@@ -1,0 +1,15 @@
+/AdditionalParameterRule.java/1.2/Fri May  9 15:18:16 2014//
+/ColonDetector.java/1.2/Fri May  9 15:18:24 2014//
+/FastCodeKeywordRulesStrategie.java/1.2/Thu Dec  5 14:56:40 2013//
+/FastCodeTemplateCodeScanner.java/1.2/Thu Dec  5 14:56:44 2013//
+/FastCodeTemplatePartitionScanner.java/1.4/Tue Jul 15 00:55:38 2014//
+/FastCodeTemplatePartitions.java/1.4/Sat Jul 12 23:11:07 2014//
+/IRulesStrategy.java/1.2/Thu Dec  5 14:56:58 2013//
+/ParameterRulesContext.java/1.4/Mon Jul 14 02:33:10 2014//
+/ParameterTypeDetector.java/1.1/Wed Dec  4 14:03:34 2013//
+/ParameterTypeRulesStrategie.java/1.2/Fri May  9 15:18:58 2014//
+/SingleTokenScanner.java/1.2/Thu Dec  5 14:57:16 2013//
+/TagDetector.java/1.2/Thu Dec  5 14:57:20 2013//
+/TemplateRulesStrategie.java/1.4/Thu Jun 12 20:03:50 2014//
+/VelocityRulesContext.java/1.8/Mon Jul 14 02:34:05 2014//
+/WhitespaceDetector.java/1.2/Thu Dec  5 14:57:30 2013//
