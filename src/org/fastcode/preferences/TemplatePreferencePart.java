@@ -43,8 +43,7 @@ public class TemplatePreferencePart {
 
 	private static final String[][]	GETTER_SETTER_TYPES			= { { "Getter Setter Both", "gettersetter" }, { "Getter Only", "getter" },
 			{ "Setter Only", "setter" }, { "None", "none" }	};
-	//private static final String[][]	NUMBER_OF_REQUIRED_ITMES	= { { "0", "0" }, { "1", "1" }, { "2", "2" } };
-	private static final String[][]	NUMBER_OF_REQUIRED_ITMES	= { { "1", "1" }, { "2", "2" } };
+	private static final String[][]	NUMBER_OF_REQUIRED_ITMES	= { { "0", "0" }, { "1", "1" }, { "2", "2" } };
 	private static final String[][]	SECOND_TEMPLATE_CHOICE		= { { "Field", "field" }, { "Method", "method" },
 			{ "Method/Field", "both" }, { "Custom", "custom" }, { "Class", "class" }, { "File", "file" }, { "Property", "property" },
 			{ "Data", "data" }, { "None", "none" }				};

@@ -8,7 +8,7 @@ public class FastCodeKeywordDetector implements IWordDetector {
 	 * @see org.eclipse.jface.text.rules.IWordDetector#isWordStart(char)
 	 */
 	public boolean isWordStart(final char aChar) {
-		return aChar == 'f' || aChar == 'b' || aChar == 'h' || aChar == 'j';
+		return aChar == 'f';
 	}
 
 

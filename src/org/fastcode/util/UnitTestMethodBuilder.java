@@ -266,6 +266,7 @@ public class UnitTestMethodBuilder extends AbstractMethodBuilder implements Meth
 				// returnValuesData.setLabelText(labelTextStr.toString().split(SPACE));
 				// returnValuesData.setValueTypes(valueType.toString().split(SPACE));
 				returnValuesData.setShellTitle("Please enter Return Values for the following formats");
+				returnValuesData.setUnitTest(true);
 				final ReturnValuesDialog returnValuesDialog = new ReturnValuesDialog(new Shell(), returnValuesData);
 				if (returnValuesDialog.open() == Window.CANCEL) {
 					return null;

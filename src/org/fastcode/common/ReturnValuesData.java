@@ -33,6 +33,7 @@ public class ReturnValuesData {
 	private List<FastCodeReturn>				localVars					= new ArrayList<FastCodeReturn>();
 	private IEditorPart							editorPart;
 	private ICompilationUnit					compUnit;
+	private boolean								unitTest;
 
 	public String[] getReturnFormatSelcted() {
 		return this.returnFormatSelcted;
@@ -140,6 +141,26 @@ public class ReturnValuesData {
 	 */
 	public void setCompUnit(final ICompilationUnit compUnit) {
 		this.compUnit = compUnit;
+	}
+
+	/**
+	 *
+	 * getter method for unitTest
+	 * @return
+	 *
+	 */
+	public boolean isUnitTest() {
+		return this.unitTest;
+	}
+
+	/**
+	 *
+	 * setter method for unitTest
+	 * @param unitTest
+	 *
+	 */
+	public void setUnitTest(final boolean unitTest) {
+		this.unitTest = unitTest;
 	}
 
 }

@@ -74,13 +74,13 @@ public class FCTagAssistProcessor implements IContentAssistProcessor {
 
 	public char[] getCompletionProposalAutoActivationCharacters() {
 		int length = 0;
-		for (int i = 0; i < this.assistants.length; ++i) {
+		for (int i = 0; this.assistants != null && i < this.assistants.length; ++i) {
 			length += this.assistants[i].getActivationCharacters().length;
 		}
 
 		int index = 0;
 		final char[] activationCharacters = new char[length];
-		for (int i = 0; i < this.assistants.length; ++i) {
+		for (int i = 0; this.assistants != null && i < this.assistants.length; ++i) {
 			final char[] chars = this.assistants[i].getActivationCharacters();
 			for (int j = 0; j < chars.length; ++j) {
 				activationCharacters[index++] = chars[j];

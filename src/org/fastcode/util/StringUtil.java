@@ -24,6 +24,8 @@ package org.fastcode.util;
 import static org.fastcode.common.FastCodeConstants.ASTERISK;
 import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_ALLOWED_VALUES;
 import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_LABEL;
+import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_MAX;
+import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_MIN;
 import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_PATTERN;
 import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_REQUIRED;
 import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_VALUE;
@@ -38,6 +40,7 @@ import static org.fastcode.common.FastCodeConstants.EMPTY_STR;
 import static org.fastcode.common.FastCodeConstants.EQUAL;
 import static org.fastcode.common.FastCodeConstants.EXCLUDE_FIELDS_FROM_SNIPPETS;
 import static org.fastcode.common.FastCodeConstants.HYPHEN;
+import static org.fastcode.common.FastCodeConstants.INT;
 import static org.fastcode.common.FastCodeConstants.LEFT_CURL;
 import static org.fastcode.common.FastCodeConstants.LEFT_PAREN_CHAR;
 import static org.fastcode.common.FastCodeConstants.NEWLINE;
@@ -111,9 +114,11 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import com.sun.corba.se.spi.extension.ZeroPortPolicy;
 import com.sun.org.apache.xml.internal.serialize.OutputFormat;
 import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_ENABLED;
+import static org.fastcode.common.FastCodeConstants.ZERO_STRING;
 
 /**
  * @author Gautam Dev
@@ -1360,17 +1365,16 @@ public class StringUtil {
 		final String classPrefix = "public class myclass {\n";
 		final String fullClass = classPrefix + methodSrc + "}";
 		final ASTParser parser = ASTParser.newParser(AST.JLS3);
-		parser.setSource(fullClass.toCharArray() );
+		parser.setSource(fullClass.toCharArray());
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);
 		final CompilationUnit cu = (CompilationUnit) parser.createAST(null);
 		final IJavaElement tree = cu.getJavaElement();
 		final FastCodeVisitor methodVisitor = new FastCodeVisitor(cu);
 		cu.accept(methodVisitor);
 		for (final MethodDeclaration method : methodVisitor.getMethods()) {
-	        System.out.print("Method name: " + method.getName()
-	            + " Return type: " + method.getReturnType2());
-	        return method.getName().toString();
-	      }
+			System.out.print("Method name: " + method.getName() + " Return type: " + method.getReturnType2());
+			return method.getName().toString();
+		}
 
 		return null;
 	}
@@ -1410,7 +1414,7 @@ public class StringUtil {
 		final String classPrefix = "public class myclass {\n";
 		final String fullClass = classPrefix + fieldSrc + "}";
 		final ASTParser parser = ASTParser.newParser(AST.JLS3);
-		parser.setSource(fullClass.toCharArray() );
+		parser.setSource(fullClass.toCharArray());
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);
 		final CompilationUnit cu = (CompilationUnit) parser.createAST(null);
 		//final IJavaElement tree =
@@ -1420,11 +1424,11 @@ public class StringUtil {
 		final FastCodeVisitor fieldVisitor = new FastCodeVisitor(cu);
 		cu.accept(fieldVisitor);
 		for (final FieldDeclaration field : fieldVisitor.getFields()) {
-			System.out.println(((VariableDeclarationFragment)field.fragments().get(0)).getName().toString());
-			return ((VariableDeclarationFragment)field.fragments().get(0)).getName().toString();
-	        /*System.out.print("Method name: " + field.getName());
-	        return field.getName().toString();*/
-	      }
+			System.out.println(((VariableDeclarationFragment) field.fragments().get(0)).getName().toString());
+			return ((VariableDeclarationFragment) field.fragments().get(0)).getName().toString();
+			/*System.out.print("Method name: " + field.getName());
+			return field.getName().toString();*/
+		}
 
 		return null;
 	}
@@ -1831,14 +1835,25 @@ public class StringUtil {
 			if (!isEmpty(paramVar.toString().trim()) && createObj) {
 				validateParamValueAndType(paramVar, paramType, paramList, colonFound);
 				for (final Entry<String, String> attribute : allAttributes.entrySet()) {
+					if ((attribute.getKey().equals(ATTRIBUTE_MIN) || attribute.getKey().equals(ATTRIBUTE_MAX))
+							&& !paramType.toString().equalsIgnoreCase(INT)) {
+						throw new FastCodeException("Min or Max attribute can be used only with - int - parameter");
+					}
 					if (!(attribute.getKey().equals(ATTRIBUTE_REQUIRED) || attribute.getKey().equals(ATTRIBUTE_PATTERN)
 							|| attribute.getKey().equals(PLACEHOLDER_PROJECT) || attribute.getKey().equals(ATTRIBUTE_LABEL)
-							|| attribute.getKey().equals(ATTRIBUTE_ALLOWED_VALUES) || attribute.getKey().equals(ATTRIBUTE_VALUE) || attribute.getKey().equals(ATTRIBUTE_ENABLED))) {
+							|| attribute.getKey().equals(ATTRIBUTE_ALLOWED_VALUES) || attribute.getKey().equals(ATTRIBUTE_VALUE)
+							|| attribute.getKey().equals(ATTRIBUTE_ENABLED) || attribute.getKey().equals(ATTRIBUTE_MAX) || attribute
+							.getKey().equals(ATTRIBUTE_MIN))) {
 						throw new FastCodeException("Attribute - " + attribute.getKey() + ", for parameter - " + paramVar
 								+ ", must be one of required/pattern/allowed_values/value/project/label/enabled");
 					}
 				}
 
+				if (allAttributes.containsKey(ATTRIBUTE_MAX) && allAttributes.containsKey(ATTRIBUTE_MIN)) {
+					if(!(Integer.parseInt(allAttributes.get(ATTRIBUTE_MIN)) <= Integer.parseInt(allAttributes.get(ATTRIBUTE_MAX)))) {
+						throw new FastCodeException("Min must have value less than or equal to Max.");
+					}
+				}
 				final String allowedValues = allAttributes.get(ATTRIBUTE_ALLOWED_VALUES) == null ? EMPTY_STR : allAttributes
 						.get(ATTRIBUTE_ALLOWED_VALUES);
 				final String value = allAttributes.get(ATTRIBUTE_VALUE) == null ? EMPTY_STR : allAttributes.get(ATTRIBUTE_VALUE);
@@ -1861,7 +1876,10 @@ public class StringUtil {
 								: allAttributes.get(ATTRIBUTE_REQUIRED), allAttributes.get(ATTRIBUTE_PATTERN) == null ? EMPTY_STR
 								: allAttributes.get(ATTRIBUTE_PATTERN), allAttributes.get(PLACEHOLDER_PROJECT) == null ? EMPTY_STR
 								: allAttributes.get(PLACEHOLDER_PROJECT), allowedValues,
-						allAttributes.get(ATTRIBUTE_LABEL) == null ? EMPTY_STR : allAttributes.get(ATTRIBUTE_LABEL), allAttributes.get(ATTRIBUTE_ENABLED) == null ? Boolean.toString(true) : allAttributes.get(ATTRIBUTE_ENABLED));
+						allAttributes.get(ATTRIBUTE_LABEL) == null ? EMPTY_STR : allAttributes.get(ATTRIBUTE_LABEL),
+						allAttributes.get(ATTRIBUTE_ENABLED) == null ? Boolean.toString(true) : allAttributes.get(ATTRIBUTE_ENABLED),
+						allAttributes.get(ATTRIBUTE_MIN) == null ? ZERO_STRING : allAttributes.get(ATTRIBUTE_MIN),
+						allAttributes.get(ATTRIBUTE_MAX) == null ? ZERO_STRING : allAttributes.get(ATTRIBUTE_MAX));
 				additionalParamsList.add(additionalParams);
 				createObj = false;
 				colonFound = false;
@@ -1874,11 +1892,27 @@ public class StringUtil {
 
 		validateParamValueAndType(paramVar, paramType, paramList, colonFound);
 		for (final Entry<String, String> attribute : allAttributes.entrySet()) {
+
+			if ((attribute.getKey().equals(ATTRIBUTE_MIN) || attribute.getKey().equals(ATTRIBUTE_MAX))
+					&& !paramType.toString().equalsIgnoreCase(INT)) {
+				throw new FastCodeException("Min or Max attribute can be used only with - int - parameter");
+			}
+			if ((attribute.getKey().equals(ATTRIBUTE_MIN) || attribute.getKey().equals(ATTRIBUTE_MAX))
+					&& !paramType.toString().equalsIgnoreCase(INT)) {
+				throw new FastCodeException("Min or Max attribute can be used only with - int - parameter");
+			}
 			if (!(attribute.getKey().equals(ATTRIBUTE_REQUIRED) || attribute.getKey().equals(ATTRIBUTE_PATTERN)
 					|| attribute.getKey().equals(PLACEHOLDER_PROJECT) || attribute.getKey().equals(ATTRIBUTE_LABEL)
-					|| attribute.getKey().equals(ATTRIBUTE_ALLOWED_VALUES) || attribute.getKey().equals(ATTRIBUTE_VALUE) || attribute.getKey().equals(ATTRIBUTE_ENABLED))) {
+					|| attribute.getKey().equals(ATTRIBUTE_ALLOWED_VALUES) || attribute.getKey().equals(ATTRIBUTE_VALUE)
+					|| attribute.getKey().equals(ATTRIBUTE_ENABLED) || attribute.getKey().equals(ATTRIBUTE_MAX) || attribute.getKey()
+					.equals(ATTRIBUTE_MIN))) {
 				throw new FastCodeException("Attribute - " + attribute.getKey() + ", for parameter - " + paramVar
 						+ ", must be one of required/pattern/allowed_values/value/project/label");
+			}
+		}
+		if (allAttributes.containsKey(ATTRIBUTE_MAX) && allAttributes.containsKey(ATTRIBUTE_MIN)) {
+			if(!(Integer.parseInt(allAttributes.get(ATTRIBUTE_MIN)) <= Integer.parseInt(allAttributes.get(ATTRIBUTE_MAX)))) {
+				throw new FastCodeException("Min must have value less than or equal to Max.");
 			}
 		}
 		final String allowedValues = allAttributes.get(ATTRIBUTE_ALLOWED_VALUES) == null ? EMPTY_STR : allAttributes
@@ -1902,7 +1936,10 @@ public class StringUtil {
 				allAttributes.get(ATTRIBUTE_REQUIRED) == null ? Boolean.toString(true) : allAttributes.get(ATTRIBUTE_REQUIRED),
 				allAttributes.get(ATTRIBUTE_PATTERN) == null ? EMPTY_STR : allAttributes.get(ATTRIBUTE_PATTERN),
 				allAttributes.get(PLACEHOLDER_PROJECT) == null ? EMPTY_STR : allAttributes.get(PLACEHOLDER_PROJECT), allowedValues,
-				allAttributes.get(ATTRIBUTE_LABEL) == null ? EMPTY_STR : allAttributes.get(ATTRIBUTE_LABEL), allAttributes.get(ATTRIBUTE_ENABLED) == null ? Boolean.toString(true) : allAttributes.get(ATTRIBUTE_ENABLED));
+				allAttributes.get(ATTRIBUTE_LABEL) == null ? EMPTY_STR : allAttributes.get(ATTRIBUTE_LABEL),
+				allAttributes.get(ATTRIBUTE_ENABLED) == null ? Boolean.toString(true) : allAttributes.get(ATTRIBUTE_ENABLED),
+				allAttributes.get(ATTRIBUTE_MIN) == null ? ZERO_STRING : allAttributes.get(ATTRIBUTE_MIN),
+				allAttributes.get(ATTRIBUTE_MAX) == null ? ZERO_STRING : allAttributes.get(ATTRIBUTE_MAX));
 		additionalParamsList.add(additionalParams);
 
 		System.out.println(paramVar.toString());
@@ -2080,17 +2117,15 @@ public class StringUtil {
 
 		/*final String method =
 			 "private void static main121_op(String[] args) throws Exception {\n  {djfkdsjf} }";
-	 	System.out.println(parseMethodName(method));*/
+		System.out.println(parseMethodName(method));*/
 
 		// System.out.println(containsAnyPlaceHolder("${var.max}"));
 		// System.out.println((reverseCamelCase("prod_tpy",'_')));
 		// System.out.println((reverseCamelCase("prod_tpy",'_')).substring(0,1).toLowerCase()+(reverseCamelCase("prod_tpy",'_')).substring(1));
 
-		  final String fieldSrc =
-		  "\t\t\t\t@Column(name = \"ipaddress\",nullable=false,length = 10)\n private String ipaddress;"
-		  ; //"\t\t\t\t@Column \n private String ipaddress;"; // final String
-		  final String fieldname = parseFieldName(fieldSrc); System.out.println(fieldname);
-
+		final String fieldSrc = "\t\t\t\t@Column(name = \"ipaddress\",nullable=false,length = 10)\n private String ipaddress;"; //"\t\t\t\t@Column \n private String ipaddress;"; // final String
+		final String fieldname = parseFieldName(fieldSrc);
+		System.out.println(fieldname);
 
 		/*
 		 * final String setMethod =
@@ -2159,21 +2194,20 @@ public class StringUtil {
 		//parseAdditonalParam("targetClass:class staticImport:boolean methodName(value=\"create${class.name}\")");
 		//parseAdditonalParam("targetClass:class(label=\"Target Class\" pattern=\"*DAO\" project=\"TestFC\") fieldName value(allowed_values=\"Krish Bajju Vidu\") staticImport:boolean(label=\"Do Static Import\" value=\"true\") testFile:file (pattern=\"*File\" project=\"TestFC\" required=\"false\") myPak:package ");
 		//final String method1 = "///* " +
-			//	  "/*" +
-				//  "/*@return" +
-	//			  "/*//"+
-	//			"public int getVar2 ()  {" +
-	//			"int getVar2 =  testOfCVDialog.getVar2();" +
-	//			"return getVar2;" +
-	//			"}";
-				/*final String method2 =
-						"public Strng int getVar2 ()  {" +
-						"int getVar2 =  testOfCVDialog.getVar2();" +
-						"return getVar2;" +
-						"}";*/
-	//	final String abc = "/**/n*/n* @return/n*/ /n public int getVar2 ()  {int getVar2 =  testOfCVDialog.getVar2();return getVar2;}";
-	//	System.out.println("method name -- " + parseMethodName(abc));
-
+		//	  "/*" +
+		//  "/*@return" +
+		//			  "/*//"+
+		//			"public int getVar2 ()  {" +
+		//			"int getVar2 =  testOfCVDialog.getVar2();" +
+		//			"return getVar2;" +
+		//			"}";
+		/*final String method2 =
+				"public Strng int getVar2 ()  {" +
+				"int getVar2 =  testOfCVDialog.getVar2();" +
+				"return getVar2;" +
+				"}";*/
+		//	final String abc = "/**/n*/n* @return/n*/ /n public int getVar2 ()  {int getVar2 =  testOfCVDialog.getVar2();return getVar2;}";
+		//	System.out.println("method name -- " + parseMethodName(abc));
 
 	}
 

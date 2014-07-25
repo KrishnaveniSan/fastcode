@@ -196,7 +196,7 @@ public class TemplateFieldEditor extends FieldEditor {
 			this.assistants = this.ctx.getTemplateContentAssistants(null);
 			this.fcTagAssistants = this.ctx.getFCTagContentAssistants(null);
 			this.ruleStrategies = this.ctx.getTemplateRuleStrategies();
-			this.fcTagRuleStrategies = this.ctx.getFCTagRuleStrategies();
+//			this.fcTagRuleStrategies = this.ctx.getFCTagRuleStrategies();
 			if (templateType.equals(P_DATABASE_TEMPLATE_PREFIX)) {
 				this.assistants = this.ctx.getDBTemplateContentAssistants(null);
 			}

@@ -41,6 +41,8 @@ public class ParameterTypeManager {
 		PARAM_TYPES.add("enum");
 		PARAM_TYPES.add("interface");
 		PARAM_TYPES.add("string");
+		PARAM_TYPES.add("int");
+		PARAM_TYPES.add("intRange");
 
 	};
 
@@ -147,5 +149,4 @@ public class ParameterTypeManager {
 	public static String[] getDirectives() {
 		return PARAM_TYPES.toArray(new String[PARAM_TYPES.size()]);
 	}
-
 }

@@ -7,7 +7,10 @@ import static org.fastcode.common.FastCodeConstants.GROOVY_EXTENSION;
 import static org.fastcode.common.FastCodeConstants.JAVA_EXTENSION;
 import static org.fastcode.common.FastCodeConstants.NEWLINE;
 import static org.fastcode.common.FastCodeConstants.SPACE;
+import static org.fastcode.common.FastCodeConstants.UNDERSCORE;
 import static org.fastcode.util.SourceUtil.checkForErrors;
+import static org.fastcode.util.SourceUtil.getImagefromFCCacheMap;
+import static org.fastcode.util.SourceUtil.getPackageFragmentFromWorkspace;
 import static org.fastcode.util.SourceUtil.getRepositoryServiceClass;
 import static org.fastcode.util.SourceUtil.isFileReferenced;
 import static org.fastcode.util.SourceUtil.isFileSaved;
@@ -19,6 +22,8 @@ import static org.fastcode.util.VersionControlUtil.getPreviousCommentsFromCache;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +41,7 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ISelection;
@@ -53,14 +59,18 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.CheckedTreeSelectionDialog;
+import org.fastcode.Activator;
 import org.fastcode.common.Action;
 import org.fastcode.common.FastCodeCheckinCommentsData;
 import org.fastcode.common.FastCodeConstants.ACTION_ENTITY;
 import org.fastcode.dialog.FastCodeCheckinCommentsDialog;
 import org.fastcode.exception.FastCodeRepositoryException;
+import org.fastcode.popup.actions.snippet.FastCodeCache;
 import org.fastcode.preferences.VersionControlPreferences;
+import org.fastcode.setting.GlobalSettings;
 import org.fastcode.util.FastCodeFileForCheckin;
 import org.fastcode.util.RepositoryService;
+import static org.fastcode.util.SourceUtil.populateFCCacheEntityImageMap;
 
 public class CommitMultipleFileAction implements IActionDelegate, IWorkbenchWindowActionDelegate {
 
@@ -87,20 +97,24 @@ public class CommitMultipleFileAction implements IActionDelegate, IWorkbenchWind
 
 		final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 		final ISelection selection = window.getSelectionService().getSelection("org.eclipse.jdt.ui.PackageExplorer");
+		if (selection == null) {
+			MessageDialog.openError(new Shell(), "Error", "Some error....quiting");
+			return;
+		}
 		final IStructuredSelection structuredSelection = (IStructuredSelection) selection;
-
 		final Object firstElement = structuredSelection.getFirstElement();
-		final IProject project = null;
-		final List<File> itemsTocheckIn = new ArrayList<File>();
+		IProject project = null;
+		//final List<File> itemsTocheckIn = new ArrayList<File>();
 
-		if (firstElement instanceof IPackageFragment) {
+		/*if (firstElement instanceof IPackageFragment) {
 			IPackageFragment packageFragment;
 			packageFragment = (IPackageFragment) firstElement;
 			System.out.println(packageFragment.getPath());
-			/*final String pakURI = packageFragment.getResource().getLocationURI().toString();
+			project = packageFragment.getJavaProject().getProject();
+			final String pakURI = packageFragment.getResource().getLocationURI().toString();
 			final File pakFile = new File(pakURI.substring(pakURI.indexOf(COLON) + 1));
 
-			project = packageFragment.getJavaProject().getProject();
+
 			itemsTocheckIn.add(pakFile);
 
 			try {
@@ -150,91 +164,97 @@ public class CommitMultipleFileAction implements IActionDelegate, IWorkbenchWind
 			} catch (final Exception ex) {
 				// TODO Auto-generated catch block
 				ex.printStackTrace();
-			}*/
+			}
 
 		} else if (firstElement instanceof ICompilationUnit) {
 			final ICompilationUnit compilationUnit = (ICompilationUnit) firstElement;
 
 		} else {
 
-		}
+		}*/
+		if (firstElement instanceof IPackageFragment) {
+			final IPackageFragment packageFragment;
+			packageFragment = (IPackageFragment) firstElement;
+			System.out.println(packageFragment.getPath());
+			project = packageFragment.getJavaProject().getProject();
+			try {
 
-		try {
-
-			final RepositoryService checkin = getRepositoryServiceClass();
-			final IProject prj = project;
-			final IRunnableWithProgress op = new IRunnableWithProgress() {
-				public void run(final IProgressMonitor monitor) {
-					try {
-						final FastCodeCheckinCommentsData comboData = new FastCodeCheckinCommentsData();
-						final List<String> cmntsFromRepo = checkin.getPreviousComments(prj.getName());
-						comboData.setComntsFromRepo(cmntsFromRepo);
-						final FastCodeCheckinCommentsDialog fastCodeCombo = new FastCodeCheckinCommentsDialog(new Shell(), comboData);
-						if (fastCodeCombo.open() == Window.CANCEL) {
-							//return;
-							/*comment = getCompilationUnitFromEditor() != null ? "Modified Class " + file.getName() + DOT : "Modified File "
-									+ file.getName() + DOT;*/
-						}
-						String comment;
-						if (comboData.isAddPrefixFooter()) {
-							final Map<String, Object> placeHolder = new HashMap<String, Object>();
-							getGlobalSettings(placeHolder);
-							final String prefix = evaluateByVelocity(versionControlPreferences.getComntPrefix(), placeHolder);
-							final String footer = evaluateByVelocity(versionControlPreferences.getComntFooter(), placeHolder);
-							comment = prefix + NEWLINE + comboData.getFinalComment() + NEWLINE + footer;
-						} else {
-							comment = comboData.getFinalComment();
-						}
-
-						final CheckedTreeSelectionDialog checkedTreeSelectionDialog = new CheckedTreeSelectionDialog(new Shell(),
-								new FileLabelProvider(), new FileContentProvider());
-						checkedTreeSelectionDialog.setTitle("File(s) Selection");
-						checkedTreeSelectionDialog.setMessage("Select the file(s) to checkin");
-						checkedTreeSelectionDialog.setInput(itemsTocheckIn);
-						//checkedTreeSelectionDialog.setInitialElementSelections(filterActionList(actionList));//checkedTreeSelectionDialog.setInitialElementSelections(actionList);
-						checkedTreeSelectionDialog.setExpandedElements(itemsTocheckIn.toArray(new File[0]));
-						checkedTreeSelectionDialog.setContainerMode(true);
-
-						if (checkedTreeSelectionDialog.open() == Window.CANCEL) {
-							return;
-						}
-						final StringBuilder existWarningBuilder = new StringBuilder();
-
-						if (checkedTreeSelectionDialog.getResult() != null) {
-							for (final Object selection : checkedTreeSelectionDialog.getResult()) {
-								final File fileSelected = (File) selection;
-								monitor.setTaskName("Auto checkin");
-								monitor.subTask("Checking in " + fileSelected.getName());
-								checkin.checkInFile(fileSelected, comment, prj);
-
+				final RepositoryService checkin = getRepositoryServiceClass();
+				final IProject prj = project;
+				final IRunnableWithProgress op = new IRunnableWithProgress() {
+					public void run(final IProgressMonitor monitor) {
+						try {
+							final FastCodeCheckinCommentsData comboData = new FastCodeCheckinCommentsData();
+							final List<String> cmntsFromRepo = checkin.getPreviousComments(prj.getName());
+							comboData.setComntsFromRepo(cmntsFromRepo);
+							final FastCodeCheckinCommentsDialog fastCodeCombo = new FastCodeCheckinCommentsDialog(new Shell(), comboData);
+							if (fastCodeCombo.open() == Window.CANCEL) {
+								//return;
+								/*comment = getCompilationUnitFromEditor() != null ? "Modified Class " + file.getName() + DOT : "Modified File "
+										+ file.getName() + DOT;*/
+							}
+							String comment;
+							if (comboData.isAddPrefixFooter()) {
+								final Map<String, Object> placeHolder = new HashMap<String, Object>();
+								getGlobalSettings(placeHolder);
+								final String prefix = evaluateByVelocity(versionControlPreferences.getComntPrefix(), placeHolder);
+								final String footer = evaluateByVelocity(versionControlPreferences.getComntFooter(), placeHolder);
+								comment = prefix + NEWLINE + comboData.getFinalComment() + NEWLINE + footer;
+							} else {
+								comment = comboData.getFinalComment();
 							}
 
+							final CheckedTreeSelectionDialog checkedTreeSelectionDialog = new CheckedTreeSelectionDialog(new Shell(),
+									new FileLabelProvider(), new FileContentProvider());
+							checkedTreeSelectionDialog.setTitle("File(s) Selection");
+							checkedTreeSelectionDialog.setMessage("Select the file(s) to checkin");
+							checkedTreeSelectionDialog.setInput(packageFragment);
+							//checkedTreeSelectionDialog.setInitialElementSelections(filterActionList(actionList));//checkedTreeSelectionDialog.setInitialElementSelections(actionList);
+							//checkedTreeSelectionDialog.setExpandedElements(itemsTocheckIn.toArray(new File[0]));
+							//checkedTreeSelectionDialog.setContainerMode(true);
+
+							if (checkedTreeSelectionDialog.open() == Window.CANCEL) {
+								return;
+							}
+							final StringBuilder existWarningBuilder = new StringBuilder();
+
+							if (checkedTreeSelectionDialog.getResult() != null) {
+								for (final Object selection : checkedTreeSelectionDialog.getResult()) {
+									final File fileSelected = (File) selection;
+									monitor.setTaskName("Auto checkin");
+									monitor.subTask("Checking in " + fileSelected.getName());
+									checkin.checkInFile(fileSelected, comment, prj);
+
+								}
+
+							}
+						} catch (final FastCodeRepositoryException ex) {
+							MessageDialog.openError(new Shell(), "Error", "Some error occured --" + ex.getMessage());
+							ex.printStackTrace();
+						} catch (final Exception ex) {
+							MessageDialog.openError(new Shell(), "Error", "Some error occured --" + ex.getMessage());
+							ex.printStackTrace();
+						} finally {
+							monitor.done();
 						}
-					} catch (final FastCodeRepositoryException ex) {
-						MessageDialog.openError(new Shell(), "Error", "Some error occured --" + ex.getMessage());
-						ex.printStackTrace();
-					} catch (final Exception ex) {
-						MessageDialog.openError(new Shell(), "Error", "Some error occured --" + ex.getMessage());
-						ex.printStackTrace();
-					} finally {
-						monitor.done();
+
 					}
-				}
-			};
+				};
 
-			final IWorkbench wb = PlatformUI.getWorkbench();
-			final IWorkbenchWindow win = wb.getActiveWorkbenchWindow();
+				final IWorkbench wb = PlatformUI.getWorkbench();
+				final IWorkbenchWindow win = wb.getActiveWorkbenchWindow();
 
-			new ProgressMonitorDialog(new Shell()).run(false, false, op);
-		} catch (final FastCodeRepositoryException ex1) {
-			// TODO Auto-generated catch block
-			ex1.printStackTrace();
-		} catch (final InvocationTargetException ex) {
-			// TODO Auto-generated catch block
-			ex.printStackTrace();
-		} catch (final InterruptedException ex) {
-			// TODO Auto-generated catch block
-			ex.printStackTrace();
+				new ProgressMonitorDialog(new Shell()).run(false, false, op);
+			} catch (final FastCodeRepositoryException ex1) {
+				// TODO Auto-generated catch block
+				ex1.printStackTrace();
+			} catch (final InvocationTargetException ex) {
+				// TODO Auto-generated catch block
+				ex.printStackTrace();
+			} catch (final InterruptedException ex) {
+				// TODO Auto-generated catch block
+				ex.printStackTrace();
+			}
 		}
 	}
 
@@ -249,6 +269,8 @@ public class CommitMultipleFileAction implements IActionDelegate, IWorkbenchWind
 	}
 
 	private class FileLabelProvider implements ILabelProvider {
+		private Image	image;
+		FastCodeCache	fastCodeCache	= FastCodeCache.getInstance();
 
 		public void addListener(final ILabelProviderListener arg0) {
 			// TODO Auto-generated method stub
@@ -271,18 +293,59 @@ public class CommitMultipleFileAction implements IActionDelegate, IWorkbenchWind
 		}
 
 		public Image getImage(final Object arg0) {
-			// TODO Auto-generated method stub
-			return null;
+			Image entityImage = null;
+			final GlobalSettings globalSettings = GlobalSettings.getInstance();
+			final String image = globalSettings.getPropertyValue("file".toUpperCase() + UNDERSCORE + "IMAGE", EMPTY_STR);
+			if (this.fastCodeCache.getEntityImageMap().containsKey("file")) {
+				return getImagefromFCCacheMap("file");
+			}
+			entityImage = getImage(image);
+			populateFCCacheEntityImageMap("file", entityImage);
+			return entityImage;
 		}
 
-		public String getText(final Object arg0) {
-			// TODO Auto-generated method stub
-			return null;
+		/**
+		 * Gets the image.
+		 *
+		 * @param imageName
+		 *            the image name
+		 * @return the image
+		 */
+		private Image getImage(String imageName) {
+			URL url = null;
+			if (imageName == null) {
+				return null;
+			}
+			final Image image = PlatformUI.getWorkbench().getSharedImages().getImage(imageName);
+			if (image != null && !image.isDisposed()) {
+				// this.image = null;
+				return image;
+			}
+			try {
+				if (imageName.startsWith("org.eclipse.jdt.ui.")) {
+					imageName = imageName.substring("org.eclipse.jdt.ui.".length());
+				}
+				url = new URL(Activator.getDefault().getDescriptor().getInstallURL(), "icons/" + imageName);
+			} catch (final MalformedURLException ex) {
+				ex.printStackTrace();
+				return null;
+			}
+			final ImageDescriptor descriptor = ImageDescriptor.createFromURL(url);
+			this.image = descriptor.createImage();
+			return this.image;
+		}
+
+		public String getText(final Object input) {
+			if (input instanceof File) {
+				return ((File) input).getName();
+			}
+
+			return EMPTY_STR;
 		}
 
 	}
 
-	private class FileContentProvider implements ITreeContentProvider{
+	private class FileContentProvider implements ITreeContentProvider {
 
 		public void dispose() {
 			// TODO Auto-generated method stub
@@ -295,12 +358,11 @@ public class CommitMultipleFileAction implements IActionDelegate, IWorkbenchWind
 		}
 
 		public Object[] getChildren(final Object inputObj) {
-			/*final List<File> itemsTocheckIn = new ArrayList<File>();
-
+			final List<File> itemsTocheckIn = new ArrayList<File>();
+			final IPackageFragment packageFragment = (IPackageFragment) inputObj;
 			final String pakURI = packageFragment.getResource().getLocationURI().toString();
 			final File pakFile = new File(pakURI.substring(pakURI.indexOf(COLON) + 1));
-
-			project = packageFragment.getJavaProject().getProject();
+			final IProject project = packageFragment.getJavaProject().getProject();
 			itemsTocheckIn.add(pakFile);
 
 			try {
@@ -351,18 +413,16 @@ public class CommitMultipleFileAction implements IActionDelegate, IWorkbenchWind
 				// TODO Auto-generated catch block
 				ex.printStackTrace();
 			}
-			return itemsTocheckIn;*/
-			return null;
+			return itemsTocheckIn.toArray(new File[0]);
+			//return null;
 		}
 
-		public Object[] getElements(final Object arg0) {
-			// TODO Auto-generated method stub
-			return null;
+		public Object[] getElements(final Object input) {
+			return getChildren(input);
 		}
 
-		public Object getParent(final Object arg0) {
-			// TODO Auto-generated method stub
-			return null;
+		public Object getParent(final Object input) {
+			return input instanceof IPackageFragment ? input : null;
 		}
 
 		public boolean hasChildren(final Object arg0) {

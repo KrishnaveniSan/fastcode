@@ -4,17 +4,20 @@ import org.fastcode.common.FastCodeConstants.RETURN_TYPES;
 
 public class FastCodeAdditionalParams {
 
-	private String name;
-	private RETURN_TYPES returnTypes;
-	private String defaultValue;
-	private String required;
-	private String pattern;
-	private String project;
-	private String allowedValues;
-	private String label;
-	private String enabled;
+	private String			name;
+	private RETURN_TYPES	returnTypes;
+	private String			defaultValue;
+	private String			required;
+	private String			pattern;
+	private String			project;
+	private String			allowedValues;
+	private String			label;
+	private String			enabled;
+	private String			min;
+	private String			max;
 
-	public FastCodeAdditionalParams(final String name, final RETURN_TYPES returnTypes, final String defaultValue, final String required, final String enabled) {
+	public FastCodeAdditionalParams(final String name, final RETURN_TYPES returnTypes, final String defaultValue, final String required,
+			final String enabled) {
 		super();
 		this.name = name;
 		this.returnTypes = returnTypes;
@@ -23,7 +26,9 @@ public class FastCodeAdditionalParams {
 		this.enabled = enabled;
 	}
 
-	public FastCodeAdditionalParams(final String name, final RETURN_TYPES returnTypes, final String defaultValue, final String required, final String pattern, final String project, final String allowedValues, final String label, final String enabled) {
+	public FastCodeAdditionalParams(final String name, final RETURN_TYPES returnTypes, final String defaultValue, final String required,
+			final String pattern, final String project, final String allowedValues, final String label, final String enabled,
+			final String min, final String max) {
 		super();
 		this.name = name;
 		this.returnTypes = returnTypes;
@@ -34,19 +39,41 @@ public class FastCodeAdditionalParams {
 		this.allowedValues = allowedValues;
 		this.label = label;
 		this.enabled = enabled;
+		this.max = max;
+		this.min = min;
 	}
 
-	public String getName() {return this.name;}
+	public String getMin() {
+		return this.min;
+	}
 
-	public void setName(final String name) {this.name = name;}
+	public String getMax() {
+		return this.max;
+	}
 
-	public RETURN_TYPES getReturnTypes() {return this.returnTypes;}
+	public String getName() {
+		return this.name;
+	}
 
-	public void setReturnTypes(final RETURN_TYPES returnTypes) {this.returnTypes = returnTypes;}
+	public void setName(final String name) {
+		this.name = name;
+	}
 
-	public String getDefaultValue() {return this.defaultValue;}
+	public RETURN_TYPES getReturnTypes() {
+		return this.returnTypes;
+	}
 
-	public void setDefaultValue(final String defaultValue) {this.defaultValue = defaultValue;}
+	public void setReturnTypes(final RETURN_TYPES returnTypes) {
+		this.returnTypes = returnTypes;
+	}
+
+	public String getDefaultValue() {
+		return this.defaultValue;
+	}
+
+	public void setDefaultValue(final String defaultValue) {
+		this.defaultValue = defaultValue;
+	}
 
 	/**
 	 *

@@ -13,6 +13,7 @@ import org.eclipse.jface.text.rules.Token;
 
 /**
  * Partition scanner for templates.
+ *
  */
 public class FastCodeTemplatePartitionScanner extends RuleBasedPartitionScanner {
 

@@ -1335,7 +1335,7 @@ public class FastCodeConstants {
 		STRING("String"), CHAR("char"), DOUBLE("double"), DBL_CLASS("Double"), INT("int"), INTEGER("Integer"), FLOAT("float"), FLOAT_CLASS(
 				"Float"), BOOLEAN("boolean"), BOOLEAN_CLASS("Boolean"), BYTE("byte"), LONG("long"), SHORT("short"), CLASS("class"), FILE(
 				"file"), FOLDER("folder"), PACKAGE("package"), PROJECT("project"), JAVAPROJECT("javaProject"), LOCALVAR("localvar"), INTERFACE(
-				"interface"), ENUMERATION("enum");
+				"interface"), ENUMERATION("enum"), INTRANGE("intRange");
 		private String	value;
 
 		private RETURN_TYPES(final String value) {
@@ -1667,13 +1667,13 @@ public class FastCodeConstants {
 
 	public static final String	COMPLETED								= "completed";
 
-	public static final String	CURRENT_PACKAGE							= "Current Package";
+	public static final String	ENCLOSING_PACKAGE						= "Enclosing Package";
 
-	public static final String	CURRENT_FOLDER							= "Current Folder";
+	public static final String	ENCLOSING_FOLDER						= "Enclosing Folder";
 
-	public static final String	CURRENT_CLASS							= "Current Class";
+	public static final String	ENCLOSING_CLASS							= "Enclosing Class";
 
-	public static final String	CURRENT_FILE							= "Current File";
+	public static final String	ENCLOSING_FILE							= "Enclosing File";
 
 	public static final String	FILE_DETETE								= "deleted";
 
@@ -1769,4 +1769,10 @@ public class FastCodeConstants {
 			this.value = value;
 		}
 	}
+
+	public static final String	ATTRIBUTE_MIN		= "min";
+
+	public static final String	ATTRIBUTE_MAX		= "max";
+
+	public static final String ZERO_STRING = "0";
 }

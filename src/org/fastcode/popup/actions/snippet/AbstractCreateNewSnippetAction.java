@@ -83,6 +83,7 @@ import static org.fastcode.util.SourceUtil.getLocalVarFromCompUnit;
 import static org.fastcode.util.SourceUtil.getPublicMethods;
 import static org.fastcode.util.SourceUtil.getSelectedMembers;
 import static org.fastcode.util.SourceUtil.populateFCCacheEntityImageMap;
+import static org.fastcode.util.SourceUtil.refreshProject;
 import static org.fastcode.util.StringUtil.changeFirstLetterToUpperCase;
 import static org.fastcode.util.StringUtil.createDefaultInstance;
 import static org.fastcode.util.StringUtil.evaluateByVelocity;
@@ -106,6 +107,7 @@ import java.util.Map.Entry;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -144,6 +146,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.CheckedTreeSelectionDialog;
@@ -337,7 +340,7 @@ public abstract class AbstractCreateNewSnippetAction {
 					.toString()
 					.substring(0,
 							editorFile.getProjectRelativePath().toString().indexOf(editorFile.getProjectRelativePath().lastSegment()) - 1);
-			IFolder folder = new FastCodeFile(editorFile).getProject().getProject().getFolder(srcPath);
+			final IFolder folder = new FastCodeFile(editorFile).getProject().getProject().getFolder(srcPath);
 			placeHolders.put(ENCLOSING_FOLDER_STR, new FastCodeFolder(folder));
 			placeHolders.put(ENCLOSING_PROJECT_STR, new FastCodeFile(editorFile).getProject());
 			if (pType != null) {
@@ -371,7 +374,7 @@ public abstract class AbstractCreateNewSnippetAction {
 					tableName = this.createSnippetData.getTableSelected();
 					placeHolders.put(TABLE, tableName);
 					placeHolders.put(SCHEMA, this.createSnippetData.getSchemaSelected());
-					placeHolders.put(DATABASE_NAME, createSnippetData.getSelectedDatabaseName());
+					placeHolders.put(DATABASE_NAME, this.createSnippetData.getSelectedDatabaseName());
 					placeHolders.put(INSTANCE_STR, tableName.substring(0, 1).toLowerCase());
 				}
 
@@ -670,7 +673,7 @@ public abstract class AbstractCreateNewSnippetAction {
 					}
 					for (i = startLine - 1; i <= endLine - 1; i++) {
 						if (document.getNumberOfLines() < i) {
-							int j = i + 1;
+							final int j = i + 1;
 							openError(new Shell(), "Error", " Line number " + j + " does not exists in the file");
 							return;
 						}
@@ -735,6 +738,8 @@ public abstract class AbstractCreateNewSnippetAction {
 			}
 			ResourcesPlugin.getWorkspace().addResourceChangeListener(FastCodeResourceChangeListener.getInstance());
 		}
+		/*final IProject project = compilationUnit.getJavaProject().getProject();
+		refreshProject(project.getName());*/
 	}
 
 	/**
@@ -902,6 +907,7 @@ public abstract class AbstractCreateNewSnippetAction {
 		// returnValuesData.setValueTypes();
 		// returnValuesData.setDefaultValue(createDefaultInstance(type.getName()));
 		returnValuesData.setShellTitle("Additional Parameters");
+		returnValuesData.setUnitTest(false);
 		final ReturnValuesDialog returnValuesDialog = new ReturnValuesDialog(new Shell(), returnValuesData);
 		if (returnValuesDialog.open() == Window.CANCEL) {
 			placeHolders.put(EXIT_KEY, true);
@@ -1981,7 +1987,7 @@ public abstract class AbstractCreateNewSnippetAction {
 			String imageName = null;
 			final GlobalSettings globalSettings = GlobalSettings.getInstance();
 			Image image = null;
-			FastCodeCache fastCodeCache = FastCodeCache.getInstance();
+			final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
 			if (isPrivate(fastCodeField.getField().getFlags())) {
 				if (fastCodeCache.getEntityImageMap().containsKey("field_private")) {
 					return getImagefromFCCacheMap("field_private");

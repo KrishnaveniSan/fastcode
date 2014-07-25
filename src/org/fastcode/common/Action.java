@@ -17,7 +17,7 @@ public class Action {
 	private String			entityName;
 	private String			nodeName;
 	private String			rootNodeName;
-	private Object			dir;
+	private Object			folderPath;
 	private Object			packge;
 	private Object			project;
 	private String			labelMsg;
@@ -31,6 +31,7 @@ public class Action {
 	private boolean			exist;
 	private final boolean			overrideMethods;
 	private String			classToImport;
+	private String			imports;
 
 	public ACTION_TYPE getType() {
 		return this.type;
@@ -104,12 +105,12 @@ public class Action {
 		this.rootNodeName = rootNodeName;
 	}
 
-	public Object getDir() {
-		return this.dir;
+	public Object getFolderPath() {
+		return this.folderPath;
 	}
 
-	public void setDir(final String dir) {
-		this.dir = dir;
+	public void setFolderPath(final Object folderPath) {
+		this.folderPath = folderPath;
 	}
 
 	public Object getPackge() {
@@ -212,6 +213,14 @@ public class Action {
 		this.classToImport = classToImport;
 	}
 
+	public String getImports() {
+		return this.imports;
+	}
+
+	public void setImports(final String imports) {
+		this.imports = imports;
+	}
+
 	private Action(final Builder builder) {
 		this.type = builder.type;
 		this.source = builder.source;
@@ -222,7 +231,7 @@ public class Action {
 		this.entityName = builder.entityName;
 		this.nodeName = builder.nodeName;
 		this.rootNodeName = builder.rootNodeName;
-		this.dir = builder.dir;
+		setFolderPath(builder.folderPath);
 		this.packge = builder.packge;
 		this.project = builder.project;
 		this.labelMsg = builder.labelMsg;
@@ -236,6 +245,7 @@ public class Action {
 		this.exist = builder.exist;
 		this.overrideMethods = builder.overrideMethods;
 		this.classToImport = builder.classToImport;
+		this.imports = builder.imports;
 	}
 
 	public static class Builder {
@@ -248,7 +258,7 @@ public class Action {
 		private String			entityName;
 		private String			nodeName;
 		private String			rootNodeName;
-		private Object			dir;
+		private Object			folderPath;
 		private Object			packge;
 		private Object			project;
 		private String			labelMsg;
@@ -262,6 +272,7 @@ public class Action {
 		private boolean			exist;
 		private boolean			overrideMethods;
 		private String			classToImport;
+		private String			imports;
 
 		public Builder withType(final ACTION_TYPE type) {
 			this.type = type;
@@ -308,8 +319,8 @@ public class Action {
 			return this;
 		}
 
-		public Builder withDir(final Object dir) {
-			this.dir = dir;
+		public Builder withFolderPath(final Object folderPath) {
+			this.folderPath = folderPath;
 			return this;
 		}
 
@@ -378,10 +389,13 @@ public class Action {
 			return this;
 		}
 
+		public Builder withImports(final String imports) {
+			this.imports = imports;
+			return this;
+		}
+
 		public Action build() {
 			return new Action(this);
 		}
-
 	}
-
 }

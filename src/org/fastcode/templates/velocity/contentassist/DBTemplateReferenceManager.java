@@ -17,7 +17,7 @@ import org.fastcode.templates.util.VariablesUtil;
 
 /**
  * Manager for Velocity references.
- * AAAAA
+ *
  */
 public class DBTemplateReferenceManager {
 

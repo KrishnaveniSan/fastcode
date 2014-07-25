@@ -82,6 +82,7 @@ import static org.fastcode.util.SourceUtil.getEditorPartFromFile;
 import static org.fastcode.util.SourceUtil.getFQNameFromFieldTypeName;
 import static org.fastcode.util.SourceUtil.getFileContents;
 import static org.fastcode.util.SourceUtil.getIFileFromFile;
+import static org.fastcode.util.SourceUtil.getImagefromFCCacheMap;
 import static org.fastcode.util.SourceUtil.getJavaProject;
 import static org.fastcode.util.SourceUtil.getPackageRootFromProject;
 import static org.fastcode.util.SourceUtil.getPackagesInProject;
@@ -93,6 +94,7 @@ import static org.fastcode.util.SourceUtil.implementInterfaceMethods;
 import static org.fastcode.util.SourceUtil.isFileSaved;
 import static org.fastcode.util.SourceUtil.isNativeType;
 import static org.fastcode.util.SourceUtil.overrideBaseClassMethods;
+import static org.fastcode.util.SourceUtil.populateFCCacheEntityImageMap;
 import static org.fastcode.util.StringUtil.format;
 import static org.fastcode.util.StringUtil.formatXml;
 import static org.fastcode.util.StringUtil.formatXmlWithCDATA;
@@ -182,6 +184,7 @@ import org.fastcode.common.Actions;
 import org.fastcode.common.FastCodeConstants.ACTION_ENTITY;
 import org.fastcode.common.FastCodeConstants.ACTION_TYPE;
 import org.fastcode.common.FastCodeConstants.CLASS_TYPE;
+import org.fastcode.common.FastCodeConstants.TARGET;
 import org.fastcode.common.FastCodeConstants.TemplateTag;
 import org.fastcode.common.FastCodeEntityHolder;
 import org.fastcode.common.FastCodeField;
@@ -203,7 +206,6 @@ import org.fastcode.util.FastCodeFileForCheckin;
 import org.fastcode.util.RepositoryService;
 import org.fastcode.util.SourceUtil;
 import org.fastcode.versioncontrol.FastCodeCheckinCache;
-import static org.fastcode.util.SourceUtil.getImagefromFCCacheMap;
 
 public class TemplateTagsProcessor {
 	final List<Action>			subActions					= new ArrayList<Action>();
@@ -513,6 +515,7 @@ public class TemplateTagsProcessor {
 	 * @param methodName
 	 * @param methodSource
 	 * @param typeToCreate
+	 * @param imports
 	 * @param targetFastCodeType.
 	 * @param contextMap
 	 * @param spacesBeforeCursor
@@ -523,8 +526,13 @@ public class TemplateTagsProcessor {
 	 * @throws Exception
 	 */
 	private IMethod createMethodFromTag(final String methodName, final String methodSource, final FastCodeType targetFastCodeType,
-			final String typeToCreate, final Map<String, Object> contextMap, final String spacesBeforeCursor, final Map<String, Object> placeHolders,
-			final ICompilationUnit compUnit, final IEditorPart editorPart) throws Exception {
+			final String typeToCreate, final String imports, final Map<String, Object> contextMap, final String spacesBeforeCursor,
+			final Map<String, Object> placeHolders, final ICompilationUnit compUnit, final IEditorPart editorPart) throws Exception {
+		if (!isEmpty(imports)) {
+			for (final String classToImport : imports.split(SPACE)) {
+				createImportFromTag(classToImport, compUnit);
+			}
+		}
 		IType type = null;
 		if (targetFastCodeType.getiType() == null) {
 			IJavaProject javaProject = null;
@@ -623,9 +631,13 @@ public class TemplateTagsProcessor {
 	 * @throws Exception
 	 */
 	private IMember createFieldFromTag(final String fieldName, final String fieldSource, final FastCodeType targetFastCodeType,
-			final String classToImport, final Map<String, Object> contextMap, final String spacesBeforeCursor, final Map<String, Object> placeHolders,
-			final IEditorPart editorPart) throws Exception {
-
+			final String classToImport, final String imports, final Map<String, Object> contextMap, final String spacesBeforeCursor,
+			final Map<String, Object> placeHolders, final ICompilationUnit compUnit, final IEditorPart editorPart) throws Exception {
+		if (!isEmpty(imports)) {
+			for (final String clasToImport : imports.split(SPACE)) {
+				createImportFromTag(clasToImport, compUnit);
+			}
+		}
 		IType type = null;
 		if (targetFastCodeType.getiType() == null) {
 			IJavaProject javaProject = null;
@@ -725,14 +737,10 @@ public class TemplateTagsProcessor {
 		boolean createFileAlone = true;
 		try {
 			final File newFileObj = new File(file.getLocationURI());
-
-			/*final FastCodeCheckinCache checkinCache = FastCodeCheckinCache.getInstance();
-			checkinCache.getFilesToCheckIn().add(new FastCodeFileForCheckin(INITIATED, newFileObj.getAbsolutePath()));*/
-			/*addOrUpdateFileStatusInCache(newFileObj);
-			final boolean prjShared = !isEmpty(file.getProject().getPersistentProperties());
-			final boolean prjConfigured = !isEmpty(isPrjConfigured(file.getProject().getName()));
-			createFileAlone = !(this.versionControlPreferences.isEnable() && prjShared && prjConfigured);*/
 			if ((Boolean) placeHolders.get(AUTO_CHECKIN)) {
+				final boolean prjShared = !isEmpty(file.getProject().getPersistentProperties());
+				final boolean prjConfigured = !isEmpty(isPrjConfigured(file.getProject().getName()));
+				createFileAlone = !(this.versionControlPreferences.isEnable() && prjShared && prjConfigured);
 				if (proceedWithAutoCheckin(newFileObj, file.getProject())) {
 					final RepositoryService repositoryService = getRepositoryServiceClass();
 					try {
@@ -903,8 +911,8 @@ public class TemplateTagsProcessor {
 	 */
 	private void createClassFromTag(final String className, final Object packge, final Object project, String insideTagBody,
 			final Map<String, Object> contextMap, final Map<String, Object> placeHolders, final ICompilationUnit compUnit,
-			final String typeToCreate, final String spacesBeforeCursor, boolean overrideMethods, final boolean exist, final IEditorPart editorPart)
-			throws JavaModelException, Exception {
+			final String typeToCreate, final String spacesBeforeCursor, boolean overrideMethods, final boolean exist,
+			final IEditorPart editorPart) throws JavaModelException, Exception {
 
 		if (typeToCreate.equals(ACTION_ENTITY.Innerclass.getValue())) {
 			compUnit.becomeWorkingCopy(null);
@@ -1014,41 +1022,44 @@ public class TemplateTagsProcessor {
 		}
 
 		boolean createFileAlone = true;
-		String path;
-		try {
-			final boolean prjShared = !isEmpty(pkgFrgmt.getResource().getProject().getPersistentProperties());
-			final boolean prjConfigured = !isEmpty(isPrjConfigured(pkgFrgmt.getResource().getProject().getName()));
-			createFileAlone = !(this.versionControlPreferences.isEnable() && prjShared && prjConfigured);
+		if ((Boolean) placeHolders.get(AUTO_CHECKIN)) {
+			String path;
+			try {
+				final boolean prjShared = !isEmpty(pkgFrgmt.getResource().getProject().getPersistentProperties());
+				final boolean prjConfigured = !isEmpty(isPrjConfigured(pkgFrgmt.getResource().getProject().getName()));
+				createFileAlone = !(this.versionControlPreferences.isEnable() && prjShared && prjConfigured);
 
-			final String prjURI = pkgFrgmt.getResource().getLocationURI().toString();
-			path = prjURI.substring(prjURI.indexOf(COLON) + 1);
-			final File newFileObj = new File(path + FORWARD_SLASH + className + DOT + JAVA_EXTENSION);
-			if (this.versionControlPreferences.isEnable() && prjShared && prjConfigured) {
-				final RepositoryService repositoryService = getRepositoryServiceClass();
-				try {
-					if (repositoryService.isFileInRepository(newFileObj)) { // && !MessageDialog.openQuestion(new Shell(), "File present in repository", "File already present in repository. Click yes to overwrite")) {
-						/*MessageDialog.openWarning(new Shell(), "File present in repository", className + " is already present in repository. Please synchronise and try again.");
-						return;*/
-						createFileAlone = MessageDialog
-								.openQuestion(
-										new Shell(),
-										"File present in repository",
-										"File "
-												+ newFileObj.getName()
-												+ " already present in repository. Click yes to just create the file, No to return without any action.");
-						if (!createFileAlone) {
-							return;
+				final String prjURI = pkgFrgmt.getResource().getLocationURI().toString();
+				path = prjURI.substring(prjURI.indexOf(COLON) + 1);
+				final File newFileObj = new File(path + FORWARD_SLASH + className + DOT + JAVA_EXTENSION);
+				if (this.versionControlPreferences.isEnable() && prjShared && prjConfigured) {
+					final RepositoryService repositoryService = getRepositoryServiceClass();
+					try {
+						if (repositoryService.isFileInRepository(newFileObj)) { // && !MessageDialog.openQuestion(new Shell(), "File present in repository", "File already present in repository. Click yes to overwrite")) {
+							/*MessageDialog.openWarning(new Shell(), "File present in repository", className + " is already present in repository. Please synchronise and try again.");
+							return;*/
+							createFileAlone = MessageDialog
+									.openQuestion(
+											new Shell(),
+											"File present in repository",
+											"File "
+													+ newFileObj.getName()
+													+ " already present in repository. Click yes to just create the file, No to return without any action.");
+							if (!createFileAlone) {
+								return;
+							}
 						}
+					} catch (final Throwable th) {
+						th.printStackTrace();
+						createFileAlone = true;
 					}
-				} catch (final Throwable th) {
-					th.printStackTrace();
-					createFileAlone = true;
 				}
+				final FastCodeCheckinCache checkinCache = FastCodeCheckinCache.getInstance();
+				checkinCache.getFilesToCheckIn().add(new FastCodeFileForCheckin(INITIATED, newFileObj.getAbsolutePath()));
+
+			} catch (final FastCodeRepositoryException ex) {
+				ex.printStackTrace();
 			}
-			final FastCodeCheckinCache checkinCache = FastCodeCheckinCache.getInstance();
-			checkinCache.getFilesToCheckIn().add(new FastCodeFileForCheckin(INITIATED, newFileObj.getAbsolutePath()));
-		} catch (final FastCodeRepositoryException ex) {
-			ex.printStackTrace();
 		}
 
 		/*if (parseClassName(insideTagBody) == null) {
@@ -1143,13 +1154,14 @@ public class TemplateTagsProcessor {
 		contextMap.put("Class_" + compilationUnit.getElementName(), new FastCodeObject(compilationUnit, ACTION_ENTITY.Class.getValue()));
 
 		if (!createFileAlone) {
-			final IFile file = (IFile) compilationUnit.findPrimaryType().getResource(); //.getLocationURI());
-			List<FastCodeEntityHolder> chngsForType = ((Map<Object, List<FastCodeEntityHolder>>) contextMap.get(FC_OBJ_CREATED)).get(file);
+			final IFile fileObj = (IFile) compilationUnit.findPrimaryType().getResource(); //.getLocationURI());
+			List<FastCodeEntityHolder> chngsForType = ((Map<Object, List<FastCodeEntityHolder>>) contextMap.get(FC_OBJ_CREATED))
+					.get(fileObj);
 			if (chngsForType == null) {
 				chngsForType = new ArrayList<FastCodeEntityHolder>();
 				chngsForType.add(new FastCodeEntityHolder(PLACEHOLDER_CLASS, new FastCodeType(compilationUnit.findPrimaryType())));
 			}
-			((Map<Object, List<FastCodeEntityHolder>>) contextMap.get(FC_OBJ_CREATED)).put(file, chngsForType);
+			((Map<Object, List<FastCodeEntityHolder>>) contextMap.get(FC_OBJ_CREATED)).put(fileObj, chngsForType);
 		}
 		/*final Map<String, Object> listofChange = ((Map<Object, Map<String, Object>>) contextMap.get("changes_for_File")).get(file);
 		if (chngsForType == null) {
@@ -1207,12 +1219,14 @@ public class TemplateTagsProcessor {
 		final Map<String, String> attributes;
 		String memberName = null;
 		String targetClass = null;
-		String dir = null;
+		String folderPath = null;
 		String memberSource = null;
 		boolean optional = false;
 		ACTION_TYPE actionType = ACTION_TYPE.Create;
 		String typeToCreate = null;
 		String delimiter = null;
+		String imprt = null;
+
 		final int tagEnd = tagFound == TemplateTag.IMPORT ? getTemplateTagStart(tagFound).length() + 1 : getTemplateTagStart(tagFound)
 				.length();
 		if (startTagEnd > tagEnd) {
@@ -1235,13 +1249,14 @@ public class TemplateTagsProcessor {
 			 * " is not synchronized ,Please refresh and try again."); }
 			 */
 
-			String classToImport = insideTagBody;
+			final String classToImport = insideTagBody;
 			IType type = null;
 			if (!isEmpty(insideTagBody) && insideTagBody.contains(XML_START + TEMPLATE_TAG_PREFIX + COLON)) {
 				throw new Exception("There should not be any other tags inside <fc:import>,  exiting....");
 			}
 			optional = attributes.containsKey(OPTIONAL) ? Boolean.valueOf(attributes.get(OPTIONAL)) : false;
-			if (isNativeType(classToImport)) {
+			type = validateClassToImport(insideTagBody, classToImport, compUnit);
+			/*if (isNativeType(classToImport)) {
 				return null;
 			}
 			final String fileExtension = compUnit.getResource().getFileExtension();
@@ -1315,6 +1330,9 @@ public class TemplateTagsProcessor {
 			}
 			if (type.equals(compUnit.findPrimaryType())) {
 				return null;
+			}*/
+			if (type == null) {
+				return null;
 			}
 			final String lblMgs = !isEmpty(insideTagBody) && insideTagBody.contains(HASH) ? classToImport : type.getFullyQualifiedName();
 			final Action actionImport = new Action.Builder().withEntity(ACTION_ENTITY.Import).withType(actionType)
@@ -1342,10 +1360,34 @@ public class TemplateTagsProcessor {
 				throw new Exception(
 						"Attribute \"name\" contains either java reserve word or not valid for method name ,Please provide correct one  for <fc:method> tag  in the XML and try again");
 			}
-			targetClass = attributes.containsKey(PLACEHOLDER_TARGET) ? attributes.get(PLACEHOLDER_TARGET) : null;
+			targetClass = attributes.containsKey(TARGET.clas.getValue()) ? attributes.get(TARGET.clas.getValue()) : null;
+			if (targetClass == null) {
+				targetClass = attributes.containsKey(PLACEHOLDER_TARGET) ? attributes.get(PLACEHOLDER_TARGET) : null;
+			}
 			optional = attributes.containsKey(OPTIONAL) ? Boolean.valueOf(attributes.get(OPTIONAL)) : false;
 			typeToCreate = attributes.containsKey(TYPE) ? attributes.get(TYPE) : null;
+			imprt = attributes.containsKey("import") ? attributes.get("import") : null;
+			final List<String> classToImportList = new ArrayList<String>();
 
+			if (!isEmpty(imprt)) {
+				for (final String clasToImport : imprt.split(SPACE)) {
+					classToImportList.add(clasToImport);
+				}
+				for (final String clasToImport : imprt.split(SPACE)) {
+					final IType type2 = validateClassToImport(clasToImport, clasToImport, compUnit);
+					if (type2 == null) {
+						classToImportList.remove(clasToImport);
+					}
+				}
+				String importNames = EMPTY_STR;
+				if (!classToImportList.isEmpty()) {
+					for (final String importName : classToImportList) {
+						importNames = importNames + importName + SPACE;
+
+					}
+					imprt = importNames;
+				}
+			}
 			if (!validateCompUnit(compUnit) && isEmpty(targetClass)) {
 				throw new Exception(
 						"<fc:method> needs Java class to be open in the editor. Compilation unit is null (no java class open in the editor) and there is no target class. Method cannot be created");
@@ -1461,7 +1503,7 @@ public class TemplateTagsProcessor {
 							createTargetClass ? "Create " + partLblMsg1 + " class " + targetClass + " and " + actionType.toString()
 									+ partLblMsg2 + " Method   " + memberName + " in " + targetClass : actionType.toString() + partLblMsg2
 									+ " Method   " + memberName + "  in class  " + type1.getElementName()).withOptional(optional)
-					.withTypeToCreate(typeToCreate)
+					.withTypeToCreate(typeToCreate).withImports(imprt)
 					/*.withExist(exist)*/.build();
 			return actionMethod;
 
@@ -1479,10 +1521,35 @@ public class TemplateTagsProcessor {
 			}
 			Action actionField = null;
 			memberName = attributes.containsKey(PLACEHOLDER_NAME) ? attributes.get(PLACEHOLDER_NAME) : null;
-			targetClass = attributes.containsKey(PLACEHOLDER_TARGET) ? attributes.get(PLACEHOLDER_TARGET) : null;
+			targetClass = attributes.containsKey(TARGET.clas.getValue()) ? attributes.get(TARGET.clas.getValue()) : null;
+			if (targetClass == null) {
+				targetClass = attributes.containsKey(PLACEHOLDER_TARGET) ? attributes.get(PLACEHOLDER_TARGET) : null;
+			}
 			optional = attributes.containsKey(OPTIONAL) ? Boolean.valueOf(attributes.get(OPTIONAL)) : false;
-			final String fieldType = attributes.containsKey(PLACEHOLDER_CLASS) ? attributes.get(PLACEHOLDER_CLASS) : null;
+			final String fieldType = attributes.containsKey("fieldClass") ? attributes.get("fieldClass") : null;
 
+			imprt = attributes.containsKey("import") ? attributes.get("import") : null;
+			final List<String> classToImportList1 = new ArrayList<String>();
+
+			if (!isEmpty(imprt)) {
+				for (final String clasToImport : imprt.split(SPACE)) {
+					classToImportList1.add(clasToImport);
+				}
+				for (final String clasToImport : imprt.split(SPACE)) {
+					final IType type2 = validateClassToImport(clasToImport, clasToImport, compUnit);
+					if (type2 == null) {
+						classToImportList1.remove(clasToImport);
+					}
+				}
+				String importNames = EMPTY_STR;
+				if (!classToImportList1.isEmpty()) {
+					for (final String importName : classToImportList1) {
+						importNames = importNames + importName + SPACE;
+
+					}
+					imprt = importNames;
+				}
+			}
 			if (memberName == null || memberName.equals(EMPTY_STR)) {
 				throw new Exception("Please provide attribute \"name\" for <fc:field> tag in the XML and try again");
 			} else if (isJavaReservedWord(memberName) || !isValidVariableName(memberName)) {
@@ -1554,8 +1621,8 @@ public class TemplateTagsProcessor {
 					.withLabelMsg(
 							createTargetClass1 ? "Create class " + targetClass + " and " + actionType.toString() + " Field  " + memberName
 									+ " in " + targetClass : actionType.toString() + " Field  " + memberName + "  in class  "
-									+ fastCodeType.getName()).withOptional(optional).withClassToImport(fieldType).withSubAction(this.subActions)
-					.build();
+									+ fastCodeType.getName()).withOptional(optional).withClassToImport(fieldType).withImports(imprt)
+					.withSubAction(this.subActions).build();
 			return actionField;
 
 		case FILE:
@@ -1566,22 +1633,25 @@ public class TemplateTagsProcessor {
 			} else if (tagFound == TemplateTag.FILES) {
 				memberName = attributes.containsKey(NAMES) ? attributes.get(NAMES) : null;
 			}
-			dir = attributes.containsKey(DIR) ? attributes.get(DIR) : null;
+			folderPath = attributes.containsKey(PLACEHOLDER_FOLDER) ? attributes.get(PLACEHOLDER_FOLDER) : null;
+			if (folderPath == null) {
+				folderPath = attributes.containsKey(DIR) ? attributes.get(DIR) : null;
+			}
 			optional = attributes.containsKey(OPTIONAL) ? Boolean.valueOf(attributes.get(OPTIONAL)) : false;
 			delimiter = attributes.containsKey(DELIMITER) ? attributes.get(DELIMITER) : SPACE;
 
-			if (dir != null) {
-				if (!dir.startsWith(HASH)) {
-					dir = validateDir(dir, attributes, placeHolders);
+			if (folderPath != null) {
+				if (!folderPath.startsWith(HASH)) {
+					folderPath = validateFolderPath(folderPath, attributes, placeHolders);
 				}
 			} else {
-				throw new Exception("Please provide attribute \"dir\" for <fc:" + tagFound.toString().toLowerCase()
-						+ "> dir attribute in the XML and try again. ");
+				throw new Exception("Please provide attribute \"folder\" for <fc:" + tagFound.toString().toLowerCase()
+						+ "> folder attribute in the XML and try again. ");
 			}
 			if (isEmpty(memberName)) {
 				final String name = tagFound == TemplateTag.FILE ? PLACEHOLDER_NAME : NAMES;
 				throw new Exception("Please provide attribute" + "\"" + name + "\" for <fc:" + tagFound.toString().toLowerCase()
-						+ "> dir attribute in the XML and try again. ");
+						+ "> folder attribute in the XML and try again. ");
 			}
 			if (!isEmpty(insideTagBody) && insideTagBody.contains(XML_START + TEMPLATE_TAG_PREFIX + COLON)) {
 				throw new Exception("There should not be any other tags inside <fc:" + tagFound.toString().toLowerCase()
@@ -1623,8 +1693,8 @@ public class TemplateTagsProcessor {
 				}
 			}
 
-			IFolder folder = dir.startsWith(HASH) ? ((FastCodeFolder) placeHolders.get(dir.replace(HASH, EMPTY_STR).trim())).getFolder()
-					: ResourcesPlugin.getWorkspace().getRoot().getFolder(new Path(dir));
+			IFolder folder = folderPath.startsWith(HASH) ? ((FastCodeFolder) placeHolders.get(folderPath.replace(HASH, EMPTY_STR).trim()))
+					.getFolder() : ResourcesPlugin.getWorkspace().getRoot().getFolder(new Path(folderPath));
 
 			if (folder.getProject() == null || !folder.getProject().exists()) {
 				final boolean confirm = MessageDialog.openConfirm(new Shell(), "Confirmation", "Project:  " + folder.getProject().getName()
@@ -1635,8 +1705,9 @@ public class TemplateTagsProcessor {
 					IJavaProject project1 = null;
 					if (folder.getProject() == null || !folder.getProject().exists()) {
 						project1 = getWorkingJavaProjectFromUser();
-						dir = project1.getElementName() + FORWARD_SLASH + folder.getParent().getName() + FORWARD_SLASH + folder.getName();
-						folder = ResourcesPlugin.getWorkspace().getRoot().getFolder(new Path(dir));
+						folderPath = project1.getElementName() + FORWARD_SLASH + folder.getParent().getName() + FORWARD_SLASH
+								+ folder.getName();
+						folder = ResourcesPlugin.getWorkspace().getRoot().getFolder(new Path(folderPath));
 					}
 				}
 			}
@@ -1686,7 +1757,7 @@ public class TemplateTagsProcessor {
 					.withEntity(tagFound == TemplateTag.FILE ? ACTION_ENTITY.File : ACTION_ENTITY.Files)
 					.withType(actionType)
 					.withEntityName(memberName)
-					.withDir(folder.getFullPath().toString())
+					.withFolderPath(folder.getFullPath().toString())
 					.withSource(isEmpty(insideTagBody) ? insideTagBody : insideTagBody.trim())
 					.withLabelMsg(
 							actionTypeLbl + SPACE + tagFound.toString().toLowerCase() + SPACE + labelMsgPart + "  in  " + msg1 + SPACE
@@ -1708,7 +1779,10 @@ public class TemplateTagsProcessor {
 			 */
 			final String nodeName = attributes.containsKey(NODE) ? attributes.get(NODE) : null;
 			final String rootNodeName = attributes.containsKey(PARENT) ? attributes.get(PARENT) : null;
-			final String target = attributes.containsKey(PLACEHOLDER_TARGET) ? attributes.get(PLACEHOLDER_TARGET) : null;
+			String targetFile = attributes.containsKey(TARGET.file.getValue()) ? attributes.get(TARGET.file.getValue()) : null;
+			if (targetFile == null) {
+				targetFile = attributes.containsKey(PLACEHOLDER_TARGET) ? attributes.get(PLACEHOLDER_TARGET) : null;
+			}
 			optional = attributes.containsKey(OPTIONAL) ? Boolean.valueOf(attributes.get(OPTIONAL)) : false;
 
 			if (!isEmpty(insideTagBody) && insideTagBody.contains(XML_START + TEMPLATE_TAG_PREFIX + COLON)) {
@@ -1717,7 +1791,7 @@ public class TemplateTagsProcessor {
 
 			final Action actionXML = new Action.Builder().withEntity(ACTION_ENTITY.Xml).withType(actionType).withNodeName(nodeName)
 					.withRootNodeName(rootNodeName).withSource(isEmpty(insideTagBody) ? insideTagBody : insideTagBody.trim())
-					.withTarget(target)
+					.withTarget(targetFile)
 					.withLabelMsg(actionType.toString() + " Xml tag with root node   " + rootNodeName + "  and with node  " + nodeName)
 					.withOptional(optional).build();
 
@@ -1737,8 +1811,8 @@ public class TemplateTagsProcessor {
 			typeToCreate = attributes.containsKey(TYPE) ? attributes.get(TYPE) : PLACEHOLDER_CLASS;
 			optional = attributes.containsKey(OPTIONAL) ? Boolean.valueOf(attributes.get(OPTIONAL)) : false;
 			delimiter = attributes.containsKey(DELIMITER) ? attributes.get(DELIMITER) : SPACE;
-			final boolean overrideMethods = attributes.containsKey("override_methods") ? Boolean.valueOf(attributes.get("override_methods"))
-					: false;
+			final boolean overrideMethods = attributes.containsKey("override_methods") ? Boolean
+					.valueOf(attributes.get("override_methods")) : false;
 			/*
 			 * IJavaProject prj = getJavaProject(project); if (prj == null) {
 			 * prj = getJavaProject((String)
@@ -1903,36 +1977,41 @@ public class TemplateTagsProcessor {
 
 		case FOLDER:
 
-			dir = attributes.containsKey(DIR) ? attributes.get(DIR) : null;
+			folderPath = attributes.containsKey(PLACEHOLDER_FOLDER) ? attributes.get(PLACEHOLDER_FOLDER) : null;
+			if (folderPath == null) {
+				folderPath = attributes.containsKey(DIR) ? attributes.get(DIR) : null;
+			}
 			optional = attributes.containsKey(OPTIONAL) ? Boolean.valueOf(attributes.get(OPTIONAL)) : false;
-			if (isEmpty(dir)) {
-				throw new Exception("Please provide attribute \"dir\" for <fc:folder> tag  in the XML and try again. ");
+			if (isEmpty(folderPath)) {
+				throw new Exception("Please provide attribute \"folder\" for <fc:folder> tag  in the XML and try again. ");
 			} else {
-				dir = validateDir(dir, attributes, placeHolders);
+				folderPath = validateFolderPath(folderPath, attributes, placeHolders);
 			}
 			if (!isEmpty(insideTagBody) && insideTagBody.contains(XML_START + TEMPLATE_TAG_PREFIX + COLON)) {
 				throw new Exception("There should not be any other tags inside <fc:folder>,  exiting....");
 			}
 			String prjt = null;
-			if (dir.contains(FORWARD_SLASH)) {
-				prjt = dir.substring(0, dir.indexOf(FORWARD_SLASH)).equals(EMPTY_STR) ? null : dir.substring(0, dir.indexOf(FORWARD_SLASH));
+			if (folderPath.contains(FORWARD_SLASH)) {
+				prjt = folderPath.substring(0, folderPath.indexOf(FORWARD_SLASH)).equals(EMPTY_STR) ? null : folderPath.substring(0,
+						folderPath.indexOf(FORWARD_SLASH));
 			}
 			IProject project1 = null;
 			if (prjt != null) {
 				project1 = getJavaProject(prjt).getProject();
 				final IWorkspaceRoot root = project1.getWorkspace().getRoot();
 				//final IPath searchPath = project.getFullPath().append(dir);
-				final IFolder existingFolder = root.getFolder(new Path(dir));
+				final IFolder existingFolder = root.getFolder(new Path(folderPath));
 				if (existingFolder.exists()) {
-					final String folderName = dir.contains(FORWARD_SLASH) ? dir.substring(dir.lastIndexOf(FORWARD_SLASH) + 1, dir.length())
-							: dir;
+					final String folderName = folderPath.contains(FORWARD_SLASH) ? folderPath.substring(
+							folderPath.lastIndexOf(FORWARD_SLASH) + 1, folderPath.length()) : folderPath;
 					this.existingMembersBuilder.append("Folder with Name: " + folderName);
 					this.existingMembersBuilder.append(SPACE + COMMA + SPACE);
 					return null;
 				}
 			}
-			final Action actionFolder = new Action.Builder().withEntity(ACTION_ENTITY.Folder).withType(actionType).withDir(dir)
-					.withLabelMsg(actionType.toString() + SPACE + "Folder: " + dir).withOptional(optional).withProject(project1).build();
+			final Action actionFolder = new Action.Builder().withEntity(ACTION_ENTITY.Folder).withType(actionType)
+					.withFolderPath(folderPath).withLabelMsg(actionType.toString() + SPACE + "Folder: " + folderPath)
+					.withOptional(optional).withProject(project1).build();
 			return actionFolder;
 			//break;
 
@@ -2037,24 +2116,27 @@ public class TemplateTagsProcessor {
 		case EXIT:
 
 			final String message = attributes.containsKey(PLACEHOLDER_MESSAGE) ? attributes.get(PLACEHOLDER_MESSAGE) : null;
-			optional = attributes.containsKey(OPTIONAL) ? Boolean.valueOf(attributes.get(OPTIONAL)) : false;
+			//optional = attributes.containsKey(OPTIONAL) ? Boolean.valueOf(attributes.get(OPTIONAL)) : false;
 			actionType = ACTION_TYPE.Prompt;
 			if (!isEmpty(insideTagBody) && insideTagBody.contains(XML_START + TEMPLATE_TAG_PREFIX + COLON)) {
 				throw new Exception("There should not be any other tags inside <fc:exit>,  exiting....");
 			}
 			final Action actionExit = new Action.Builder().withEntity(ACTION_ENTITY.Exit).withType(actionType)
-					.withLabelMsg("Exit : " + message).withOptional(optional).build();
+					.withLabelMsg("Exit : " + message).build();
 
 			return actionExit;
 			//break;
 		case PROPERTY:
 
-			final String targetFile = attributes.containsKey(PLACEHOLDER_TARGET) ? attributes.get(PLACEHOLDER_TARGET) : null;
+			String targetFile1 = attributes.containsKey(TARGET.file.getValue()) ? attributes.get(TARGET.file.getValue()) : null;
+			if (targetFile1 == null) {
+				targetFile1 = attributes.containsKey(PLACEHOLDER_TARGET) ? attributes.get(PLACEHOLDER_TARGET) : null;
+			}
 			//final IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(targetFile).makeAbsolute());
-			final IFile file = !isEmpty(targetFile) && targetFile.startsWith(HASH) ? ((FastCodeFile) placeHolders.get(targetFile.replace(
-					HASH, EMPTY_STR).trim())).getFile() : ResourcesPlugin.getWorkspace().getRoot()
-					.getFile(new Path(targetFile).makeAbsolute());
-			final String fileFullPath = !isEmpty(targetFile) && targetFile.startsWith(HASH) ? file.getFullPath().toString() : targetFile;
+			final IFile file = !isEmpty(targetFile1) && targetFile1.startsWith(HASH) ? ((FastCodeFile) placeHolders.get(targetFile1
+					.replace(HASH, EMPTY_STR).trim())).getFile() : ResourcesPlugin.getWorkspace().getRoot()
+					.getFile(new Path(targetFile1).makeAbsolute());
+			final String fileFullPath = !isEmpty(targetFile1) && targetFile1.startsWith(HASH) ? file.getFullPath().toString() : targetFile1;
 
 			/*	if (!file.getFileExtension().equals("properties")) {
 					throw new Exception("The File selected is not a property file. Please select one properties file and try again.");
@@ -2089,20 +2171,65 @@ public class TemplateTagsProcessor {
 		case SNIPPET:
 
 			final String source = replaceSpecialChars(insideTagBody);
-			final String targt = attributes.containsKey(PLACEHOLDER_TARGET) ? attributes.get(PLACEHOLDER_TARGET) : null;
-			final Object openFile = placeHolders.containsKey(ENCLOSING_CLASS_STR) ? ((FastCodeType) placeHolders.get(ENCLOSING_CLASS_STR))
-					.getFullyQualifiedName() : ((FastCodeFile) placeHolders.get(ENCLOSING_FILE_STR)).getFullPath();
+			final String targtClass = attributes.containsKey(TARGET.clas.getValue()) ? attributes.get(TARGET.clas.getValue()) : null;
+			if (targetClass == null) {
+				targetClass = attributes.containsKey(PLACEHOLDER_TARGET) ? attributes.get(PLACEHOLDER_TARGET) : null;
+			}
+			String targtFile = attributes.containsKey(TARGET.file.getValue()) ? attributes.get(TARGET.file.getValue()) : null;
+
+			if (targtFile == null) {
+				targtFile = attributes.containsKey(PLACEHOLDER_TARGET) ? attributes.get(PLACEHOLDER_TARGET) : null;
+			}
+			/*final Object openFile = placeHolders.containsKey(ENCLOSING_CLASS_STR) ? ((FastCodeType) placeHolders.get(ENCLOSING_CLASS_STR))
+					.getFullyQualifiedName() : ((FastCodeFile) placeHolders.get(ENCLOSING_FILE_STR)).getFullPath();*/
+			if (!isEmpty(targtClass) && !isEmpty(targtFile)) {
+				throw new Exception(
+						"Please provide either attribute \"class\" or attribute \"file\" in <fc:snippet> tag in the xml and try again.");
+			}
 			Object targetObj = null;
-			String lblmsg = openFile.toString();
-			if (!isEmpty(targt) && targt.startsWith(HASH)) {
-				targetObj = placeHolders.get(targt.replace(HASH, EMPTY_STR).trim());
-				if (targetObj != null && targetObj instanceof FastCodeType) {
-					targetObj = ((FastCodeType) targetObj).getiType();
-					lblmsg = ((IType) targetObj).getFullyQualifiedName();
-				} else if (targetObj != null && targetObj instanceof FastCodeFile) {
-					targetObj = ((FastCodeFile) targetObj).getFile();
-					lblmsg = ((IFile) targetObj).getFullPath().toString();
+			String lblmsg = null;
+			boolean createTargetClas = false;
+			FastCodeType fCodeType = null;
+
+			if (!isEmpty(targtClass)) {
+				//have to check if class is there in placeholder
+				IJavaProject javaPrj = null;
+				if (compUnit == null) {
+					final FastCodeProject codeProject = (FastCodeProject) placeHolders.get(PLACEHOLDER_PROJECT);
+					if (codeProject.getJavaProject() != null) {
+						javaPrj = codeProject.getJavaProject();
+					}
+				} else {
+					javaPrj = compUnit.getJavaProject();
 				}
+				fastCodeType = targtClass.startsWith(HASH) ? (FastCodeType) placeHolders.get(targtClass.replace(HASH, EMPTY_STR).trim())
+						: new FastCodeType(javaPrj.findType(targtClass.trim()));
+				if (fastCodeType.getiType() == null) {
+					//have to put code for creating the class
+
+					createTargetClas = true;
+					fastCodeType = new FastCodeType(targetClass);
+
+				}
+			} else {
+				fCodeType = (FastCodeType) placeHolders.get(ENCLOSING_CLASS_STR);
+			}
+			targetObj = fCodeType;
+			if (!createTargetClas) {
+				validateTargetClassType(compUnit, targetClass, fCodeType.getiType());
+			}
+			FastCodeFile fastCodeFile = null;
+			if (!isEmpty(targtFile)) {
+				fastCodeFile = targtFile.startsWith(HASH) ? (FastCodeFile) placeHolders.get(targtFile.replace(HASH, EMPTY_STR).trim())
+						: new FastCodeFile(findFileFromPath(targtFile));
+			} else {
+				fastCodeFile = (FastCodeFile) placeHolders.get(ENCLOSING_FILE_STR);
+			}
+			targetObj = fastCodeFile;
+			if (targetObj instanceof FastCodeType) {
+				lblmsg = ((FastCodeType) targetObj).getFullyQualifiedName();
+			} else if (targetObj instanceof FastCodeFile) {
+				lblmsg = ((FastCodeFile) targetObj).getFullPath();
 			}
 			//if target does not contain # ,it can be file/class.How to check that?
 
@@ -2122,6 +2249,104 @@ public class TemplateTagsProcessor {
 		//break;
 		return null;
 
+	}
+
+	/**
+	 * @param insideTagBody
+	 * @param classToImport
+	 * @param compUnit
+	 * @return
+	 * @throws Exception
+	 */
+	private IType validateClassToImport(final String insideTagBody, String classToImport, final ICompilationUnit compUnit) throws Exception {
+		IType type = null;
+		if (isNativeType(classToImport)) {
+			return null;
+		}
+		final String fileExtension = compUnit.getResource().getFileExtension();
+		if (insideTagBody.contains(HASH)) {
+			final String part1 = insideTagBody.substring(0, insideTagBody.indexOf(HASH)).trim();
+			final String part2 = insideTagBody.substring(insideTagBody.indexOf(HASH) + 1, insideTagBody.length()).trim();
+			classToImport = part1 + DOT + part2;
+			type = compUnit.getJavaProject().findType(part1);
+			if (doesImportExistInType(classToImport, compUnit)) {
+				return null;
+			}
+		} else {
+
+			final FastCodeType fastCodeType = parseType(classToImport, compUnit);
+			type = compUnit.getJavaProject().findType(fastCodeType.getFullyQualifiedName());
+			if (type == null || !type.exists()) {
+				//throw new Exception("Java class " + fastCodeType.getFullyQualifiedName() + " does not exit");
+				MessageDialog.openError(new Shell(), "Error", "Java class " + fastCodeType.getFullyQualifiedName() + " does not exit");
+				return null;
+			}
+			for (final FastCodeType codeType : fastCodeType.getParameters()) {
+				if (codeType.getParameters().size() > 0) {
+					type = compUnit.getJavaProject().findType(codeType.getFullyQualifiedName());
+					if (type == null || !type.exists()) {
+						//throw new Exception("Java class " + codeType.getFullyQualifiedName() + " does not exit");
+						MessageDialog.openError(new Shell(), "Error", "Java class " + codeType.getFullyQualifiedName() + " does not exit");
+						return null;
+					}
+					if (isImportFromDefaultPkg(type, fileExtension)) {
+						return null;
+					}
+					if (doesImportExistInType(type.getFullyQualifiedName(), compUnit)) {
+						return null;
+					}
+					if (type.equals(compUnit.findPrimaryType())) {
+						return null;
+					}
+					for (final FastCodeType type2 : codeType.getParameters()) {
+						type = compUnit.getJavaProject().findType(type2.getFullyQualifiedName());
+						if (type == null || !type.exists()) {
+							//throw new Exception("Java class " + type2.getFullyQualifiedName() + " does not exit");
+							MessageDialog.openError(new Shell(), "Error", "Java class " + type2.getFullyQualifiedName() + " does not exit");
+							return null;
+						}
+						if (isImportFromDefaultPkg(type, fileExtension)) {
+							return null;
+						}
+						if (doesImportExistInType(type.getFullyQualifiedName(), compUnit)) {
+							return null;
+						}
+						if (type.equals(compUnit.findPrimaryType())) {
+							return null;
+						}
+					}
+				}
+				if (type == null || !type.exists()) {
+					//throw new Exception("Java class " + classToImport + " does not exit");
+					MessageDialog.openError(new Shell(), "Error", "Java class " + classToImport + " does not exit");
+					return null;
+				}
+				if (isImportFromDefaultPkg(type, fileExtension)) {
+					return null;
+				}
+				if (doesImportExistInType(type.getFullyQualifiedName(), compUnit)) {
+					return null;
+				}
+				if (type.equals(compUnit.findPrimaryType())) {
+					return null;
+				}
+			}
+			if (doesImportExistInType(type.getFullyQualifiedName(), compUnit)) {
+				return null;
+			}
+		}
+		if (type == null || !type.exists()) {
+			//throw new Exception("Java class " + classToImport + " does not exit");
+			MessageDialog.openError(new Shell(), "Error", "Java class " + classToImport + " does not exit");
+			return null;
+		}
+		if (isImportFromDefaultPkg(type, fileExtension)) {
+			return null;
+		}
+		if (type.equals(compUnit.findPrimaryType())) {
+			return null;
+		}
+		return type;
 	}
 
 	/**
@@ -2153,7 +2378,8 @@ public class TemplateTagsProcessor {
 	 * @return
 	 * @throws Exception
 	 */
-	private String buildMemberSrc(final String memberName, final String returnType, final String parameters, final String modifier, final IType type1) throws Exception {
+	private String buildMemberSrc(final String memberName, final String returnType, final String parameters, final String modifier,
+			final IType type1) throws Exception {
 		final GlobalSettings globalSettings = GlobalSettings.getInstance();
 		final Map<String, Object> placeHoldersForMethod = new HashMap<String, Object>();
 		String fullMethodPattern = EMPTY_STR;
@@ -2561,14 +2787,16 @@ public class TemplateTagsProcessor {
 			break;
 		case Method:
 			createMethodFromTag(actionSelected.getEntityName(), actionSelected.getSource(), (FastCodeType) actionSelected.getTarget(),
-					actionSelected.getTypeToCreate(), contextMap, spacesBeforeCursor, placeHolders, compUnit, editorPart);
+					actionSelected.getTypeToCreate(), actionSelected.getImports(), contextMap, spacesBeforeCursor, placeHolders, compUnit,
+					editorPart);
 			break;
 		case Field:
 			createFieldFromTag(actionSelected.getEntityName(), actionSelected.getSource(), (FastCodeType) actionSelected.getTarget(),
-					actionSelected.getClassToImport(), contextMap, spacesBeforeCursor, placeHolders, editorPart);
+					actionSelected.getClassToImport(), actionSelected.getImports(), contextMap, spacesBeforeCursor, placeHolders, compUnit,
+					editorPart);
 			break;
 		case File:
-			createFileFromTag(actionSelected.getEntityName(), actionSelected.getDir(), actionSelected.getSource(), contextMap,
+			createFileFromTag(actionSelected.getEntityName(), actionSelected.getFolderPath(), actionSelected.getSource(), contextMap,
 					placeHolders, actionSelected.isExist());
 			break;
 		case Xml:
@@ -2581,7 +2809,7 @@ public class TemplateTagsProcessor {
 					actionSelected.isOverrideMethods(), actionSelected.isExist(), editorPart);
 			break;
 		case Folder:
-			createFolderFromTag(actionSelected.getDir(), actionSelected.getProject(), placeHolders, contextMap);//createFolder(new Path(actionSelected.getDir()));
+			createFolderFromTag(actionSelected.getFolderPath(), actionSelected.getProject(), placeHolders, contextMap);//createFolder(new Path(actionSelected.getDir()));
 			break;
 		case Package:
 			createPackageFromTag(actionSelected.getEntityName(), actionSelected.getTypeToCreate(), actionSelected.getProject(), contextMap,
@@ -2595,7 +2823,7 @@ public class TemplateTagsProcessor {
 			break;*/
 		case Files:
 			for (final String fileName : actionSelected.getEntityName().split(actionSelected.getDelimiter())) {
-				createFileFromTag(fileName.trim(), actionSelected.getDir(), actionSelected.getSource(), contextMap, placeHolders,
+				createFileFromTag(fileName.trim(), actionSelected.getFolderPath(), actionSelected.getSource(), contextMap, placeHolders,
 						actionSelected.isExist());
 			}
 			break;
@@ -2704,7 +2932,8 @@ public class TemplateTagsProcessor {
 	 * @return
 	 * @throws Exception
 	 */
-	private String validateDir(String dir, final Map<String, String> attributes, final Map<String, Object> placeHolders) throws Exception {
+	private String validateFolderPath(String dir, final Map<String, String> attributes, final Map<String, Object> placeHolders)
+			throws Exception {
 		if (dir != null) {
 			String project = null;
 			if (dir.contains(FORWARD_SLASH)) {
