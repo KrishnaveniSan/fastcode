@@ -595,8 +595,7 @@ public class CreateTableDialog extends TrayDialog {
 					CreateTableDialog.this.columnTypeCombo.setEnabled(false);
 					CreateTableDialog.this.columnTypeCombo.select(0);
 					//CreateTableDialog.this.defaultValue.setText(null);
-					CreateTableDialog.this.createTableData.setColumnTypeSize(Integer.parseInt(CreateTableDialog.this.columnTypeSize
-							.getText()));
+					CreateTableDialog.this.createTableData.setColumnTypeSize(0);
 				}
 			}
 

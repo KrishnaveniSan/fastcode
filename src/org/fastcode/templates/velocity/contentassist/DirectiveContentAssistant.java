@@ -3,6 +3,7 @@ package org.fastcode.templates.velocity.contentassist;
 import static org.fastcode.common.FastCodeConstants.DOUBLE_SLASH_CHAR;
 import static org.fastcode.common.FastCodeConstants.EMPTY_QUOTE_STR;
 import static org.fastcode.common.FastCodeConstants.EMPTY_STR;
+import static org.fastcode.common.FastCodeConstants.SPACE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,13 +81,15 @@ public class DirectiveContentAssistant extends AbstractTemplateContentAssistant 
 	}
 
 	private boolean isTargetAttribute(final IDocument document, final int offset, final int length) throws BadLocationException {
-		final IRegion region = document.getLineInformationOfOffset(offset);
+	final IRegion region = document.getLineInformationOfOffset(offset);
 		/*System.out.println(region.toString());
 		System.out.println(length);
 		System.out.println(offset);*/
-		final String textBeforeContent = document.get(region.getOffset(), offset - region.getOffset() - 6);
+		final int pos = getAttributPos(document, region, offset);
+
+		final String textBeforeContent = document.get(region.getOffset(), pos - region.getOffset());
 		if (textBeforeContent.contains(FC_TAG_START)) {
-			final String attibute = document.get(offset - 6, 6);
+			final String attibute = document.get(pos, offset - pos).trim();
 			if (attibute.equalsIgnoreCase(TARGET.target.getValue()) || attibute.equalsIgnoreCase(TARGET.clas.getValue())
 					|| attibute.equalsIgnoreCase(TARGET.file.getValue()) || attibute.equalsIgnoreCase(TARGET.packag.getValue())
 					|| attibute.equalsIgnoreCase(TARGET.folder.getValue())) {
@@ -95,6 +98,17 @@ public class DirectiveContentAssistant extends AbstractTemplateContentAssistant 
 		}
 
 		return false;
+	}
+
+	private int getAttributPos(final IDocument document, final IRegion region, final int offset) throws BadLocationException {
+		int attriStartPos = 0;
+		for (int i = offset; i > region.getOffset(); i--) {
+			if (document.get(i, 1).equals(SPACE)) {
+				attriStartPos = i;
+				break;
+			}
+		}
+		return attriStartPos;
 	}
 
 	private boolean isValidElement(final String element) {
@@ -108,7 +122,6 @@ public class DirectiveContentAssistant extends AbstractTemplateContentAssistant 
 				return false;
 			}
 		}
-
 		return true;
 	}
 }

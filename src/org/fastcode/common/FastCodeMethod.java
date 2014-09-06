@@ -66,7 +66,6 @@ public final class FastCodeMethod extends FastCodeEntity {
 					paramFQName = getFQNameFromFieldTypeName(fastCodeType.getName(), method.getCompilationUnit());
 				} else {
 					paramFQName = Signature.getSignatureQualifier(parameter) + "." + getSignatureSimpleName(parameter);
-
 				}
 				paramFQNameBuffer.append(EMPTY_STR.equals(paramFQNameBuffer.toString()) ? paramFQName : COMMA + paramFQName);
 			}

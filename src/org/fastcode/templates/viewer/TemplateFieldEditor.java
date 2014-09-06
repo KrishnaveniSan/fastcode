@@ -33,11 +33,11 @@ import org.fastcode.templates.contentassist.TemplateAssistProcessor;
 import org.fastcode.templates.rules.FastCodeTemplateCodeScanner;
 import org.fastcode.templates.rules.IRulesStrategy;
 import org.fastcode.templates.rules.ParameterRulesContext;
-import org.fastcode.templates.rules.VelocityRulesContext;
+import org.fastcode.templates.rules.FastCodeRulesContext;
 
 public class TemplateFieldEditor extends FieldEditor {
 
-	VelocityRulesContext					ctx						= new VelocityRulesContext();
+	FastCodeRulesContext					ctx						= new FastCodeRulesContext();
 	private final Composite					parent;
 	private FastCodeTemplateViewer			fastCodeTemplateViewerField;
 	public static final int					VALIDATE_ON_KEY_STROKE	= 0;
@@ -190,13 +190,12 @@ public class TemplateFieldEditor extends FieldEditor {
 			this.autoEditStrategies = pc.getTemplateAutoEditStrategies();
 			this.textHover = pc.getTemplateTextHover(null);
 			this.ruleStrategies = pc.getParameterRuleStrategies();
-
 		} else {
 
 			this.assistants = this.ctx.getTemplateContentAssistants(null);
 			this.fcTagAssistants = this.ctx.getFCTagContentAssistants(null);
 			this.ruleStrategies = this.ctx.getTemplateRuleStrategies();
-//			this.fcTagRuleStrategies = this.ctx.getFCTagRuleStrategies();
+			this.fcTagRuleStrategies = this.ctx.getFCTagRuleStrategies();
 			if (templateType.equals(P_DATABASE_TEMPLATE_PREFIX)) {
 				this.assistants = this.ctx.getDBTemplateContentAssistants(null);
 			}
@@ -213,7 +212,8 @@ public class TemplateFieldEditor extends FieldEditor {
 		this.fcTagAssistProcessor.setAssistants(this.fcTagAssistants);
 
 		final SourceViewerConfiguration configuration = new FastCodeTemplateViewerConfiguration(new FastCodeTemplateCodeScanner(
-				this.ruleStrategies), this.textHover, this.autoEditStrategies, this.templateAssistProcessor, this.fcTagAssistProcessor);
+				this.ruleStrategies), new FastCodeTemplateCodeScanner(
+						this.fcTagRuleStrategies), this.textHover, this.autoEditStrategies, this.templateAssistProcessor, this.fcTagAssistProcessor);
 		this.fastCodeTemplateViewerField.configure(configuration);
 
 	}
@@ -228,7 +228,8 @@ public class TemplateFieldEditor extends FieldEditor {
 		//this.templateAssistProcessor.setFcMethodassistants(this.fcTagAssistants);
 		this.fcTagAssistProcessor.setAssistants(this.fcTagAssistants);
 		final SourceViewerConfiguration configuration = new FastCodeTemplateViewerConfiguration(new FastCodeTemplateCodeScanner(
-				this.ruleStrategies), this.textHover, this.autoEditStrategies, this.templateAssistProcessor, this.fcTagAssistProcessor);
+				this.ruleStrategies), new FastCodeTemplateCodeScanner(
+						this.fcTagRuleStrategies), this.textHover, this.autoEditStrategies, this.templateAssistProcessor, this.fcTagAssistProcessor);
 		this.fastCodeTemplateViewerField.configure(configuration);
 
 	}

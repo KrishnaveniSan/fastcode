@@ -28,11 +28,12 @@
 		<allowed-file-names>*.java</allowed-file-names>
 		<first-template-item number-required-items="1">class</first-template-item>
 		<second-template-item getter-setter="setter">field</second-template-item>
-		<additional-parameters>targetClass:class staticImport:boolean methodName(value="create${class.name}")</additional-parameters>
+		<additional-parameters>targetClass:class staticImport:boolean methodName(value="create${class.name}") generateComment:boolean </additional-parameters>
 		<template-body>
 			<![CDATA[
 						<fc:method name="${methodName}" target="${targetClass.fullyQualifiedName}" optional="false">
 						<fc:import>${class.fullyQualifiedName}</fc:import>
+						#if (${generateComment})
 						/**
 						 * This will create an instance of ${class.name}
 						 *
@@ -42,6 +43,7 @@
 						 * @return
 						 *
 						 */
+						#end
 						public static ${class.name} create${class.name}(#foreach ($field in ${fields}) final ${field.type.name} ${field.name} #if ($foreach.count < ${fields.size()}),#end #end) {
 						final ${class.name} ${class.defaultInstance} = new ${class.name}();
 						#foreach ($field in ${fields})

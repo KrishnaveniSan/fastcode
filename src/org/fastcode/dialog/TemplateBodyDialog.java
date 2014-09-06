@@ -14,6 +14,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.fastcode.common.FastCodeConstants.FIELDS;
 import org.fastcode.templates.viewer.TemplateFieldEditor;
 
+@Deprecated
 public class TemplateBodyDialog extends StatusDialog {
 
 	private Composite	parent;

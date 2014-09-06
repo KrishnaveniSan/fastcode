@@ -23,7 +23,7 @@ import org.fastcode.templates.velocity.contentassist.TemplateTextHover;
 import org.fastcode.templates.velocity.rules.DirectiveRulesStrategie;
 import org.fastcode.templates.velocity.rules.TemplateVariableRulesStrategie;
 
-public class VelocityRulesContext {
+public class FastCodeRulesContext {
 
 	public IRulesStrategy[] getTemplateRuleStrategies() {
 		final IRulesStrategy[] ruleStrategies = { new TemplateVariableRulesStrategie(), new DirectiveRulesStrategie(),
@@ -33,7 +33,7 @@ public class VelocityRulesContext {
 
 	public IRulesStrategy[] getFCTagRuleStrategies() {
 		final IRulesStrategy[] ruleStrategies = { new TemplateVariableRulesStrategie(), new DirectiveRulesStrategie(),
-				new TemplateRulesStrategie(), new FastCodeKeywordRulesStrategie(), new FastCodeJavaKeywordRulesStrategie() };
+				new TemplateRulesStrategie(), new FastCodeKeywordRulesStrategie() , new FastCodeJavaKeywordRulesStrategie(), new FastCodeJavaCommentRulesStrategie() };
 		return ruleStrategies;
 	}
 
@@ -95,4 +95,5 @@ public class VelocityRulesContext {
 		};
 		return assistants;
 	}*/
+
 }

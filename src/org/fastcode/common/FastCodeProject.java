@@ -2,13 +2,15 @@ package org.fastcode.common;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IJavaProject;
+import org.fastcode.util.SourceUtil;
+
 
 public class FastCodeProject extends FastCodeEntity {
 
 	private IProject		project;
 	private IJavaProject	javaProject;
 	private String			path;
-	
+
 	public FastCodeProject(final IProject project) {
 		super();
 		if (project == null || !project.exists()) {
@@ -18,6 +20,7 @@ public class FastCodeProject extends FastCodeEntity {
 		this.project = project;
 		this.name = project.getName();
 		this.path = project.getFullPath().toString();
+		this.javaProject = SourceUtil.getJavaProject(project);
 	}
 
 	public FastCodeProject(final IJavaProject project) {
@@ -53,10 +56,10 @@ public class FastCodeProject extends FastCodeEntity {
 	}
 
 	public IJavaProject getJavaProject() {
-		return javaProject;
+		return this.javaProject;
 	}
 
-	public void setJavaProject(IJavaProject javaProject) {
+	public void setJavaProject(final IJavaProject javaProject) {
 		this.javaProject = javaProject;
 	}
 
@@ -79,5 +82,4 @@ public class FastCodeProject extends FastCodeEntity {
 	public void setPath(final String path) {
 		this.path = path;
 	}
-
 }

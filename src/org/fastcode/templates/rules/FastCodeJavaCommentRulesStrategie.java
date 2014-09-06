@@ -1,0 +1,36 @@
+package org.fastcode.templates.rules;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.eclipse.jface.text.rules.EndOfLineRule;
+import org.eclipse.jface.text.rules.IPredicateRule;
+import org.eclipse.jface.text.rules.IRule;
+import org.eclipse.jface.text.rules.IToken;
+import org.eclipse.jface.text.rules.MultiLineRule;
+import org.eclipse.jface.text.rules.WordRule;
+import org.fastcode.FastCodeColorManager;
+import org.fastcode.templates.velocity.rules.FastCodeJavaCommentDetector;
+
+public class FastCodeJavaCommentRulesStrategie implements IRulesStrategy {
+
+	/*
+	 * @see org.fastcode.templates.rules.IRulesStrategy#createRules()
+	 */
+	public List<IRule> createRules() {
+		final List<IRule> rules = new ArrayList<IRule>();
+		// Add word rule for java reserved words
+		final IToken token = FastCodeColorManager.getToken("COMMENT");
+
+		final WordRule wordRule = new WordRule(new FastCodeJavaCommentDetector(), FastCodeColorManager.getToken("NORMAL"));
+			/*wordRule.addWord("/*", token);
+			wordRule.addWord("//", token);*/
+		//rules.add(wordRule);
+
+		rules.add(new EndOfLineRule("//", token));
+		rules.add(new MultiLineRule("/*", "*/", token));
+
+		return rules;
+	}
+
+}

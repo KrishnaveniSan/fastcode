@@ -8,6 +8,7 @@ import org.eclipse.jface.text.rules.IRule;
 import org.eclipse.jface.text.rules.RuleBasedScanner;
 import org.eclipse.jface.text.rules.WhitespaceRule;
 import org.fastcode.FastCodeColorManager;
+import static org.fastcode.util.FastCodeUtil.getEmptyArrayForNull;
 
 /**
  * Scanner for template code.
@@ -47,7 +48,7 @@ public class FastCodeTemplateCodeScanner extends RuleBasedScanner {
 		rules.add(new WhitespaceRule(new WhitespaceDetector()));
 
 		// add rules from strategies
-		for (int i = 0; i < this.ruleStrategies.length; ++i) {
+		for (int i = 0; i < getEmptyArrayForNull(this.ruleStrategies).length; ++i) {
 			rules.addAll(this.ruleStrategies[i].createRules());
 		}
 

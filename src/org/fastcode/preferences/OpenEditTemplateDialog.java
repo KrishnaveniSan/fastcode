@@ -987,7 +987,7 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 			templatePreferencePart.getterSetterRadioButton.setEnabled(false, this.parent);
 			templatePreferencePart.numberOfRequiredClassesField.setEnabled(false, this.parent);
 			getPreferenceStore().setValue(
-					getTemplatePreferenceKey(this.templatePreferencePart.templateName, P_TEMPLATE_NUMBER_REQUIRED_ITEMS), 0);
+					getTemplatePreferenceKey(this.templatePreferencePart.templateName, P_TEMPLATE_NUMBER_REQUIRED_ITEMS), 1);
 			templatePreferencePart.numberOfRequiredClassesField.load();
 			templatePreferencePart.itemPatternField.setEnabled(true, this.parent);
 			//templatePreferencePart.itemPatternField.setEnabled(true, this.parent);
@@ -1002,7 +1002,7 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 			templatePreferencePart.numberOfRequiredClassesField.setEnabled(false, this.parent);
 			templatePreferencePart.itemPatternField.setEnabled(true, this.parent);
 			getPreferenceStore().setValue(
-					getTemplatePreferenceKey(this.templatePreferencePart.templateName, P_TEMPLATE_NUMBER_REQUIRED_ITEMS), 0);
+					getTemplatePreferenceKey(this.templatePreferencePart.templateName, P_TEMPLATE_NUMBER_REQUIRED_ITEMS), 1);
 			templatePreferencePart.numberOfRequiredClassesField.load();
 			getPreferenceStore().setValue(getTemplatePreferenceKey(this.templatePreferencePart.templateName, P_TEMPLATE_GETTER_SETTER),
 					GETTER_SETTER.NONE.getValue());
@@ -1020,7 +1020,7 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 			}
 			templatePreferencePart.numberOfRequiredClassesField.setEnabled(false, this.parent);
 			getPreferenceStore().setValue(
-					getTemplatePreferenceKey(this.templatePreferencePart.templateName, P_TEMPLATE_NUMBER_REQUIRED_ITEMS), 0);
+					getTemplatePreferenceKey(this.templatePreferencePart.templateName, P_TEMPLATE_NUMBER_REQUIRED_ITEMS), 1);
 			templatePreferencePart.numberOfRequiredClassesField.load();
 		} else if (newValueOfFirstTemplateItem.equals(FIRST_TEMPLATE.None.getValue())) {
 

@@ -3,6 +3,7 @@ package org.fastcode.templates.viewer;
 import org.eclipse.jface.text.IAutoEditStrategy;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextHover;
+import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.contentassist.ContentAssistant;
 import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.jface.text.contentassist.IContentAssistant;
@@ -11,6 +12,7 @@ import org.eclipse.jface.text.presentation.PresentationReconciler;
 import org.eclipse.jface.text.rules.DefaultDamagerRepairer;
 import org.eclipse.jface.text.rules.IToken;
 import org.eclipse.jface.text.rules.ITokenScanner;
+import org.eclipse.jface.text.rules.Token;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.text.source.SourceViewerConfiguration;
 import org.fastcode.FastCodeColorManager;
@@ -24,6 +26,7 @@ public class FastCodeTemplateViewerConfiguration extends SourceViewerConfigurati
 
 	private ITextHover				textHover;
 	private ITokenScanner			tokenScanner;
+	private ITokenScanner			fcTagTokenScanner;
 	private IAutoEditStrategy[]		autoEditStrategies;
 	private IContentAssistProcessor	assistProcessor;
 	private IContentAssistProcessor	fcTagProcessor;
@@ -35,7 +38,7 @@ public class FastCodeTemplateViewerConfiguration extends SourceViewerConfigurati
 	 * @param textHover the text hover
 	 */
 	public FastCodeTemplateViewerConfiguration(final ITokenScanner tokenScanner, final ITextHover textHover) {
-		this(tokenScanner, textHover, null, null, null);
+		this(tokenScanner, null, textHover, null, null, null);
 	}
 
 	/**
@@ -46,12 +49,13 @@ public class FastCodeTemplateViewerConfiguration extends SourceViewerConfigurati
 	 * @param autoEditStrategies the auto edit strategies
 	 * @param assistProcessor the assist processor
 	 */
-	public FastCodeTemplateViewerConfiguration(final ITokenScanner tokenScanner, final ITextHover textHover, final IAutoEditStrategy[] autoEditStrategies, final IContentAssistProcessor assistProcessor, final IContentAssistProcessor fcTagProcessor) {
+	public FastCodeTemplateViewerConfiguration(final ITokenScanner tokenScanner, final ITokenScanner fcTagTokenScanner,final ITextHover textHover, final IAutoEditStrategy[] autoEditStrategies, final IContentAssistProcessor assistProcessor, final IContentAssistProcessor fcTagProcessor) {
 		this.textHover = textHover;
 		this.tokenScanner = tokenScanner;
 		this.assistProcessor = assistProcessor;
 		this.autoEditStrategies = autoEditStrategies;
 		this.fcTagProcessor = fcTagProcessor;
+		this.fcTagTokenScanner = fcTagTokenScanner;
 	}
 
 	public FastCodeTemplateViewerConfiguration() {
@@ -152,15 +156,16 @@ public class FastCodeTemplateViewerConfiguration extends SourceViewerConfigurati
 		rec.setDamager(dr, IDocument.DEFAULT_CONTENT_TYPE);
 		rec.setRepairer(dr, IDocument.DEFAULT_CONTENT_TYPE);
 
-		dr = new DefaultDamagerRepairer(this.tokenScanner);
+		dr = new DefaultDamagerRepairer(this.fcTagTokenScanner);
 		rec.setDamager(dr, FastCodeTemplatePartitions.FC_METHOD);
 		rec.setRepairer(dr, FastCodeTemplatePartitions.FC_METHOD);
 
-		dr = new DefaultDamagerRepairer(this.tokenScanner);
+		dr = new DefaultDamagerRepairer(this.fcTagTokenScanner);
 		rec.setDamager(dr, FastCodeTemplatePartitions.FC_FIELD);
 		rec.setRepairer(dr, FastCodeTemplatePartitions.FC_FIELD);
 
-		dr = new DefaultDamagerRepairer(this.tokenScanner);
+		//final IToken fcClassToken = FastCodeColorManager.getToken("JAVA_KEYWORD");
+		dr = new DefaultDamagerRepairer(this.fcTagTokenScanner); //new SingleTokenScanner(fcClassToken));
 		rec.setDamager(dr, FastCodeTemplatePartitions.FC_CLASS);
 		rec.setRepairer(dr, FastCodeTemplatePartitions.FC_CLASS);
 

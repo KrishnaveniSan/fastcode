@@ -1706,13 +1706,13 @@
                label="New Class With Fields"
                menubarPath="FastCode.menu1/group1">
          </action>
-        <!-- <action
+        <action
                class="org.fastcode.versioncontrol.CommitMultipleFileAction"
                definitionId="FastCode.commitmultiplefileaction.command"
                id="FastCode.commitmultiplefileaction.command"
                label="Check In"
                menubarPath="FastCode.menu1/group1">
-         </action>-->
+         </action>
       </objectContribution>
       </extension>
 

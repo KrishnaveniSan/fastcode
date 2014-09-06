@@ -124,6 +124,12 @@
 		<function-proposal proposal="extension" prefix="file - "
 			description="extension" offset="0" basic="false">
 		</function-proposal>
+		<function-proposal proposal="path" prefix="file - "
+			description="path" offset="0" basic="false">
+		</function-proposal>
+		<function-proposal proposal="project" prefix="file - "
+			description="project" offset="0" basic="false">
+		</function-proposal>
 	</element-proposal>
 	<element-proposal proposal="property" prefix="property"
 			description=" " offset="0" basic="true">
@@ -225,6 +231,16 @@
 		</function-proposal>
 		<function-proposal proposal="step" prefix="intRange - "
 			description="step" offset="0" basic="false">
+		</function-proposal>
+	</element-proposal>
+
+	<element-proposal proposal="localvar" prefix="localvar - "
+		description=" " offset="0" basic="true">
+		<function-proposal proposal="name" prefix="localvar - "
+			description="  name " offset="0" basic="false">
+		</function-proposal>
+		<function-proposal proposal="type.name" prefix="localvar - "
+			description="  type.name " offset="0" basic="false">
 		</function-proposal>
 	</element-proposal>
 </root>

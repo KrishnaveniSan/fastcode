@@ -2,6 +2,7 @@ package org.fastcode;
 
 import static org.fastcode.common.FastCodeConstants.COMMA;
 import static org.fastcode.util.FastCodeUtil.closeInputStream;
+import static org.fastcode.util.StringUtil.isEmpty;
 
 import java.io.InputStream;
 import java.util.Enumeration;
@@ -16,6 +17,7 @@ import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.rules.IToken;
 import org.eclipse.jface.text.rules.Token;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.RGB;
 
 /**
@@ -41,16 +43,21 @@ public final class FastCodeColorManager {
 		while (keys.hasMoreElements()) {
 
 			final String string = prop.getProperty((String) element);
-			final int[] colorValues = new int[3];
-
+			final int[] colorValues = new int[4];
 			int i = 0;
-			for (final String s : string.split(COMMA)) {
+			final String[] colorsArry = string.split(COMMA);
+			for (final String s : colorsArry) {
 				colorValues[i] = Integer.valueOf(s.trim());
 				i++;
 			}
-
-			attributes.put(element.toString(),
-					new TextAttribute(colorManager.getColor(new RGB(colorValues[0], colorValues[1], colorValues[2]))));
+			TextAttribute textAttribute = null;
+			if (colorValues[3] == 0) {
+				textAttribute = new TextAttribute(colorManager.getColor(new RGB(colorValues[0], colorValues[1], colorValues[2])));
+			} else {
+				textAttribute = new TextAttribute(colorManager.getColor(new RGB(colorValues[0], colorValues[1], colorValues[2])), null,
+						colorValues[3]);
+			}
+			attributes.put(element.toString(), textAttribute);
 			tokens.put((String) element, new Token(getTextAttribute((String) element)));
 			element = keys.nextElement();
 		}

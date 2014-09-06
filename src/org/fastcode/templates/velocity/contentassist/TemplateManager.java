@@ -170,9 +170,6 @@ public class TemplateManager {
 					REFERENCE_PROPOSALS.addAll(REFERENCE_PROPOSALS_MAP.get(SECOND_TEMPLATE.property));
 				}
 			}
-
-
-
 		}
 
 		Iterator<ElementProposal> iter = REFERENCE_PROPOSALS.iterator();

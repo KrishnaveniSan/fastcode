@@ -397,7 +397,8 @@ public class VelocityUtil {
 		invalidMethodsStr = invalidMethodsStr.replaceFirst(COMMA, EMPTY_STR);
 		final String[] invalidMethStrArr = invalidMethodsStr.split(COMMA);
 		invalidMethodsStr = EMPTY_STR;
-		for (int i = 0; i < invalidMethArr.length; i++) {
+
+		for (int i = 0; invalidMethArr != null && i < invalidMethArr.length; i++) {
 			boolean isValidMeth = false;
 			final String tmpMeth = invalidMethArr[i];
 			for (int j = 0; j < getEmptyArrayForNull(strmeths).length; j++) {
@@ -630,9 +631,7 @@ public class VelocityUtil {
 
 				}
 			}
-
 		}
-
 		return isValidVar;
 	}
 

@@ -1,11 +1,12 @@
 package org.fastcode.dialog;
 
 import static org.fastcode.common.FastCodeConstants.ASTERISK;
-import static org.fastcode.common.FastCodeConstants.ENCLOSING_CLASS;
-import static org.fastcode.common.FastCodeConstants.ENCLOSING_FILE;
-import static org.fastcode.common.FastCodeConstants.ENCLOSING_FOLDER;
-import static org.fastcode.common.FastCodeConstants.ENCLOSING_PACKAGE;
 import static org.fastcode.common.FastCodeConstants.EMPTY_STR;
+import static org.fastcode.common.FastCodeConstants.ENCLOSING_CLASS_STR;
+import static org.fastcode.common.FastCodeConstants.ENCLOSING_FILE_STR;
+import static org.fastcode.common.FastCodeConstants.ENCLOSING_FOLDER_STR;
+import static org.fastcode.common.FastCodeConstants.ENCLOSING_INTERFACE_STR;
+import static org.fastcode.common.FastCodeConstants.ENCLOSING_PACKAGE_STR;
 import static org.fastcode.common.FastCodeConstants.FALSE_STR;
 import static org.fastcode.common.FastCodeConstants.FC_PLUGIN;
 import static org.fastcode.common.FastCodeConstants.FORWARD_SLASH;
@@ -15,8 +16,10 @@ import static org.fastcode.common.FastCodeConstants.LEFT_PAREN;
 import static org.fastcode.common.FastCodeConstants.NEWLINE;
 import static org.fastcode.common.FastCodeConstants.RIGHT_PAREN;
 import static org.fastcode.common.FastCodeConstants.SPACE;
+import static org.fastcode.common.FastCodeConstants.SPACE_CHAR;
 import static org.fastcode.common.FastCodeConstants.STARTLINE_ENDLINE;
 import static org.fastcode.common.FastCodeConstants.TRUE_STR;
+import static org.fastcode.common.FastCodeConstants.ZERO_STRING;
 import static org.fastcode.util.FastCodeUtil.getEmptyListForNull;
 import static org.fastcode.util.SourceUtil.getAlteredPackageName;
 import static org.fastcode.util.SourceUtil.getDefaultPathFromProject;
@@ -27,7 +30,9 @@ import static org.fastcode.util.SourceUtil.getTypeFromWorkspace;
 import static org.fastcode.util.SourceUtil.isFullNameOfFile;
 import static org.fastcode.util.StringUtil.isEmpty;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
@@ -157,7 +162,6 @@ public class ReturnValuesDialog extends TrayDialog {
 	protected void okPressed() {
 
 		if (this.returnValuesData == null) {
-
 			this.returnValuesData = new ReturnValuesData();
 		}
 		final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
@@ -209,13 +213,21 @@ public class ReturnValuesDialog extends TrayDialog {
 				if (this.returnValuesData.getFastCodeAdditionalParams()[i].getReturnTypes().getValue() == INT) {
 					this.returnValuesData.addReturnValuesMap(this.returnValuesData.getFastCodeAdditionalParams()[i].getName(), new Integer(
 							this.valueText[i].getText()));
-				} else if (this.returnValuesData.getFastCodeAdditionalParams()[i].getReturnTypes().getValue() == RETURN_TYPES.INTRANGE.getValue()) {
-					final String data[] = this.valueText[i].getText().split(SPACE);
-					if (data.length < 2) {
-						setErrorMessage("please enter atleast 2 space separated values (start end) for " + this.label[i].getText().replace(ASTERISK, EMPTY_STR));
+				} else if (this.returnValuesData.getFastCodeAdditionalParams()[i].getReturnTypes().getValue() == RETURN_TYPES.INTRANGE
+						.getValue()) {
+					IntRange intRangeObj = null;
+					try {
+						intRangeObj = parseIntrange(this.valueText[i].getText());
+
+						if (Integer.parseInt(this.returnValuesData.getFastCodeAdditionalParams()[i].getMax()) != 0) {
+							validateIntRange(this.returnValuesData.getFastCodeAdditionalParams()[i].getMin(),
+									this.returnValuesData.getFastCodeAdditionalParams()[i].getMax(), this.valueText[i], intRangeObj);
+						}
+					} catch (final Exception ex) {
+						setErrorMessage(ex.getMessage());
+						this.valueText[i].setFocus();
 						return;
 					}
-					final IntRange intRangeObj = new IntRange(Integer.parseInt(data[0]), Integer.parseInt(data[1]), data.length == 3 ? Integer.parseInt(data[2]) : 0);
 					this.returnValuesData.addReturnValuesMap(this.returnValuesData.getFastCodeAdditionalParams()[i].getName(), intRangeObj);
 				} else {
 					this.returnValuesData.addReturnValuesMap(this.returnValuesData.getFastCodeAdditionalParams()[i].getName(),
@@ -252,7 +264,7 @@ public class ReturnValuesDialog extends TrayDialog {
 						return;
 					}*/
 					if (this.currentClass != null && !isEmpty(this.classNameCombo[i].getText())
-							&& this.classNameCombo[i].getText().contains(ENCLOSING_CLASS)) {
+							&& this.classNameCombo[i].getText().contains(ENCLOSING_CLASS_STR)) {
 						if (!fastCodeCache.getTypeSet().contains(this.currentClass)) {
 							fastCodeCache.getTypeSet().add(this.currentClass);
 						}
@@ -279,7 +291,7 @@ public class ReturnValuesDialog extends TrayDialog {
 
 						}*/
 
-					if (this.currentFile != null && !isEmpty(textValue) && textValue.contains(ENCLOSING_FILE)) {
+					if (this.currentFile != null && !isEmpty(textValue) && textValue.contains(ENCLOSING_FILE_STR)) {
 						if (!fastCodeCache.getFileSet().contains(this.currentFile)) {
 							fastCodeCache.getFileSet().add(this.currentFile);
 						}
@@ -301,7 +313,7 @@ public class ReturnValuesDialog extends TrayDialog {
 					}
 
 					if (this.currentFolder != null && !isEmpty(this.folderNameCombo[i].getText())
-							&& this.folderNameCombo[i].getText().contains(ENCLOSING_FOLDER)) {
+							&& this.folderNameCombo[i].getText().contains(ENCLOSING_FOLDER_STR)) {
 						if (!fastCodeCache.getFolderSet().contains(this.currentFolder)) {
 							fastCodeCache.getFolderSet().add(this.currentFolder);
 						}
@@ -320,7 +332,7 @@ public class ReturnValuesDialog extends TrayDialog {
 						return;
 					}*/
 					if (this.currentPackage != null && !isEmpty(this.packageCombo[i].getText())
-							&& this.packageCombo[i].getText().contains(ENCLOSING_PACKAGE)) {
+							&& this.packageCombo[i].getText().contains(ENCLOSING_PACKAGE_STR)) {
 
 						final String textValue = this.packageCombo[i].getText();
 						if (!isEmpty(textValue) && !validatePattern(pattern, textValue)) {
@@ -331,7 +343,6 @@ public class ReturnValuesDialog extends TrayDialog {
 						if (!fastCodeCache.getPackageSet().contains(this.currentPackage)) {
 							fastCodeCache.getPackageSet().add(this.currentPackage);
 						}
-
 						if (this.valuesObj[i] == null) {
 							this.valuesObj[i] = new FastCodePackage(this.currentPackage);
 						}
@@ -366,7 +377,7 @@ public class ReturnValuesDialog extends TrayDialog {
 
 				} else if (additionalParamType.equals(RETURN_TYPES.INTERFACE.getValue())) {
 					if (this.currentInterface != null && !isEmpty(this.interfaceNameCombo[i].getText())
-							&& this.interfaceNameCombo[i].getText().contains("current interface")) {
+							&& this.interfaceNameCombo[i].getText().contains(ENCLOSING_INTERFACE_STR)) {
 						final String textValue = this.interfaceNameCombo[i].getText();
 						if (!isEmpty(textValue) && !validatePattern(pattern, textValue)) {
 							setErrorMessage("The selected value " + textValue + " does not match pattern " + pattern + " specified.");
@@ -515,6 +526,12 @@ public class ReturnValuesDialog extends TrayDialog {
 			final boolean enabled = Boolean.valueOf(this.returnValuesData.getFastCodeAdditionalParams()[count].getEnabled());
 			final String max = this.returnValuesData.getFastCodeAdditionalParams()[count].getMax();
 			final String min = this.returnValuesData.getFastCodeAdditionalParams()[count].getMin();
+			final String type = this.returnValuesData.getFastCodeAdditionalParams()[count].getType();
+			final String dependsOn = this.returnValuesData.getFastCodeAdditionalParams()[count].getDependsOn();
+			FastCodeAdditionalParams parentParameter = null;
+			if (this.labelFCAdditonalParamMap.containsKey(dependsOn)) {
+				parentParameter = this.labelFCAdditonalParamMap.get(dependsOn);
+			}
 			if (!enabled) {
 				required = false;
 			}
@@ -556,7 +573,7 @@ public class ReturnValuesDialog extends TrayDialog {
 					|| valueType.equalsIgnoreCase(RETURN_TYPES.JAVAPROJECT.getValue())) {
 				createProjectSelectionPane(composite, valueType, count, defaultValue, pattern, enabled);
 			} else if (valueType.equalsIgnoreCase(RETURN_TYPES.LOCALVAR.getValue())) {
-				createLocalVarSelectionPane(composite, valueType, count, defaultValue, pattern, enabled);
+				createLocalVarSelectionPane(composite, count, defaultValue, pattern, enabled, type);
 			} else if (valueType.equalsIgnoreCase(RETURN_TYPES.BOOLEAN.getValue())) {
 				createBooleanParamCheckBox(composite, count, defaultValue, enabled);
 			} else if (!isEmpty(allowedValues)) {
@@ -688,11 +705,96 @@ public class ReturnValuesDialog extends TrayDialog {
 								text.setFocus();
 							}
 						}
+						if (text.getToolTipText().equals(RETURN_TYPES.INTRANGE.getValue())) {
+							if (!isEmpty(max)) {
+								if (Integer.parseInt(max) != 0) {
+									try {
+										if (!isEmpty(value)) {
+											final IntRange intRange = parseIntrange(value);
+
+											validateIntRange(min, max, text, intRange);
+										}
+									} catch (final Exception ex) {
+										ReturnValuesDialog.this.setErrorMessage(ex.getMessage());
+									}
+								}
+							}
+						}
 					}
 				});
 			}
 		}
 
+	}
+
+	/**
+	 * @param max
+	 * @param min
+	 * @param text
+	 * @param intRange
+	 */
+	public void validateIntRange(final String min, final String max, final Text text, final IntRange intRange) {
+		if (intRange == null) {
+			return;
+		}
+		if (!isEmpty(min)) {
+			final int minVal = Integer.parseInt(min);
+			if (intRange.getStart() < minVal) {
+				setErrorMessage("Please enter a value greater than " + min + " for start.");
+				text.setFocus();
+				return;
+			} else {
+				setErrorMessage(ReturnValuesDialog.this.defaultMessage);
+			}
+		}
+		if (!isEmpty(max)) {
+			final int maxVal = Integer.parseInt(max);
+			if (intRange.getEnd() > maxVal) {
+				setErrorMessage("Please enter a value lesser than " + max + " for end.");
+				text.setFocus();
+				return;
+			} else {
+				setErrorMessage(ReturnValuesDialog.this.defaultMessage);
+			}
+		}
+	}
+
+	protected IntRange parseIntrange(final String value) throws Exception {
+		final StringBuilder max = new StringBuilder();
+		final StringBuilder min = new StringBuilder();
+		final StringBuilder step = new StringBuilder(ZERO_STRING);
+		boolean maxOver = false;
+		boolean minOver = false;
+		for (final char ch : value.toCharArray()) {
+
+			if (ch == HYPHEN.toCharArray()[0]) {
+				if (!isEmpty(min.toString())) {
+					minOver = true;
+				}
+				continue;
+			}
+			if (ch == SPACE_CHAR) {
+				if (!isEmpty(max.toString())) {
+					maxOver = true;
+				}
+				continue;
+			}
+			if (!minOver) {
+				min.append(ch);
+				continue;
+			}
+			if (!maxOver) {
+				max.append(ch);
+				continue;
+			}
+			step.append(ch);
+
+		}
+		IntRange intRange = null;
+		if (!isEmpty(min.toString()) && !isEmpty(max.toString())) {
+			intRange = new IntRange(Integer.parseInt(min.toString()), Integer.parseInt(max.toString()), Integer.parseInt(step.toString()));
+		}
+		return intRange;
 	}
 
 	/**
@@ -947,8 +1049,8 @@ public class ReturnValuesDialog extends TrayDialog {
 		try {
 			if (this.compilationUnit != null && this.compilationUnit.getPrimary().findPrimaryType().isInterface()) {
 				this.currentInterface = this.compilationUnit.getPrimary().findPrimaryType();
-				this.interfaceNameCombo[count].add("current interface" + HYPHEN + this.currentInterface.getFullyQualifiedName());
-				this.interfaceNameCombo[count].select(0);
+				this.interfaceNameCombo[count].add(ENCLOSING_INTERFACE_STR + HYPHEN + this.currentInterface.getFullyQualifiedName());
+				//this.interfaceNameCombo[count].select(0);
 			}
 		} catch (final JavaModelException ex1) {
 			ex1.printStackTrace();
@@ -964,7 +1066,7 @@ public class ReturnValuesDialog extends TrayDialog {
 						boolean addItem = true;
 						if (this.interfaceNameCombo[count].getItems() != null) {
 							for (final String existingInterface : this.interfaceNameCombo[count].getItems()) {
-								if (existingInterface.contains("current interface")) {
+								if (existingInterface.contains(ENCLOSING_INTERFACE_STR)) {
 									continue;
 								}
 								if (existingInterface.equals(type.getFullyQualifiedName())) {
@@ -987,7 +1089,7 @@ public class ReturnValuesDialog extends TrayDialog {
 			public void widgetSelected(final SelectionEvent event) {
 				String selectedInterfaceName = ((Combo) event.widget).getText(); //ReturnValuesDialog.this.classNameCombo.getText();
 				try {
-					if (selectedInterfaceName.contains("current interface")) {
+					if (selectedInterfaceName.contains(ENCLOSING_INTERFACE_STR)) {
 						selectedInterfaceName = ReturnValuesDialog.this.currentInterface.getFullyQualifiedName();
 					}
 					if (!fastCodeCache.getTypeSet().isEmpty()) {
@@ -1015,7 +1117,7 @@ public class ReturnValuesDialog extends TrayDialog {
 			public void focusLost(final FocusEvent e) {
 				String inputInterfaceName = ((Combo) e.widget).getText();
 				if (!isEmpty(inputInterfaceName)) {
-					if (inputInterfaceName.contains("current interface")) {
+					if (inputInterfaceName.contains(ENCLOSING_INTERFACE_STR)) {
 						inputInterfaceName = ReturnValuesDialog.this.currentInterface.getFullyQualifiedName();
 					}
 					if (!fastCodeCache.getTypeSet().isEmpty()) {
@@ -1164,14 +1266,14 @@ public class ReturnValuesDialog extends TrayDialog {
 
 	/**
 	 * @param parent
-	 * @param valueType
 	 * @param count
 	 * @param defaultValue
 	 * @param pattern
 	 * @param enabled
+	 * @param type
 	 */
-	private void createLocalVarSelectionPane(final Composite parent, final String valueType, final int count, final String defaultValue,
-			final String pattern, final boolean enabled) {
+	private void createLocalVarSelectionPane(final Composite parent, final int count, final String defaultValue, final String pattern,
+			final boolean enabled, final String type) {
 		final Composite composite = new Composite(parent, parent.getStyle());
 		final GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
@@ -1195,8 +1297,13 @@ public class ReturnValuesDialog extends TrayDialog {
 			if (this.returnValuesData.getCompUnit() == null) {
 				setErrorMessage("Please invoke this template from a java class(method), to select local variables.");
 			}
-			this.returnValuesData.setLocalVars(getLocalVarFromCompUnit(this.returnValuesData.getCompUnit(),
-					this.returnValuesData.getEditorPart()));
+			if (isEmpty(type)) {
+				this.returnValuesData.setLocalVars(getLocalVarFromCompUnit(this.returnValuesData.getCompUnit(),
+						this.returnValuesData.getEditorPart()));
+			} else {
+				this.returnValuesData.setLocalVars(getLocalVarsOfType(
+						getLocalVarFromCompUnit(this.returnValuesData.getCompUnit(), this.returnValuesData.getEditorPart()), type));
+			}
 		} catch (final Exception ex) {
 			setErrorMessage(ex.getMessage());
 		}
@@ -1231,6 +1338,16 @@ public class ReturnValuesDialog extends TrayDialog {
 			}
 		});
 
+	}
+
+	private List<FastCodeReturn> getLocalVarsOfType(final List<FastCodeReturn> localVarFromCompUnit, final String type) {
+		final List<FastCodeReturn> localVarsList = new ArrayList<FastCodeReturn>();
+		for (final FastCodeReturn fastCodeReturn : localVarFromCompUnit) {
+			if (fastCodeReturn.getType().getName().equals(type)) {
+				localVarsList.add(fastCodeReturn);
+			}
+		}
+		return localVarsList;
 	}
 
 	/**
@@ -1350,8 +1467,8 @@ public class ReturnValuesDialog extends TrayDialog {
 		final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
 		if (this.compilationUnit != null) {
 			this.currentPackage = this.compilationUnit.getPrimary().findPrimaryType().getPackageFragment();
-			this.packageCombo[count].add(ENCLOSING_PACKAGE + HYPHEN + getAlteredPackageName(this.currentPackage));
-			this.packageCombo[count].select(0);
+			this.packageCombo[count].add(ENCLOSING_PACKAGE_STR + HYPHEN + getAlteredPackageName(this.currentPackage));
+			//this.packageCombo[count].select(0);
 		}
 		if (!fastCodeCache.getPackageSet().isEmpty()) {
 			for (final IPackageFragment pkgFrgmt : fastCodeCache.getPackageSet()) {
@@ -1371,7 +1488,7 @@ public class ReturnValuesDialog extends TrayDialog {
 				boolean addItem = true;
 				if (this.packageCombo[count].getItems() != null) {
 					for (final String existingPkg : this.packageCombo[count].getItems()) {
-						if (existingPkg.contains(ENCLOSING_PACKAGE)) {
+						if (existingPkg.contains(ENCLOSING_PACKAGE_STR)) {
 							continue;
 						}
 						if (existingPkg.equals(getAlteredPackageName(pkgFrgmt))) {
@@ -1390,12 +1507,12 @@ public class ReturnValuesDialog extends TrayDialog {
 			public void widgetSelected(final SelectionEvent event) {
 				final Combo pkgCombo = (Combo) event.widget;
 				String selectedPkgName = pkgCombo.getText();
-				if (selectedPkgName.contains(ENCLOSING_PACKAGE)) {
+				if (selectedPkgName.contains(ENCLOSING_PACKAGE_STR)) {
 					selectedPkgName = ReturnValuesDialog.this.currentPackage.getElementName();
 				}
 				try {
 					for (final IPackageFragment pkg : fastCodeCache.getPackageSet()) {
-						if (pkg.getElementName().equals(selectedPkgName)) {
+						if (getAlteredPackageName(pkg).equals(selectedPkgName)) {
 							ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) event.widget).getToolTipText())] = new FastCodePackage(
 									pkg);
 						}
@@ -1417,11 +1534,11 @@ public class ReturnValuesDialog extends TrayDialog {
 				final Combo pkgCombo = (Combo) e.widget;
 				String inputPkgName = pkgCombo.getText();
 				if (!isEmpty(inputPkgName)) {
-					if (inputPkgName.contains(ENCLOSING_PACKAGE)) {
+					if (inputPkgName.contains(ENCLOSING_PACKAGE_STR)) {
 						inputPkgName = ReturnValuesDialog.this.currentPackage.getElementName();
 					}
 					for (final IPackageFragment pkg : fastCodeCache.getPackageSet()) {
-						if (pkg.getElementName().equals(inputPkgName)) {
+						if (pkg.getElementName().equals(inputPkgName) || getAlteredPackageName(pkg).equals(inputPkgName)) {
 							return;
 						}
 					}
@@ -1473,7 +1590,6 @@ public class ReturnValuesDialog extends TrayDialog {
 					final IPackageFragment allPackages[] = getPackagesInProject(
 							isEmpty(project) ? ReturnValuesDialog.this.returnValuesData.getJavaProject() : getIJavaProjectFromName(project),
 							srcPath, "source");
-
 					if (allPackages == null) {
 						return;
 					}
@@ -1513,7 +1629,6 @@ public class ReturnValuesDialog extends TrayDialog {
 									.select(ReturnValuesDialog.this.packageCombo[Integer.parseInt(((Button) event.widget).getToolTipText())]
 											.getItemCount() - 1);
 						}
-
 						if (!fastCodeCache.getPackageSet().contains(packageFragment)) {
 							fastCodeCache.getPackageSet().add(packageFragment);
 						}
@@ -1592,9 +1707,9 @@ public class ReturnValuesDialog extends TrayDialog {
 					final IFolder folder = this.returnValuesData.getJavaProject().getProject().getFolder(srcPath);
 					if (folder != null) {
 						this.currentFolder = folder;
-						this.folderNameCombo[count].add(ENCLOSING_FOLDER + HYPHEN + this.currentFolder.getFullPath().toString());
+						this.folderNameCombo[count].add(ENCLOSING_FOLDER_STR + HYPHEN + this.currentFolder.getFullPath().toString());
 
-						this.folderNameCombo[count].select(0);
+						//this.folderNameCombo[count].select(0);
 					}
 				}
 			} catch (final Exception ex) {
@@ -1620,7 +1735,7 @@ public class ReturnValuesDialog extends TrayDialog {
 				boolean addItem = true;
 				if (this.folderNameCombo[count].getItems() != null) {
 					for (final String existingFolder : this.folderNameCombo[count].getItems()) {
-						if (existingFolder.contains(ENCLOSING_FOLDER)) {
+						if (existingFolder.contains(ENCLOSING_FOLDER_STR)) {
 							continue;
 						}
 						if (existingFolder.equals(folder.getFullPath().toString())) {
@@ -1640,7 +1755,7 @@ public class ReturnValuesDialog extends TrayDialog {
 			public void widgetSelected(final SelectionEvent event) {
 
 				String selectedFolderPath = ((Combo) event.widget).getText(); // ReturnValuesDialog.this.folderNameCombo.getText();
-				if (selectedFolderPath.contains(ENCLOSING_FOLDER)) {
+				if (selectedFolderPath.contains(ENCLOSING_FOLDER_STR)) {
 					selectedFolderPath = ReturnValuesDialog.this.currentFolder.getFullPath().toString();
 				}
 				try {
@@ -1668,7 +1783,7 @@ public class ReturnValuesDialog extends TrayDialog {
 			public void focusLost(final FocusEvent e) {
 				String inputFolderPath = ((Combo) e.widget).getText();
 				if (!isEmpty(inputFolderPath)) {
-					if (inputFolderPath.contains(ENCLOSING_FOLDER)) {
+					if (inputFolderPath.contains(ENCLOSING_FOLDER_STR)) {
 						inputFolderPath = ReturnValuesDialog.this.currentFolder.getFullPath().toString();
 					}
 					for (final IFolder folder : fcCache.getFolderSet()) {
@@ -1800,8 +1915,8 @@ public class ReturnValuesDialog extends TrayDialog {
 		final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
 		if (this.compilationUnit != null) {
 			this.currentClass = this.compilationUnit.getPrimary().findPrimaryType();
-			this.classNameCombo[count].add(ENCLOSING_CLASS + HYPHEN + this.currentClass.getFullyQualifiedName());
-			this.classNameCombo[count].select(0);
+			this.classNameCombo[count].add(ENCLOSING_CLASS_STR + HYPHEN + this.currentClass.getFullyQualifiedName());
+			//this.classNameCombo[count].select(0);
 		}
 
 		if (!fastCodeCache.getTypeSet().isEmpty()) {
@@ -1823,7 +1938,7 @@ public class ReturnValuesDialog extends TrayDialog {
 				boolean addItem = true;
 				if (this.classNameCombo[count].getItems() != null) {
 					for (final String existingClass : this.classNameCombo[count].getItems()) {
-						if (existingClass.contains(ENCLOSING_CLASS)) {
+						if (existingClass.contains(ENCLOSING_CLASS_STR)) {
 							continue;
 						}
 						if (existingClass.equals(type.getFullyQualifiedName())) {
@@ -1843,7 +1958,7 @@ public class ReturnValuesDialog extends TrayDialog {
 			public void widgetSelected(final SelectionEvent event) {
 				String selectedFromClassName = ((Combo) event.widget).getText(); //ReturnValuesDialog.this.classNameCombo.getText();
 				try {
-					if (selectedFromClassName.contains(ENCLOSING_CLASS)) {
+					if (selectedFromClassName.contains(ENCLOSING_CLASS_STR)) {
 						selectedFromClassName = ReturnValuesDialog.this.currentClass.getFullyQualifiedName();
 					}
 					if (!fastCodeCache.getTypeSet().isEmpty()) {
@@ -1870,7 +1985,7 @@ public class ReturnValuesDialog extends TrayDialog {
 			public void focusLost(final FocusEvent e) {
 				String inputFromClassName = ((Combo) e.widget).getText();
 				if (!isEmpty(inputFromClassName)) {
-					if (inputFromClassName.contains(ENCLOSING_CLASS)) {
+					if (inputFromClassName.contains(ENCLOSING_CLASS_STR)) {
 						inputFromClassName = ReturnValuesDialog.this.currentClass.getFullyQualifiedName();
 					}
 					if (!fastCodeCache.getTypeSet().isEmpty()) {
@@ -2022,8 +2137,8 @@ public class ReturnValuesDialog extends TrayDialog {
 		if (this.compilationUnit == null) {
 			final IFile file = (IFile) this.returnValuesData.getEditorPart().getEditorInput().getAdapter(IFile.class);
 			this.currentFile = file;
-			this.fileNameCombo[count].add(ENCLOSING_FILE + HYPHEN + this.currentFile.getFullPath().toString());
-			this.fileNameCombo[count].select(0);
+			this.fileNameCombo[count].add(ENCLOSING_FILE_STR + HYPHEN + this.currentFile.getFullPath().toString());
+			//this.fileNameCombo[count].select(0);
 		}
 		if (!fastCodeCache.getFileSet().isEmpty()) {
 			for (final IFile file : fastCodeCache.getFileSet()) {
@@ -2043,7 +2158,7 @@ public class ReturnValuesDialog extends TrayDialog {
 				boolean addItem = true;
 				if (this.fileNameCombo[count].getItems() != null) {
 					for (final String existingFile : this.fileNameCombo[count].getItems()) {
-						if (existingFile.contains(ENCLOSING_FILE)) {
+						if (existingFile.contains(ENCLOSING_FILE_STR)) {
 							continue;
 						}
 						if (existingFile.equals(file.getFullPath().toString())) {
@@ -2064,7 +2179,7 @@ public class ReturnValuesDialog extends TrayDialog {
 			public void widgetSelected(final SelectionEvent event) {
 				String selectedFileName = ((Combo) event.widget).getText(); //ReturnValuesDialog.this.fileNameCombo.getText();
 				try {
-					if (selectedFileName.contains(ENCLOSING_FILE)) {
+					if (selectedFileName.contains(ENCLOSING_FILE_STR)) {
 						selectedFileName = ReturnValuesDialog.this.currentFile.getFullPath().toString();
 					}
 					if (!fastCodeCache.getFileSet().isEmpty()) {
@@ -2103,7 +2218,7 @@ public class ReturnValuesDialog extends TrayDialog {
 				setErrorMessage(ReturnValuesDialog.this.defaultMessage);
 				String inputFileName = ((Combo) e.widget).getText();
 				if (!isEmpty(inputFileName)) {
-					if (inputFileName.contains(ENCLOSING_FILE)) {
+					if (inputFileName.contains(ENCLOSING_FILE_STR)) {
 						inputFileName = ReturnValuesDialog.this.currentFile.getFullPath().toString();
 					}
 					if (!fastCodeCache.getFileSet().isEmpty()) {

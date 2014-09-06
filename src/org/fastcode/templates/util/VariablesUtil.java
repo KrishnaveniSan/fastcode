@@ -58,7 +58,7 @@ public class VariablesUtil {
 					this.addlparamList.add(proposal);
 				}
 				if (param.getReturnTypes() != null) {
-					if (!(param.getReturnTypes().equals(RETURN_TYPES.STRING) || param.getReturnTypes().equals(RETURN_TYPES.BOOLEAN) || param.getReturnTypes().equals(RETURN_TYPES.LOCALVAR))) {
+					if (!(param.getReturnTypes().equals(RETURN_TYPES.STRING) || param.getReturnTypes().equals(RETURN_TYPES.BOOLEAN) || param.getReturnTypes().equals(RETURN_TYPES.LOCALVAR) || param.getReturnTypes().equals(RETURN_TYPES.INTRANGE) || param.getReturnTypes().equals(RETURN_TYPES.INT))) {
 						this.variablesList.add(proposal);
 					}
 					final ArrayList<String> functions = ContentAssistUtil.getTypefunctionmap(param.getReturnTypes().getValue());

@@ -32,7 +32,7 @@ public class ParameterTypeManager {
 	static {
 		PARAM_TYPES.add("class");
 		PARAM_TYPES.add("javaProject");
-		PARAM_TYPES.add("localVar");
+		PARAM_TYPES.add("localvar");
 		PARAM_TYPES.add("file");
 		PARAM_TYPES.add("package");
 		PARAM_TYPES.add("folder");
@@ -149,4 +149,5 @@ public class ParameterTypeManager {
 	public static String[] getDirectives() {
 		return PARAM_TYPES.toArray(new String[PARAM_TYPES.size()]);
 	}
+
 }

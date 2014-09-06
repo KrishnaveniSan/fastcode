@@ -111,6 +111,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.preferences.InstanceScope;
@@ -288,9 +289,7 @@ public abstract class AbstractCreateNewSnippetAction {
 
 		this.templateType = this.createSnippetData.getTemplateType();
 
-		this.description = this.templateType == null ? EMPTY_STR
-				: makeWord(this.templateType.startsWith(this.templatePrefix + UNDERSCORE) ? this.templateType.substring(this.templatePrefix
-						.length() + 1) : this.templateType);
+		this.description = this.templateType == null ? EMPTY_STR : makeWord(this.templateType.startsWith(this.templatePrefix + UNDERSCORE) ? this.templateType.substring(this.templatePrefix.length() + 1) : this.templateType);
 
 		final TemplateCache templateCache = TemplateCache.getInstance();
 		ICompilationUnit compilationUnit = null;
@@ -316,7 +315,11 @@ public abstract class AbstractCreateNewSnippetAction {
 			}
 
 			final String[] allowedNames = this.templateSettings.getAllowedFileNames();
-			compilationUnit = isJavaInArray(JAVA_EXTENSION, allowedNames) ? getCompilationUnitFromEditor() : null;
+//			compilationUnit = isJavaInArray(JAVA_EXTENSION, allowedNames) ? getCompilationUnitFromEditor() : null;
+			compilationUnit = getCompilationUnitFromEditor();
+			if (compilationUnit == null && isJavaInArray(JAVA_EXTENSION, allowedNames) ) {
+				throw new Exception("Fatal error : not a valid class.");
+			}
 			if (compilationUnit != null) {
 				compilationUnit.becomeWorkingCopy(new NullProgressMonitor());
 			}
@@ -335,19 +338,22 @@ public abstract class AbstractCreateNewSnippetAction {
 
 			final IFile editorFile = (IFile) this.editorPart.getEditorInput().getAdapter(IFile.class);
 			placeHolders.put(ENCLOSING_FILE_STR, new FastCodeFile(editorFile));//new FastCodeFile(this.editorPart.getEditorInput().getName(), editorFile.getProjectRelativePath().toString()));
-			final String srcPath = editorFile
-					.getProjectRelativePath()
-					.toString()
-					.substring(0,
-							editorFile.getProjectRelativePath().toString().indexOf(editorFile.getProjectRelativePath().lastSegment()) - 1);
-			final IFolder folder = new FastCodeFile(editorFile).getProject().getProject().getFolder(srcPath);
+
+			final String projectRelativePath = editorFile.getProjectRelativePath().toString();
+			final int segmentCount = editorFile.getProjectRelativePath().segmentCount();
+			final String srcPath = segmentCount == 1 ? EMPTY_STR : projectRelativePath .substring(0, projectRelativePath.indexOf(editorFile.getProjectRelativePath().lastSegment()) - 1);
+
+			final IFolder folder = isEmpty(srcPath) ? editorFile.getProject().getFolder(editorFile.getProject().getFullPath()) : editorFile.getProject().getFolder(srcPath);
+
 			placeHolders.put(ENCLOSING_FOLDER_STR, new FastCodeFolder(folder));
 			placeHolders.put(ENCLOSING_PROJECT_STR, new FastCodeFile(editorFile).getProject());
+
 			if (pType != null) {
 				placeHolders.put(ENCLOSING_CLASS_STR, new FastCodeType(pType));
 				placeHolders.put(ENCLOSING_PACKAGE_STR, new FastCodeType(pType).getPackage());
 				placeHolders.put(ENCLOSING_PROJECT_STR, new FastCodeProject(pType.getJavaProject().getProject()));
 			}
+
 			placeHolders.put(AUTO_CHECKIN, this.createSnippetData.isDoAutoCheckin());
 			initializePlaceHolders(this.templateSettings, placeHolders);
 			if (this.templatePrefix.equals(TEMPLATE) && this.createSnippetData.getSelectedProject() != null) {
@@ -738,8 +744,10 @@ public abstract class AbstractCreateNewSnippetAction {
 			}
 			ResourcesPlugin.getWorkspace().addResourceChangeListener(FastCodeResourceChangeListener.getInstance());
 		}
-		/*final IProject project = compilationUnit.getJavaProject().getProject();
-		refreshProject(project.getName());*/
+		final IProject project = this.createSnippetData.getSelectedProject().getProject();
+		if (project != null) {
+			refreshProject(project.getName());
+		}
 	}
 
 	/**

@@ -1,11 +1,11 @@
 package org.fastcode.dialog;
 
-import static org.fastcode.common.FastCodeConstants.ENCLOSING_CLASS;
-import static org.fastcode.common.FastCodeConstants.ENCLOSING_FILE;
-import static org.fastcode.common.FastCodeConstants.ENCLOSING_FOLDER;
-import static org.fastcode.common.FastCodeConstants.ENCLOSING_PACKAGE;
 import static org.fastcode.common.FastCodeConstants.DOT;
 import static org.fastcode.common.FastCodeConstants.EMPTY_STR;
+import static org.fastcode.common.FastCodeConstants.ENCLOSING_CLASS_STR;
+import static org.fastcode.common.FastCodeConstants.ENCLOSING_FILE_STR;
+import static org.fastcode.common.FastCodeConstants.ENCLOSING_FOLDER_STR;
+import static org.fastcode.common.FastCodeConstants.ENCLOSING_PACKAGE_STR;
 import static org.fastcode.common.FastCodeConstants.FAST_CODE_PLUGIN_ID;
 import static org.fastcode.common.FastCodeConstants.FC_PLUGIN;
 import static org.fastcode.common.FastCodeConstants.HYPHEN;
@@ -528,7 +528,7 @@ public class CreateSnippetDialog extends TrayDialog {
 				switch (CreateSnippetDialog.this.templateSettings.getFirstTemplateItem()) {
 				case Class:
 					String selectedFromClassName = CreateSnippetDialog.this.selectTypeCombo.getText();
-					if (selectedFromClassName.contains(ENCLOSING_CLASS)) {
+					if (selectedFromClassName.contains(ENCLOSING_CLASS_STR)) {
 						selectedFromClassName = CreateSnippetDialog.this.currentType;
 					}
 					try {
@@ -556,7 +556,7 @@ public class CreateSnippetDialog extends TrayDialog {
 					break;
 				case File:
 					String selectedFileName = CreateSnippetDialog.this.selectTypeCombo.getText();
-					if (selectedFileName.contains(ENCLOSING_FILE)) {
+					if (selectedFileName.contains(ENCLOSING_FILE_STR)) {
 						selectedFileName = CreateSnippetDialog.this.currentType;
 					}
 					try {
@@ -598,7 +598,7 @@ public class CreateSnippetDialog extends TrayDialog {
 					break;
 				case Folder:
 					String selectedFolderPath = CreateSnippetDialog.this.selectTypeCombo.getText();
-					if (selectedFolderPath.contains(ENCLOSING_FOLDER)) {
+					if (selectedFolderPath.contains(ENCLOSING_FOLDER_STR)) {
 						selectedFolderPath = CreateSnippetDialog.this.currentType;
 					}
 					try {
@@ -623,7 +623,7 @@ public class CreateSnippetDialog extends TrayDialog {
 					break;
 				case Package:
 					String selectedPkgName = CreateSnippetDialog.this.selectTypeCombo.getText();
-					if (selectedPkgName.contains(ENCLOSING_PACKAGE)) {
+					if (selectedPkgName.contains(ENCLOSING_PACKAGE_STR)) {
 						selectedPkgName = CreateSnippetDialog.this.currentType;
 					}
 					try {
@@ -635,7 +635,7 @@ public class CreateSnippetDialog extends TrayDialog {
 								}
 							}
 						}
-						if (CreateSnippetDialog.this.createSnippetData.getFolder() == null) {
+						if (CreateSnippetDialog.this.createSnippetData.getPackageFragment() == null) {
 							if (CreateSnippetDialog.this.browsedFirstTemplateMap.containsKey(selectedPkgName)) {
 								CreateSnippetDialog.this.createSnippetData
 										.setPackageFragment((IPackageFragment) CreateSnippetDialog.this.browsedFirstTemplateMap
@@ -723,7 +723,7 @@ public class CreateSnippetDialog extends TrayDialog {
 				case Class:
 					String inputFromClassName = CreateSnippetDialog.this.selectTypeCombo.getText();
 					if (!isEmpty(inputFromClassName)) {
-						if (inputFromClassName.contains(ENCLOSING_CLASS)) {
+						if (inputFromClassName.contains(ENCLOSING_CLASS_STR)) {
 							inputFromClassName = CreateSnippetDialog.this.currentType;
 						}
 						if (!fastCodeCache.getTypeSet().isEmpty()) {
@@ -762,7 +762,7 @@ public class CreateSnippetDialog extends TrayDialog {
 				case File:
 					String inputFileName = CreateSnippetDialog.this.selectTypeCombo.getText();
 					if (!isEmpty(inputFileName)) {
-						if (inputFileName.contains(ENCLOSING_FILE)) {
+						if (inputFileName.contains(ENCLOSING_FILE_STR)) {
 							inputFileName = CreateSnippetDialog.this.currentType;
 						}
 						if (!fastCodeCache.getFileSet().isEmpty()) {
@@ -813,7 +813,7 @@ public class CreateSnippetDialog extends TrayDialog {
 				case Folder:
 					String inputFolderPath = CreateSnippetDialog.this.selectTypeCombo.getText();
 					if (!isEmpty(inputFolderPath)) {
-						if (inputFolderPath.contains(ENCLOSING_FOLDER)) {
+						if (inputFolderPath.contains(ENCLOSING_FOLDER_STR)) {
 							inputFolderPath = CreateSnippetDialog.this.currentType;
 						}
 						if (!fastCodeCache.getFolderSet().isEmpty()) {
@@ -833,7 +833,7 @@ public class CreateSnippetDialog extends TrayDialog {
 				case Package:
 					String inputPkgName = CreateSnippetDialog.this.selectTypeCombo.getText();
 					if (!isEmpty(inputPkgName)) {
-						if (inputPkgName.contains(ENCLOSING_PACKAGE)) {
+						if (inputPkgName.contains(ENCLOSING_PACKAGE_STR)) {
 							inputPkgName = CreateSnippetDialog.this.currentType;
 						}
 						if (!fastCodeCache.getPackageSet().isEmpty()) {
@@ -2367,7 +2367,7 @@ public class CreateSnippetDialog extends TrayDialog {
 		if (editorPart != null) {
 			if (compUnit != null) {
 				this.currentType = compUnit.getPrimary().findPrimaryType().getFullyQualifiedName();
-				this.toClassNameCombo.add(ENCLOSING_CLASS + HYPHEN + this.currentType);
+				this.toClassNameCombo.add(ENCLOSING_CLASS_STR + HYPHEN + this.currentType);
 				//this.toClassNameCombo.select(0);
 			}
 		}
@@ -2375,7 +2375,7 @@ public class CreateSnippetDialog extends TrayDialog {
 			for (final IType type : fastCodeCache.getTypeSet()) {
 				if (this.toClassNameCombo.getItems() != null) {
 					for (final String existingClass : this.toClassNameCombo.getItems()) {
-						if (!existingClass.contains(ENCLOSING_CLASS)) {
+						if (!existingClass.contains(ENCLOSING_CLASS_STR)) {
 							if (!existingClass.equals(type.getFullyQualifiedName())) {
 								this.toClassNameCombo.add(type.getFullyQualifiedName());
 							}
@@ -2393,7 +2393,7 @@ public class CreateSnippetDialog extends TrayDialog {
 
 			public void widgetSelected(final SelectionEvent event) {
 				String selectedToClassName = CreateSnippetDialog.this.toClassNameCombo.getText();
-				if (selectedToClassName.contains(ENCLOSING_CLASS)) {
+				if (selectedToClassName.contains(ENCLOSING_CLASS_STR)) {
 					selectedToClassName = CreateSnippetDialog.this.currentType;
 				}
 				try {
@@ -2438,7 +2438,7 @@ public class CreateSnippetDialog extends TrayDialog {
 
 			public void focusLost(final FocusEvent e) {
 				String inputToClassName = CreateSnippetDialog.this.toClassNameCombo.getText();
-				if (inputToClassName.contains(ENCLOSING_CLASS)) {
+				if (inputToClassName.contains(ENCLOSING_CLASS_STR)) {
 					inputToClassName = CreateSnippetDialog.this.currentType;
 				}
 				for (final IType type : fastCodeCache.getTypeSet()) {
@@ -3201,12 +3201,12 @@ public class CreateSnippetDialog extends TrayDialog {
 			if (editorPart != null) {
 				if (compUnit != null) {
 					this.currentType = compUnit.getPrimary().findPrimaryType().getFullyQualifiedName();
-					//this.selectTypeCombo.add(ENCLOSING_CLASS + HYPHEN + this.currentType);
+					this.selectTypeCombo.add(ENCLOSING_CLASS_STR + HYPHEN + this.currentType);
 					this.createSnippetData.setFromClass(compUnit.getPrimary().findPrimaryType());
 					if (!isEmpty(this.fromClassInstCombo.getText())) {
 						this.fromClassInstCombo.removeAll();
 					}
-					this.selectTypeCombo.select(0);
+					//this.selectTypeCombo.select(0);
 					setInstanceNameCombo(this.currentType);
 				}
 			}
@@ -3226,7 +3226,7 @@ public class CreateSnippetDialog extends TrayDialog {
 					boolean addItem = true;
 					if (this.selectTypeCombo.getItems() != null) {
 						for (final String existingClass : this.selectTypeCombo.getItems()) {
-							if (existingClass.contains(ENCLOSING_CLASS)) {
+							if (existingClass.contains(ENCLOSING_CLASS_STR)) {
 								continue;
 							}
 							if (existingClass.equals(type.getFullyQualifiedName())) {
@@ -3248,10 +3248,10 @@ public class CreateSnippetDialog extends TrayDialog {
 				if (compUnit == null) {
 					final IFile file = (IFile) editorPart.getEditorInput().getAdapter(IFile.class);
 					this.currentType = file.getFullPath().toString();
-					this.selectTypeCombo.add(ENCLOSING_FILE + HYPHEN + this.currentType);
+					this.selectTypeCombo.add(ENCLOSING_FILE_STR + HYPHEN + this.currentType);
 					this.createSnippetData.setResourceFile(file);
 					//this.createSnippetData.getFastCodeFiles().add(new FastCodeFile(file));
-					this.selectTypeCombo.select(0);
+					//this.selectTypeCombo.select(0);
 				}
 			}
 			if (!fastCodeCache.getFileSet().isEmpty()) {
@@ -3263,7 +3263,7 @@ public class CreateSnippetDialog extends TrayDialog {
 					boolean addItem = true;
 					if (this.selectTypeCombo.getItems() != null) {
 						for (final String existingFile : this.selectTypeCombo.getItems()) {
-							if (existingFile.contains(ENCLOSING_FILE)) {
+							if (existingFile.contains(ENCLOSING_FILE_STR)) {
 								continue;
 							}
 							if (existingFile.equals(file.getFullPath().toString())) {
@@ -3299,9 +3299,9 @@ public class CreateSnippetDialog extends TrayDialog {
 							final IFolder folder = this.createSnippetData.getJavaProject().getProject().getFolder(srcPath);
 							if (folder != null) {
 								this.currentType = folder.getFullPath().toString();
-								this.selectTypeCombo.add(ENCLOSING_FOLDER + HYPHEN + this.currentType);
+								this.selectTypeCombo.add(ENCLOSING_FOLDER_STR + HYPHEN + this.currentType);
 								this.createSnippetData.setFolder(folder);
-								this.selectTypeCombo.select(0);
+								//this.selectTypeCombo.select(0);
 							}
 						}
 
@@ -3318,7 +3318,7 @@ public class CreateSnippetDialog extends TrayDialog {
 					boolean addItem = true;
 					if (this.selectTypeCombo.getItems() != null) {
 						for (final String existingFolder : this.selectTypeCombo.getItems()) {
-							if (existingFolder.contains(ENCLOSING_FOLDER)) {
+							if (existingFolder.contains(ENCLOSING_FOLDER_STR)) {
 								continue;
 							}
 							if (existingFolder.equals(folder.getFullPath().toString())) {
@@ -3338,9 +3338,9 @@ public class CreateSnippetDialog extends TrayDialog {
 				if (compUnit != null) {
 					final IPackageFragment packageFragment = compUnit.getPrimary().findPrimaryType().getPackageFragment();
 					this.currentType = getAlteredPackageName(packageFragment);
-					this.selectTypeCombo.add(ENCLOSING_PACKAGE + HYPHEN + this.currentType);
+					this.selectTypeCombo.add(ENCLOSING_PACKAGE_STR + HYPHEN + this.currentType);
 					this.createSnippetData.setPackageFragment(packageFragment);
-					this.selectTypeCombo.select(0);
+					//this.selectTypeCombo.select(0);
 				}
 			}
 			if (!fastCodeCache.getPackageSet().isEmpty()) {
@@ -3351,7 +3351,7 @@ public class CreateSnippetDialog extends TrayDialog {
 					boolean addItem = true;
 					if (this.selectTypeCombo.getItems() != null) {
 						for (final String existingPkg : this.selectTypeCombo.getItems()) {
-							if (existingPkg.contains(ENCLOSING_PACKAGE)) {
+							if (existingPkg.contains(ENCLOSING_PACKAGE_STR)) {
 								continue;
 							}
 							if (existingPkg.equals(getAlteredPackageName(pkgFrgmt))) {
@@ -3574,9 +3574,7 @@ public class CreateSnippetDialog extends TrayDialog {
 				}
 			}
 			break;
-
 		}
-
 	}
 
 	/**

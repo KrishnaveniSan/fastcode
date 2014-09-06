@@ -1667,13 +1667,13 @@ public class FastCodeConstants {
 
 	public static final String	COMPLETED								= "completed";
 
-	public static final String	ENCLOSING_PACKAGE						= "Enclosing Package";
+	public static final String	CURRENT_PACKAGE							= "Current Package";
 
-	public static final String	ENCLOSING_FOLDER						= "Enclosing Folder";
+	public static final String	CURRENT_FOLDER							= "Current Folder";
 
-	public static final String	ENCLOSING_CLASS							= "Enclosing Class";
+	public static final String	CURRENT_CLASS							= "Current Class";
 
-	public static final String	ENCLOSING_FILE							= "Enclosing File";
+	public static final String	CURRENT_FILE							= "Current File";
 
 	public static final String	FILE_DETETE								= "deleted";
 
@@ -1722,6 +1722,8 @@ public class FastCodeConstants {
 	public static final String	ENCLOSING_FOLDER_STR					= "enclosing-folder";
 
 	public static final String	ENCLOSING_PROJECT_STR					= "enclosing-project";
+
+	public static final String	ENCLOSING_INTERFACE_STR					= "enclosing_interface";
 
 	public static enum FIELDS {
 		ADDITIONAL_PARAMETER, TEMPLATE_BODY
@@ -1774,5 +1776,9 @@ public class FastCodeConstants {
 
 	public static final String	ATTRIBUTE_MAX		= "max";
 
-	public static final String ZERO_STRING = "0";
+	public static final String	ZERO_STRING			= "0";
+
+	public static final String	ATTRIBUTE_TYPE		= "type";
+
+	public static final String	ATTRIBUTE_DEPENDSON	= "dependsOn";
 }

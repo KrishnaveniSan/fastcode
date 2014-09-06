@@ -84,7 +84,7 @@ public class CommitMultipleFileAction implements IActionDelegate, IWorkbenchWind
 
 	}
 
-	public void run(final IAction arg0) {
+	public void run(final IAction action) {
 		final VersionControlPreferences versionControlPreferences = VersionControlPreferences.getInstance();
 		if (!versionControlPreferences.isEnable()) {
 			MessageDialog
@@ -96,7 +96,7 @@ public class CommitMultipleFileAction implements IActionDelegate, IWorkbenchWind
 		}
 
 		final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-		final ISelection selection = window.getSelectionService().getSelection("org.eclipse.jdt.ui.PackageExplorer");
+		final ISelection selection = window.getSelectionService().getSelection(); //"org.eclipse.jdt.ui.PackageExplorer");
 		if (selection == null) {
 			MessageDialog.openError(new Shell(), "Error", "Some error....quiting");
 			return;

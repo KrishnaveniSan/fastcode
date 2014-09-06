@@ -36,7 +36,6 @@ public class TemplateVisitor extends BaseVisitor {
 			if (!this.setVars.contains(varName)) {
 				this.setVars.add(varName);
 			}
-
 		}
 		boolean isValidVar = false;
 		if (!this.tmpvarList.contains(varName)) {
@@ -78,7 +77,6 @@ public class TemplateVisitor extends BaseVisitor {
 			this.forLoopLocalVar = node.jjtGetChild(0).literal().substring(1);
 			this.localVars.add(node.jjtGetChild(0).literal());
 			this.localVars.add(node.jjtGetChild(2).literal());
-
 		}
 		if (node.getDirectiveName().equalsIgnoreCase("macro")) {
 			this.isMacrodirective = true;
@@ -89,8 +87,8 @@ public class TemplateVisitor extends BaseVisitor {
 					break;
 				}
 			}
-
 		}
+
 		node.childrenAccept(this, data);
 		this.isForDirective = false;
 		this.isMacrodirective = false;
@@ -101,7 +99,6 @@ public class TemplateVisitor extends BaseVisitor {
 	@Override
 	public Object visit(final ASTSetDirective node, final Object data) {
 		this.isSetDirective = true;
-
 		return super.visit(node, data);
 	}
 

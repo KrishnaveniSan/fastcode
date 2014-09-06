@@ -15,6 +15,8 @@ public class FastCodeAdditionalParams {
 	private String			enabled;
 	private String			min;
 	private String			max;
+	private String			type;
+	private String			dependsOn;
 
 	public FastCodeAdditionalParams(final String name, final RETURN_TYPES returnTypes, final String defaultValue, final String required,
 			final String enabled) {
@@ -28,7 +30,7 @@ public class FastCodeAdditionalParams {
 
 	public FastCodeAdditionalParams(final String name, final RETURN_TYPES returnTypes, final String defaultValue, final String required,
 			final String pattern, final String project, final String allowedValues, final String label, final String enabled,
-			final String min, final String max) {
+			final String min, final String max, final String type, final String dependsOn) {
 		super();
 		this.name = name;
 		this.returnTypes = returnTypes;
@@ -41,6 +43,8 @@ public class FastCodeAdditionalParams {
 		this.enabled = enabled;
 		this.max = max;
 		this.min = min;
+		this.type = type;
+		this.dependsOn = dependsOn;
 	}
 
 	public String getMin() {
@@ -183,4 +187,43 @@ public class FastCodeAdditionalParams {
 		this.enabled = enabled;
 	}
 
+	/**
+	 *
+	 * getter method for type
+	 * @return
+	 *
+	 */
+	public String getType() {
+		return this.type;
+	}
+
+	/**
+	 *
+	 * setter method for type
+	 * @param type
+	 *
+	 */
+	public void setType(final String type) {
+		this.type = type;
+	}
+
+	/**
+	 *
+	 * getter method for dependsOn
+	 * @return
+	 *
+	 */
+	public String getDependsOn() {
+		return this.dependsOn;
+	}
+
+	/**
+	 *
+	 * setter method for dependsOn
+	 * @param dependsOn
+	 *
+	 */
+	public void setDependsOn(final String dependsOn) {
+		this.dependsOn = dependsOn;
+	}
 }

@@ -61,7 +61,9 @@ public class FastCodeTemplateViewer extends SourceViewer {
 											FastCodeTemplatePartitions.FC_FILES,
 											FastCodeTemplatePartitions.FC_PROPERTY,
 											FastCodeTemplatePartitions.FC_INFO,
-											FastCodeTemplatePartitions.FC_SNIPPET, 		
+											FastCodeTemplatePartitions.FC_SNIPPET,
+											FastCodeTemplatePartitions.SINGLE_LINE_JAVA_COMMENT,
+											FastCodeTemplatePartitions.MULTI_LINE_JAVA_COMMENT
 											}));
 			TextUtilities.addDocumentPartitioners(document, partitioners);
 		}

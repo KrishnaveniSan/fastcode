@@ -535,7 +535,7 @@ public class SourceUtil {
 	 * @param filePath
 	 */
 	public static IFile findFileFromPath(final String filePath) {
-		final IPath fullPath = Path.fromOSString(filePath);
+		final IPath fullPath = new Path(filePath);//Path.fromOSString(filePath);
 		final String fileName = fullPath.lastSegment();
 		final IPath folderPath = fullPath.removeLastSegments(1);
 		final IFolder folder = ResourcesPlugin.getWorkspace().getRoot().getFolder(folderPath);
@@ -3251,7 +3251,7 @@ public class SourceUtil {
 	 * @param folderPath
 	 * @throws Exception
 	 */
-	public static void backUpExistingExportFile(IFile file, final String fileName, String folderPath) throws Exception {
+	public static void backUpExistingExportFile(final IFile file, final String fileName, final String folderPath) throws Exception {
 		final DateFormat dateFormat = new SimpleDateFormat("dd-MMM-yyyy_HH_mm_ss");
 		final String currentDate = dateFormat.format(new Date());// computeDate(GlobalSettings.getInstance().getDateFormat());
 
@@ -3261,10 +3261,10 @@ public class SourceUtil {
 		//final File filefromIFile = file.getRawLocation().makeAbsolute().toFile();
 		//final String filePath = file.getRawLocation().makeAbsolute().toString();
 		//final File newFile = new File(filePath.substring(0, filePath.lastIndexOf('/')) + FORWARD_SLASH + oldFileName);
-		IFolder folder = getFolderFromPath(file.getProject(), folderPath);
+		final IFolder folder = getFolderFromPath(file.getProject(), folderPath);
 		if (folder != null && folder.exists()) {
-			IFile backUpFile = folder.getFile(oldFileName);//ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(newFile.getAbsolutePath()));
-			InputStream inputStream = file.getContents();
+			final IFile backUpFile = folder.getFile(oldFileName);//ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(newFile.getAbsolutePath()));
+			final InputStream inputStream = file.getContents();
 			if (backUpFile.exists()) {
 				backUpFile.setContents(inputStream, false, true, new NullProgressMonitor());
 			} else {
@@ -3876,7 +3876,7 @@ public class SourceUtil {
 	 * @return
 	 * @throws Exception
 	 */
-	public static IPackageFragment[] getPackagesInProject(IJavaProject workingJavaProject, String defaultPath, String type)
+	public static IPackageFragment[] getPackagesInProject(IJavaProject workingJavaProject, String defaultPath, final String type)
 			throws Exception {
 		final List<IPackageFragment> allPackages = new ArrayList<IPackageFragment>();
 		if (workingJavaProject.getElementName().equals(FC_PLUGIN)) {
@@ -3992,17 +3992,17 @@ public class SourceUtil {
 	 * @param snippet
 	 * @param packageFragment
 	 * @param project
-	 * @param clasName 
+	 * @param clasName
 	 * @return
 	 * @throws Exception
 	 */
-	public static ICompilationUnit createClass(String snippet, IPackageFragment packageFragment, IJavaProject project, String clasName)
+	public static ICompilationUnit createClass(final String snippet, final IPackageFragment packageFragment, final IJavaProject project, final String clasName)
 			throws Exception {
 		ICompilationUnit compilationUnitNew = null;
 		String finalSnippet = snippet;
 
 		finalSnippet = buildClass(snippet, packageFragment, project, clasName);
-		String className = StringUtil.parseClassName(finalSnippet);
+		final String className = StringUtil.parseClassName(finalSnippet);
 		/*getGlobalSettings(placeHolders);
 		final GlobalSettings globalSettings = getInstance();
 		String classHeader = evaluateByVelocity(globalSettings.getClassHeader(), placeHolders);
@@ -4323,7 +4323,7 @@ public class SourceUtil {
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	public static void loadComments() {
 		InputStream input = null;
@@ -4656,14 +4656,14 @@ public class SourceUtil {
 	 * @return
 	 * @throws Exception
 	 */
-	public static String buildClass(String snippet, IPackageFragment packageFragment, IJavaProject project, String clasName)
+	public static String buildClass(String snippet, IPackageFragment packageFragment, IJavaProject project, final String clasName)
 			throws Exception {
 		String packageDeclaration;
 		String finalSnippet = snippet;
 		final Map<String, Object> placeHolders = new HashMap<String, Object>();
 		getGlobalSettings(placeHolders);
 		final GlobalSettings globalSettings = getInstance();
-		String classHeader = evaluateByVelocity(globalSettings.getClassHeader(), placeHolders);
+		final String classHeader = evaluateByVelocity(globalSettings.getClassHeader(), placeHolders);
 		placeHolders.put(CLASS_HEADER_STR, classHeader);
 
 		String className = null;
@@ -4704,6 +4704,7 @@ public class SourceUtil {
 				classBody = replacePlaceHolderWithBlank(classBody, null, CLASS_MODIFIER_STR, makePlaceHolder(CLASS_TYPE_STR));
 			}
 			placeHolders.put(PACKAGE_NAME_STR, packageFragment.getElementName());
+
 			placeHolders.put(CLASS_NAME_STR, clasName);
 			getGlobalSettings(placeHolders);
 
@@ -4716,8 +4717,11 @@ public class SourceUtil {
 		}
 		packageDeclaration = PACKAGE_STR + SPACE + packageFragment.getElementName() + SEMICOLON + NEWLINE + NEWLINE;
 
-		if (!snippet.trim().contains(packageDeclaration.trim())) {
+		if (!snippet.trim().contains(packageDeclaration.trim()) && !isEmpty(packageFragment.getElementName())) {
 			finalSnippet = classHeader + packageDeclaration + snippet;
+		}
+		if (isEmpty(packageFragment.getElementName())) {
+			finalSnippet = finalSnippet.replace("package" + SPACE + SEMICOLON, EMPTY_STR).trim();
 		}
 		return finalSnippet;
 	}
@@ -4726,8 +4730,8 @@ public class SourceUtil {
 	 * @param elementName
 	 * @return
 	 */
-	public static Image getImagefromFCCacheMap(String elementName) {
-		FastCodeCache fastCodeCache = FastCodeCache.getInstance();
+	public static Image getImagefromFCCacheMap(final String elementName) {
+		final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
 		Image image = null;
 		image = fastCodeCache.getEntityImageMap().get(elementName);
 		if (image != null && !image.isDisposed()) {
@@ -4741,8 +4745,8 @@ public class SourceUtil {
 	 * @param elementName
 	 * @param elementImage
 	 */
-	public static void populateFCCacheEntityImageMap(String elementName, Image elementImage) {
-		FastCodeCache fastCodeCache = FastCodeCache.getInstance();
+	public static void populateFCCacheEntityImageMap(final String elementName, final Image elementImage) {
+		final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
 		if (!fastCodeCache.getEntityImageMap().containsKey(elementName)) {
 			fastCodeCache.getEntityImageMap().put(elementName, elementImage);
 		}

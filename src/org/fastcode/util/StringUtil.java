@@ -23,6 +23,7 @@ package org.fastcode.util;
 
 import static org.fastcode.common.FastCodeConstants.ASTERISK;
 import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_ALLOWED_VALUES;
+import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_DEPENDSON;
 import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_LABEL;
 import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_MAX;
 import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_MIN;
@@ -119,6 +120,8 @@ import com.sun.org.apache.xml.internal.serialize.OutputFormat;
 import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_ENABLED;
 import static org.fastcode.common.FastCodeConstants.ZERO_STRING;
+import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_TYPE;
+import org.fastcode.common.FastCodeConstants;
 
 /**
  * @author Gautam Dev
@@ -1836,21 +1839,27 @@ public class StringUtil {
 				validateParamValueAndType(paramVar, paramType, paramList, colonFound);
 				for (final Entry<String, String> attribute : allAttributes.entrySet()) {
 					if ((attribute.getKey().equals(ATTRIBUTE_MIN) || attribute.getKey().equals(ATTRIBUTE_MAX))
-							&& !paramType.toString().equalsIgnoreCase(INT)) {
-						throw new FastCodeException("Min or Max attribute can be used only with - int - parameter");
+							&& !(paramType.toString().equalsIgnoreCase(INT) || paramType.toString().equalsIgnoreCase(
+									RETURN_TYPES.INTRANGE.getValue()))) {
+						throw new FastCodeException("Min or Max attribute can be used only with - int or intRange - parameter");
 					}
+					if (attribute.getKey().equals(ATTRIBUTE_TYPE)
+							&& !paramType.toString().equalsIgnoreCase(RETURN_TYPES.LOCALVAR.getValue())) {
+						throw new FastCodeException("type attribute can be used only with localvar parameter");
+					}
+
 					if (!(attribute.getKey().equals(ATTRIBUTE_REQUIRED) || attribute.getKey().equals(ATTRIBUTE_PATTERN)
 							|| attribute.getKey().equals(PLACEHOLDER_PROJECT) || attribute.getKey().equals(ATTRIBUTE_LABEL)
 							|| attribute.getKey().equals(ATTRIBUTE_ALLOWED_VALUES) || attribute.getKey().equals(ATTRIBUTE_VALUE)
-							|| attribute.getKey().equals(ATTRIBUTE_ENABLED) || attribute.getKey().equals(ATTRIBUTE_MAX) || attribute
-							.getKey().equals(ATTRIBUTE_MIN))) {
+							|| attribute.getKey().equals(ATTRIBUTE_ENABLED) || attribute.getKey().equals(ATTRIBUTE_MAX)
+							|| attribute.getKey().equals(ATTRIBUTE_MIN) || attribute.getKey().equals(ATTRIBUTE_TYPE) || attribute.getKey().equals(ATTRIBUTE_DEPENDSON))) {
 						throw new FastCodeException("Attribute - " + attribute.getKey() + ", for parameter - " + paramVar
 								+ ", must be one of required/pattern/allowed_values/value/project/label/enabled");
 					}
 				}
 
 				if (allAttributes.containsKey(ATTRIBUTE_MAX) && allAttributes.containsKey(ATTRIBUTE_MIN)) {
-					if(!(Integer.parseInt(allAttributes.get(ATTRIBUTE_MIN)) <= Integer.parseInt(allAttributes.get(ATTRIBUTE_MAX)))) {
+					if (!(Integer.parseInt(allAttributes.get(ATTRIBUTE_MIN)) <= Integer.parseInt(allAttributes.get(ATTRIBUTE_MAX)))) {
 						throw new FastCodeException("Min must have value less than or equal to Max.");
 					}
 				}
@@ -1879,7 +1888,9 @@ public class StringUtil {
 						allAttributes.get(ATTRIBUTE_LABEL) == null ? EMPTY_STR : allAttributes.get(ATTRIBUTE_LABEL),
 						allAttributes.get(ATTRIBUTE_ENABLED) == null ? Boolean.toString(true) : allAttributes.get(ATTRIBUTE_ENABLED),
 						allAttributes.get(ATTRIBUTE_MIN) == null ? ZERO_STRING : allAttributes.get(ATTRIBUTE_MIN),
-						allAttributes.get(ATTRIBUTE_MAX) == null ? ZERO_STRING : allAttributes.get(ATTRIBUTE_MAX));
+						allAttributes.get(ATTRIBUTE_MAX) == null ? ZERO_STRING : allAttributes.get(ATTRIBUTE_MAX),
+								allAttributes.get(ATTRIBUTE_TYPE) == null ? EMPTY_STR : allAttributes.get(ATTRIBUTE_TYPE),
+										allAttributes.get(ATTRIBUTE_DEPENDSON) == null ? EMPTY_STR : allAttributes.get(ATTRIBUTE_DEPENDSON));
 				additionalParamsList.add(additionalParams);
 				createObj = false;
 				colonFound = false;
@@ -1894,24 +1905,24 @@ public class StringUtil {
 		for (final Entry<String, String> attribute : allAttributes.entrySet()) {
 
 			if ((attribute.getKey().equals(ATTRIBUTE_MIN) || attribute.getKey().equals(ATTRIBUTE_MAX))
-					&& !paramType.toString().equalsIgnoreCase(INT)) {
-				throw new FastCodeException("Min or Max attribute can be used only with - int - parameter");
+					&& !(paramType.toString().equalsIgnoreCase(INT) || paramType.toString().equalsIgnoreCase(
+							RETURN_TYPES.INTRANGE.getValue()))) {
+				throw new FastCodeException("Min or Max attribute can be used only with - int or intRange - parameter");
 			}
-			if ((attribute.getKey().equals(ATTRIBUTE_MIN) || attribute.getKey().equals(ATTRIBUTE_MAX))
-					&& !paramType.toString().equalsIgnoreCase(INT)) {
-				throw new FastCodeException("Min or Max attribute can be used only with - int - parameter");
+			if (attribute.getKey().equals(ATTRIBUTE_TYPE) && !paramType.toString().equalsIgnoreCase(RETURN_TYPES.LOCALVAR.getValue())) {
+				throw new FastCodeException("type attribute can be used only with localvar parameter");
 			}
 			if (!(attribute.getKey().equals(ATTRIBUTE_REQUIRED) || attribute.getKey().equals(ATTRIBUTE_PATTERN)
 					|| attribute.getKey().equals(PLACEHOLDER_PROJECT) || attribute.getKey().equals(ATTRIBUTE_LABEL)
 					|| attribute.getKey().equals(ATTRIBUTE_ALLOWED_VALUES) || attribute.getKey().equals(ATTRIBUTE_VALUE)
-					|| attribute.getKey().equals(ATTRIBUTE_ENABLED) || attribute.getKey().equals(ATTRIBUTE_MAX) || attribute.getKey()
-					.equals(ATTRIBUTE_MIN))) {
+					|| attribute.getKey().equals(ATTRIBUTE_ENABLED) || attribute.getKey().equals(ATTRIBUTE_MAX)
+					|| attribute.getKey().equals(ATTRIBUTE_MIN) || attribute.getKey().equals(ATTRIBUTE_TYPE) || attribute.getKey().equals(ATTRIBUTE_DEPENDSON))) {
 				throw new FastCodeException("Attribute - " + attribute.getKey() + ", for parameter - " + paramVar
 						+ ", must be one of required/pattern/allowed_values/value/project/label");
 			}
 		}
 		if (allAttributes.containsKey(ATTRIBUTE_MAX) && allAttributes.containsKey(ATTRIBUTE_MIN)) {
-			if(!(Integer.parseInt(allAttributes.get(ATTRIBUTE_MIN)) <= Integer.parseInt(allAttributes.get(ATTRIBUTE_MAX)))) {
+			if (!(Integer.parseInt(allAttributes.get(ATTRIBUTE_MIN)) <= Integer.parseInt(allAttributes.get(ATTRIBUTE_MAX)))) {
 				throw new FastCodeException("Min must have value less than or equal to Max.");
 			}
 		}
@@ -1939,7 +1950,9 @@ public class StringUtil {
 				allAttributes.get(ATTRIBUTE_LABEL) == null ? EMPTY_STR : allAttributes.get(ATTRIBUTE_LABEL),
 				allAttributes.get(ATTRIBUTE_ENABLED) == null ? Boolean.toString(true) : allAttributes.get(ATTRIBUTE_ENABLED),
 				allAttributes.get(ATTRIBUTE_MIN) == null ? ZERO_STRING : allAttributes.get(ATTRIBUTE_MIN),
-				allAttributes.get(ATTRIBUTE_MAX) == null ? ZERO_STRING : allAttributes.get(ATTRIBUTE_MAX));
+				allAttributes.get(ATTRIBUTE_MAX) == null ? ZERO_STRING : allAttributes.get(ATTRIBUTE_MAX),
+						allAttributes.get(ATTRIBUTE_TYPE) == null ? EMPTY_STR : allAttributes.get(ATTRIBUTE_TYPE),
+								allAttributes.get(ATTRIBUTE_DEPENDSON) == null ? EMPTY_STR : allAttributes.get(ATTRIBUTE_DEPENDSON));
 		additionalParamsList.add(additionalParams);
 
 		System.out.println(paramVar.toString());
