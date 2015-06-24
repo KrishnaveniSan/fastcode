@@ -103,6 +103,7 @@ public class DatabaseConnectionPreferencePage extends PreferencePage implements 
 
 	}
 
+	@Override
 	public void init(final IWorkbench workbench) {
 		// TODO Auto-generated method stub
 
@@ -195,6 +196,7 @@ public class DatabaseConnectionPreferencePage extends PreferencePage implements 
 
 		this.table.addListener(SWT.Selection, new Listener() {
 
+			@Override
 			public void handleEvent(final Event event) {
 				if (event.type == SWT.Selection) {
 					DatabaseConnectionPreferencePage.this.fEditButton.setEnabled(true);
@@ -206,6 +208,7 @@ public class DatabaseConnectionPreferencePage extends PreferencePage implements 
 
 		this.table.addMouseListener(new MouseListener() {
 
+			@Override
 			public void mouseDoubleClick(final MouseEvent e) {
 
 				final DatabaseDetails conn = DatabaseConnectionPreferencePage.this.connList.get(DatabaseConnectionPreferencePage.this.table
@@ -214,10 +217,12 @@ public class DatabaseConnectionPreferencePage extends PreferencePage implements 
 
 			}
 
+			@Override
 			public void mouseDown(final MouseEvent e) {
 
 			}
 
+			@Override
 			public void mouseUp(final MouseEvent e) {
 				// TODO Auto-generated method stub
 
@@ -237,6 +242,7 @@ public class DatabaseConnectionPreferencePage extends PreferencePage implements 
 		this.fAddButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		this.fAddButton.addListener(SWT.Selection, new Listener() {
 
+			@Override
 			public void handleEvent(final Event e) {
 				add();
 				refresh();
@@ -249,6 +255,7 @@ public class DatabaseConnectionPreferencePage extends PreferencePage implements 
 		this.fEditButton.setEnabled(false);
 		this.fEditButton.addListener(SWT.Selection, new Listener() {
 
+			@Override
 			public void handleEvent(final Event e) {
 
 				final int index = DatabaseConnectionPreferencePage.this.table.getSelectionIndex();
@@ -268,6 +275,7 @@ public class DatabaseConnectionPreferencePage extends PreferencePage implements 
 
 		this.fRemoveButton.addListener(SWT.Selection, new Listener() {
 
+			@Override
 			public void handleEvent(final Event e) {
 				final int index = DatabaseConnectionPreferencePage.this.table.getSelectionIndex();
 				if (index > -1) {
@@ -285,6 +293,7 @@ public class DatabaseConnectionPreferencePage extends PreferencePage implements 
 		this.fImportButton.setText("Import");
 		this.fImportButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		this.fImportButton.addListener(SWT.Selection, new Listener() {
+			@Override
 			public void handleEvent(final Event e) {
 				try {
 					loadFromTNSFile();
@@ -300,6 +309,7 @@ public class DatabaseConnectionPreferencePage extends PreferencePage implements 
 		this.fExportButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		// this.fExportButton.setEnabled(false);
 		this.fExportButton.addListener(SWT.Selection, new Listener() {
+			@Override
 			public void handleEvent(final Event e) {
 				//put code
 			}
@@ -310,6 +320,7 @@ public class DatabaseConnectionPreferencePage extends PreferencePage implements 
 		innerParent.layout();
 		getControl().addListener(SWT.Traverse, new Listener() {
 
+			@Override
 			public void handleEvent(final Event event) {
 				if (event.detail == SWT.TRAVERSE_ESCAPE) {
 
@@ -320,6 +331,9 @@ public class DatabaseConnectionPreferencePage extends PreferencePage implements 
 		return parent;
 	}
 
+	/**
+	 * @return
+	 */
 	private List<DatabaseDetails> loadInput() {
 		this.connList = DatabaseUtil.loadConnectionsFromPreferenceStore();
 		Collections.sort(this.connList);
@@ -327,6 +341,9 @@ public class DatabaseConnectionPreferencePage extends PreferencePage implements 
 
 	}
 
+	/**
+	 *
+	 */
 	protected void add() {
 
 		final DatabaseConnectionDialog dialog = new DatabaseConnectionDialog(new Shell(), this.preferenceStore);
@@ -336,6 +353,9 @@ public class DatabaseConnectionPreferencePage extends PreferencePage implements 
 
 	}
 
+	/**
+	 * @param conn
+	 */
 	protected void editConnectionData(final DatabaseDetails conn) {
 
 		final DatabaseConnectionDialog dialog = new DatabaseConnectionDialog(new Shell(), this.preferenceStore, conn);
@@ -347,25 +367,37 @@ public class DatabaseConnectionPreferencePage extends PreferencePage implements 
 		DatabaseConnectionPreferencePage.this.fTableViewer.refresh();
 	}
 
+	/**
+	 * @param conn
+	 */
 	protected void remove(final DatabaseDetails conn) {
 
-		final String con = getString(conn);
+		final String con = getConnectionString(conn);
 		String connString = this.preferenceStore.getString(P_DATABASE_CONN_DATA);
 		connString = connString.replace(con, EMPTY_STR);
-		this.preferenceStore.setValue(P_DATABASE_CONN_DATA, connString);
+		this.preferenceStore.setValue(P_DATABASE_CONN_DATA, connString.trim());
 		refresh();
 		DatabaseConnectionSettings.setReload(true);
 
 	}
 
-	private String getString(final DatabaseDetails conn) {
+	/**
+	 * @param conn
+	 * @return
+	 */
+	private String getConnectionString(final DatabaseDetails conn) {
 
 		final String FIELD_DELIMITER = this.preferenceStore.getString(P_DBCONN_FIELD_DELIMITER);
+		final String RECORD_DELIMITER = this.preferenceStore.getString(P_DBCONN_RECORD_DELIMITER);
 		return conn.getDatabaseType() + FIELD_DELIMITER + conn.getDatabaseName() + FIELD_DELIMITER + conn.getHostAddress()
 				+ FIELD_DELIMITER + conn.getPort() + FIELD_DELIMITER + conn.getUserName() + FIELD_DELIMITER + conn.getPassword()
-				+ FIELD_DELIMITER + conn.isDefaultConn();
+				+ FIELD_DELIMITER + conn.isDefaultConn() + FIELD_DELIMITER + conn.getDriverClass() + FIELD_DELIMITER + conn.getDriverPrj()
+				+ RECORD_DELIMITER;
 	}
 
+	/**
+	 *
+	 */
 	private void refresh() {
 
 		this.fTableViewer.setInput(loadInput());
@@ -460,6 +492,7 @@ class DBConnectionLabelProvider extends LabelProvider implements ITableLabelProv
 	 * .Object, int)
 	 */
 
+	@Override
 	public Image getColumnImage(final Object element, final int columnIndex) {
 		return null;
 	}
@@ -470,6 +503,7 @@ class DBConnectionLabelProvider extends LabelProvider implements ITableLabelProv
 	 * .Object, int)
 	 */
 
+	@Override
 	public String getColumnText(final Object element, final int columnIndex) {
 		final DatabaseDetails data = (DatabaseDetails) element;
 
@@ -487,6 +521,10 @@ class DBConnectionLabelProvider extends LabelProvider implements ITableLabelProv
 		}
 	}
 
+	/**
+	 * @param conn
+	 * @return
+	 */
 	public String getConnURL(final DatabaseDetails conn) {
 
 		final String databaseType = conn.getDatabaseType();
@@ -526,6 +564,7 @@ class DBConnectionContentProvider implements IStructuredContentProvider {
 	 * @see IStructuredContentProvider#getElements(Object)
 	 */
 
+	@Override
 	public Object[] getElements(final Object input) {
 		return ((List<DatabaseDetails>) input).toArray();
 	}
@@ -534,6 +573,7 @@ class DBConnectionContentProvider implements IStructuredContentProvider {
 	 * @see IContentProvider#inputChanged(Viewer, Object, Object)
 	 */
 
+	@Override
 	public void inputChanged(final Viewer viewer, final Object oldInput, final Object newInput) {
 
 	}
@@ -542,6 +582,7 @@ class DBConnectionContentProvider implements IStructuredContentProvider {
 	 * @see IContentProvider#dispose()
 	 */
 
+	@Override
 	public void dispose() {
 
 	}

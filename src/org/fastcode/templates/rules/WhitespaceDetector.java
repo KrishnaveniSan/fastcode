@@ -10,6 +10,7 @@ public class WhitespaceDetector implements IWhitespaceDetector {
 	/*
 	 * @see org.eclipse.jface.text.rules.IWhitespaceDetector#isWhitespace(char)
 	 */
+	@Override
 	public boolean isWhitespace(final char c) {
 		return Character.isWhitespace(c);
 	}

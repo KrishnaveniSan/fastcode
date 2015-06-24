@@ -5,9 +5,9 @@ package org.fastcode.popup.actions.snippet;
 
 import static org.fastcode.common.FastCodeConstants.CLASS_HEADER_STR;
 import static org.fastcode.common.FastCodeConstants.NEWLINE;
+import static org.fastcode.common.FastCodeConstants.REPLACE_SELECTED_TEXT;
 import static org.fastcode.common.FastCodeConstants.TEMPLATE_TYPE;
 import static org.fastcode.common.FastCodeConstants.XML_EXTENSION;
-
 import static org.fastcode.setting.GlobalSettings.getInstance;
 import static org.fastcode.util.StringUtil.evaluateByVelocity;
 import static org.fastcode.util.StringUtil.format;
@@ -28,7 +28,6 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
 import org.fastcode.setting.GlobalSettings;
-import org.fastcode.util.FastCodeFileForCheckin;
 
 /**
  * @author Gautam
@@ -45,6 +44,7 @@ public class DefaultSnippetCreator implements SnippetCreator {
 	 * @throws Exception
 	 *
 	 */
+	@Override
 	public Object createSnippet(final IEditorPart editorPart, final String template, final Map<String, Object> placeHolders,
 			final Map<String, Object> memberSelection, final String spacesBeforeCursor) throws Exception {
 
@@ -86,32 +86,43 @@ public class DefaultSnippetCreator implements SnippetCreator {
 		final IDocumentProvider documentProvider = editor.getDocumentProvider();
 		final IDocument document = documentProvider.getDocument(editor.getEditorInput());
 		final String finalSnippet = snippet.trim();
-		document.replace(selection.getOffset(), 0, finalSnippet);
 
+		if ((Boolean) placeHolders.get(REPLACE_SELECTED_TEXT)) {
+			document.replace(selection.getOffset(),
+					selection.getLength(), finalSnippet);
+		} else {
+		document.replace(selection.getOffset(), 0, finalSnippet);
+		}
 		if (highlightSnippet()) {
 
 			final ITextSelection highlightSelection = new ITextSelection() {
 
+				@Override
 				public boolean isEmpty() {
 					return false;
 				}
 
+				@Override
 				public String getText() {
 					return null;
 				}
 
+				@Override
 				public int getStartLine() {
 					return selection.getStartLine();
 				}
 
+				@Override
 				public int getOffset() {
 					return selection.getOffset();
 				}
 
+				@Override
 				public int getLength() {
 					return finalSnippet.length();
 				}
 
+				@Override
 				public int getEndLine() {
 					return selection.getEndLine() + finalSnippet.split(NEWLINE).length;
 				}

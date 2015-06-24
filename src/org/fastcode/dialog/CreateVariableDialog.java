@@ -371,6 +371,7 @@ public class CreateVariableDialog extends TrayDialog {
 
 		this.annotationsList.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 
 				if (CreateVariableDialog.this.annotationsList.getSelectionIndices().length >= 1) {
@@ -383,6 +384,7 @@ public class CreateVariableDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -466,6 +468,7 @@ public class CreateVariableDialog extends TrayDialog {
 		}
 
 		this.insertionPointCombo.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 
 				final int selectionIndex = CreateVariableDialog.this.insertionPointCombo.getSelectionIndex();
@@ -486,6 +489,7 @@ public class CreateVariableDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -756,6 +760,7 @@ public class CreateVariableDialog extends TrayDialog {
 		}
 		this.privateButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent arg0) {
 				if (CreateVariableDialog.this.privateButton.getSelection()) {
 					if (CreateVariableDialog.this.publicStaticFinalButton != null
@@ -766,6 +771,7 @@ public class CreateVariableDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -773,6 +779,7 @@ public class CreateVariableDialog extends TrayDialog {
 		});
 		this.publicButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent arg0) {
 				if (CreateVariableDialog.this.publicButton.getSelection()) {
 					if (CreateVariableDialog.this.staticButton != null && CreateVariableDialog.this.staticButton.getSelection()
@@ -783,6 +790,7 @@ public class CreateVariableDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -847,6 +855,7 @@ public class CreateVariableDialog extends TrayDialog {
 	protected void addDisableListener(final Button option, final boolean getter, final boolean setter, final boolean both,
 			final boolean none, final boolean adder, final boolean builder) {
 		option.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetSelected(final SelectionEvent selectionEvent) {
 				CreateVariableDialog.this.getterButton.setEnabled(getter);
 				if (!getter) {
@@ -881,6 +890,7 @@ public class CreateVariableDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent selectionEvent) {
 			}
 		});
@@ -896,6 +906,7 @@ public class CreateVariableDialog extends TrayDialog {
 		this.primitivesRadioButton.setPreferenceStore(this.preferenceStore);
 		this.primitivesRadioButton.setPropertyChangeListener(new IPropertyChangeListener() {
 
+			@Override
 			public void propertyChange(final PropertyChangeEvent event) {
 				CreateVariableDialog.this.type = (String) event.getNewValue();
 
@@ -994,9 +1005,11 @@ public class CreateVariableDialog extends TrayDialog {
 		this.getterAdderButton.setEnabled(false);
 		this.getterAdderButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 			}
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 
 			}
@@ -1007,9 +1020,11 @@ public class CreateVariableDialog extends TrayDialog {
 		this.getterSetterButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		this.getterSetterButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 			}
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 
 			}
@@ -1026,10 +1041,12 @@ public class CreateVariableDialog extends TrayDialog {
 		}
 		this.noneButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -1061,6 +1078,7 @@ public class CreateVariableDialog extends TrayDialog {
 		text.addModifyListener(new ModifyListener() {
 			String	exstFileds	= EMPTY_STR;
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 				final String name = CreateVariableDialog.this.fieldType.getText();
 				String errMsg = EMPTY_STR;
@@ -1168,9 +1186,11 @@ public class CreateVariableDialog extends TrayDialog {
 			}
 		});
 		text.addFocusListener(new FocusListener() {
+			@Override
 			public void focusGained(final FocusEvent e) {
 			}
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 				final String name = CreateVariableDialog.this.fieldType.getText();
 				if (!CreateVariableDialog.this.origFieldName.equals(name)) {
@@ -1219,6 +1239,7 @@ public class CreateVariableDialog extends TrayDialog {
 		gridDataText.minimumWidth = 500;
 		text.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 				if (isEmpty(text.getText())) {
 					CreateVariableDialog.this.setErrorMessage("Please choose field type.", false, EMPTY_STR);
@@ -1235,9 +1256,11 @@ public class CreateVariableDialog extends TrayDialog {
 		this.browse.setLayoutData(gridDataButton);
 		this.browse.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 			}
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 
 				final SelectionDialog selectionDialog;
@@ -1382,6 +1405,7 @@ public class CreateVariableDialog extends TrayDialog {
 
 		this.listButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent selectionEvent) {
 				if (CreateVariableDialog.this.listButton.getSelection()) {
 					CreateVariableDialog.this.setCombo.setEnabled(false);
@@ -1430,14 +1454,17 @@ public class CreateVariableDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent selectionEvent) {
 			}
 		});
 		this.listCombo.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 
 			}
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				if (CreateVariableDialog.this.listCombo.getSelectionIndex() == 0) {
 					CreateVariableDialog.this.listCombo.select(1);
@@ -1446,6 +1473,7 @@ public class CreateVariableDialog extends TrayDialog {
 		});
 		this.setButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent selectionEvent) {
 				if (CreateVariableDialog.this.setButton.getSelection()) {
 
@@ -1496,14 +1524,17 @@ public class CreateVariableDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent selectionEvent) {
 			}
 		});
 		this.setCombo.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 
 			}
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				if (CreateVariableDialog.this.setCombo.getSelectionIndex() == 0) {
 					CreateVariableDialog.this.setCombo.select(1);
@@ -1513,6 +1544,7 @@ public class CreateVariableDialog extends TrayDialog {
 
 		this.notReqButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent selectionEvent) {
 				if (CreateVariableDialog.this.notReqButton.getSelection()) {
 					CreateVariableDialog.this.arrayDim.setEnabled(false);
@@ -1528,11 +1560,13 @@ public class CreateVariableDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent selectionEvent) {
 			}
 		});
 		this.arrayButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent selectionEvent) {
 				CreateVariableDialog.this.initialText.setText(CreateVariableDialog.initialValueMap.get("array"));
 				if (CreateVariableDialog.this.arrayButton.getSelection()) {
@@ -1554,6 +1588,7 @@ public class CreateVariableDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent selectionEvent) {
 			}
 		});
@@ -1569,10 +1604,12 @@ public class CreateVariableDialog extends TrayDialog {
 		this.arrayDim.setEnabled(false);
 		this.arrayDim.select(0);
 		this.arrayDim.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 
 			}
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				if (CreateVariableDialog.this.arrayDim.getSelectionIndex() == 0) {
 					CreateVariableDialog.this.arrayDim.select(1);
@@ -1615,10 +1652,12 @@ public class CreateVariableDialog extends TrayDialog {
 		this.staticButton.setText("STATIC");
 		//final String variableName = null;
 		this.staticButton.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 
 			}
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 
 				if (CreateVariableDialog.this.staticButton.getSelection()) {
@@ -1660,6 +1699,7 @@ public class CreateVariableDialog extends TrayDialog {
 
 		this.finalButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent selectionEvent) {
 				CreateVariableDialog.this.noneButton.setEnabled(true);
 				if (CreateVariableDialog.this.finalButton.getSelection()) {
@@ -1715,6 +1755,7 @@ public class CreateVariableDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent selectionEvent) {
 			}
 		});
@@ -1723,6 +1764,7 @@ public class CreateVariableDialog extends TrayDialog {
 		this.publicStaticFinalButton.setText("public static final");
 
 		this.publicStaticFinalButton.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetSelected(final SelectionEvent selectionEvent) {
 				final boolean selected = CreateVariableDialog.this.publicStaticFinalButton.getSelection();
 				if (selected) {
@@ -1782,6 +1824,7 @@ public class CreateVariableDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent selectionEvent) {
 			}
 		});
@@ -1812,6 +1855,7 @@ public class CreateVariableDialog extends TrayDialog {
 		this.changeToWrapper.setLayoutData(gridData);
 		this.changeToWrapper.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				if (CreateVariableDialog.this.changeToWrapper.getSelection()) {
 					CreateVariableDialog.this.definedClassType.setText(CreateVariableDialog.premitiveWrapperMap
@@ -1831,6 +1875,7 @@ public class CreateVariableDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 			}
 		});
@@ -1861,6 +1906,7 @@ public class CreateVariableDialog extends TrayDialog {
 		this.initialText.setEnabled(false);
 		this.initialText.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 				final String initialValue = CreateVariableDialog.this.initialText.getText();
 				if (!isEmpty(initialValue) && !CreateVariableDialog.this.createVariableData.isCreateFieldSimple()) {
@@ -1876,6 +1922,7 @@ public class CreateVariableDialog extends TrayDialog {
 		});
 		this.initializeButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent selectionEvent) {
 				if (CreateVariableDialog.this.initializeButton.getSelection()) {
 					CreateVariableDialog.this.initialText.setEnabled(true);
@@ -1921,6 +1968,7 @@ public class CreateVariableDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent selectionEvent) {
 			}
 		});
@@ -1945,6 +1993,7 @@ public class CreateVariableDialog extends TrayDialog {
 		this.doNotChange.setLayoutData(gridData);
 		this.doNotChange.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				if (CreateVariableDialog.this.doNotChange.getSelection()) {
 					if (!isEmpty(CreateVariableDialog.this.origFieldName)) {
@@ -1956,6 +2005,7 @@ public class CreateVariableDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 			}
 		});
@@ -1988,10 +2038,12 @@ public class CreateVariableDialog extends TrayDialog {
 		this.builderPattern = new Button(parent, SWT.RADIO);
 		this.builderPattern.setText("Builder Pattern");
 		this.builderPattern.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 
 			}
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				if (CreateVariableDialog.this.builderPattern.getSelection()
 						&& (CreateVariableDialog.this.staticButton.getSelection() || CreateVariableDialog.this.publicStaticFinalButton

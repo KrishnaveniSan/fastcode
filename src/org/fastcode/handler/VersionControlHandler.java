@@ -12,6 +12,7 @@ import org.fastcode.FastCodeCommandState;
 
 public class VersionControlHandler extends AbstractHandler {
 
+	@Override
 	public Object execute(final ExecutionEvent event) throws ExecutionException {
 		// Get the source provider service
 	    final ISourceProviderService sourceProviderService = (ISourceProviderService) HandlerUtil

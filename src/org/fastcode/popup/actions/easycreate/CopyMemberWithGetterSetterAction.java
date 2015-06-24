@@ -34,17 +34,20 @@ import org.eclipse.ui.IEditorPart;
  */
 public class CopyMemberWithGetterSetterAction implements IEditorActionDelegate {
 
-	public void run(IAction action) {
+	@Override
+	public void run(final IAction action) {
 		// TODO Auto-generated method stub
 
 	}
 
-	public void setActiveEditor(IAction action, IEditorPart targetEditor) {
+	@Override
+	public void setActiveEditor(final IAction action, final IEditorPart targetEditor) {
 		// TODO Auto-generated method stub
 
 	}
 
-	public void selectionChanged(IAction action, ISelection selection) {
+	@Override
+	public void selectionChanged(final IAction action, final ISelection selection) {
 		// TODO Auto-generated method stub
 
 	}

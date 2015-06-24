@@ -137,6 +137,7 @@ public class CopyMemberAction extends AbstractActionSupport implements IEditorAc
 	protected CreateVariableData	createVariableData;
 	IPreferenceStore				preferenceStore;
 
+	@Override
 	public void dispose() {
 	}
 

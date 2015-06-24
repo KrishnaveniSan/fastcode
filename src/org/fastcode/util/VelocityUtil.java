@@ -4,16 +4,27 @@ import static org.fastcode.common.FastCodeConstants.BACK_SLASH;
 import static org.fastcode.common.FastCodeConstants.COMMA;
 import static org.fastcode.common.FastCodeConstants.DOT;
 import static org.fastcode.common.FastCodeConstants.EMPTY_STR;
+import static org.fastcode.common.FastCodeConstants.FC_LOCAL_VAL_LIST;
 import static org.fastcode.common.FastCodeConstants.LEFT_CURL;
 import static org.fastcode.common.FastCodeConstants.LEFT_PAREN;
+import static org.fastcode.common.FastCodeConstants.LOCAL_VARIABLES;
+import static org.fastcode.common.FastCodeConstants.RETURN_VALUE;
 import static org.fastcode.common.FastCodeConstants.RIGHT_CURL;
 import static org.fastcode.common.FastCodeConstants.RIGHT_PAREN;
+import static org.fastcode.common.FastCodeConstants.SET_VARIABLES;
 import static org.fastcode.common.FastCodeConstants.SPACE;
 import static org.fastcode.common.FastCodeConstants.UNDERSCORE;
-import static org.fastcode.common.FastCodeConstants.DOLLAR;
+import static org.fastcode.common.FastCodeConstants.VALID_VARIABLES;
+import static org.fastcode.common.FastCodeConstants.VALID_VARIABLE_LIST;
 import static org.fastcode.preferences.PreferenceConstants.P_DATABASE_TEMPLATE_PREFIX;
 import static org.fastcode.preferences.PreferenceConstants.P_FILE_TEMPLATE_PLACHOLDER_NAME;
+import static org.fastcode.util.FastCodeUtil.getEmptyArrayForNull;
+import static org.fastcode.util.FastCodeUtil.getEmptyListForNull;
+import static org.fastcode.util.SourceUtil.openMessageDilalog;
+import static org.fastcode.util.SourceUtil.showWarning;
+import static org.fastcode.util.StringUtil.getNoOfTabs;
 import static org.fastcode.util.StringUtil.isEmpty;
+import static org.fastcode.util.StringUtil.loadVelocityClasses;
 import static org.fastcode.util.StringUtil.parseAdditonalParam;
 
 import java.io.InputStream;
@@ -28,6 +39,7 @@ import java.util.SortedSet;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.runtime.parser.node.SimpleNode;
 import org.apache.velocity.runtime.resource.loader.StringResourceLoader;
 import org.apache.velocity.runtime.resource.util.StringResourceRepository;
@@ -40,7 +52,9 @@ import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.text.templates.GlobalTemplateVariables.Dollar;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.Position;
 import org.eclipse.swt.widgets.Shell;
 import org.fastcode.Activator;
 import org.fastcode.common.FastCodeAdditionalParams;
@@ -48,9 +62,11 @@ import org.fastcode.common.FastCodeConstants.FIRST_TEMPLATE;
 import org.fastcode.common.FastCodeConstants.SECOND_TEMPLATE;
 import org.fastcode.exception.FastCodeException;
 import org.fastcode.preferences.TemplateVisitor;
-import static org.fastcode.util.SourceUtil.openMessageDilalog;
-import static org.fastcode.util.SourceUtil.showWarning;
-import static org.fastcode.util.FastCodeUtil.getEmptyArrayForNull;
+import org.fastcode.templates.util.FastCodeLocalVariables;
+import org.fastcode.templates.util.InvalidVariables;
+import org.fastcode.templates.util.ValidVariables;
+import org.fastcode.templates.viewer.TemplateFieldEditor;
+import org.fastcode.templates.viewer.TemplateFieldEditor.ErrorAnnotation;
 
 public class VelocityUtil {
 
@@ -62,33 +78,123 @@ public class VelocityUtil {
 	/**
 	 * @param templateBody
 	 * @param templateDetailsForVelocity
+	 * @param atEOF
+	 * @param templateBodyField
+	 * @param showErrorMessage
 	 * @return
 	 */
-	public boolean parseTemplateBody(final String templateBody, final TemplateDetailsForVelocity templateDetailsForVelocity) {
+	public Boolean parseTemplateBody(final String templateBody, final TemplateDetailsForVelocity templateDetailsForVelocity,
+			final boolean validate, final boolean atEOF, final TemplateFieldEditor templateBodyField, final boolean showErrorMessage) {
 		VelocityEngine engine = null;
 		boolean closeWindow = true;
 		try {
 			engine = getVelocityEngine(engine);
 			final StringResourceRepository repository = StringResourceLoader.getRepository();
 
-			repository.putStringResource("templateBody", templateBody);
+			if (atEOF) {
+				repository.putStringResource("templateBody", templateBody.substring(0, templateBody.length() - 1));
+			} else {
+				repository.putStringResource("templateBody", templateBody);
+			}
 
 			final Template t = engine.getTemplate("templateBody");
 
 			final SimpleNode sn = (SimpleNode) t.getData();
 			final Object o1 = templateDetailsForVelocity;
 
+			clearLocalVarsList();
+			/*System.out.println("invalid vars" + this.visitor.getInvalidVariable());
+			System.out.println(validate);*/
 			sn.jjtAccept(this.visitor, o1);
 
-			if (this.visitor.getInvalidVariable().replaceFirst(COMMA, EMPTY_STR).trim().length() > 0) {
+			if (validate) {
+				if (this.visitor.getInvalidVariable().replaceFirst(COMMA, EMPTY_STR).trim().length() > 0) {
+					for (final InvalidVariables invalidVar : this.visitor.getInvalidVarsList()) {
+						if (templateBodyField != null) {
+							int lineOffset = 0;
+							int pos = 0;
+							try {
+								final IRegion reg = templateBodyField.getDocument().getLineInformation(
+										invalidVar.getVarLineNo() > 0 ? invalidVar.getVarLineNo() - 1 : invalidVar.getVarLineNo());
+								lineOffset = templateBodyField.getDocument().getLineOffset(
+										invalidVar.getVarLineNo() > 0 ? invalidVar.getVarLineNo() - 1 : invalidVar.getVarLineNo());
+								final String lineContent = templateBodyField.getDocument().get(reg.getOffset(), reg.getLength());
+								/*System.out.println(lineContent);
+								System.out.println(lineContent.indexOf(invalidVar.getVarName()));
+								System.out.println(reg.toString());
+								System.out.println(lineOffset);*/
+								//System.out.println(lineContent);
+								/*System.out.println("numbr of tabs" + noOfTab);
+								System.out.println(noOfTab * 8);
+								System.out.println("lineOffSet" + lineOffset);
+								System.out.println("var col" + invalidVar.getVarCol());*/
+								pos = lineOffset + invalidVar.getVarCol() + 1 - getNoOfTabs(lineContent) * 7;
+								//System.out.println("pos" + pos);
+							} catch (final BadLocationException ex) {
+								// TODO Auto-generated catch block
+								ex.printStackTrace();
+							}
+							final ErrorAnnotation errorAnnotation = templateBodyField.new ErrorAnnotation(
+									invalidVar.getVarLineNo() > 0 ? invalidVar.getVarLineNo() - 1 : invalidVar.getVarLineNo(),
+									"Invalid variable '" + invalidVar.getVarName() + "'");
 
-				closeWindow = showWarning("Template " + templateDetailsForVelocity.getTemplateName() + " contains variables "
-						+ this.visitor.getInvalidVariable().replaceFirst(COMMA, EMPTY_STR)
-						+ " which are neither inbuilt nor locally defined" + this.msg2, "Proceed Anyway", "Cancel");
+							templateBodyField.addAnnotation(errorAnnotation, new Position(pos, invalidVar.getVarName().length()));
+						}
+					}
+
+					if (showErrorMessage) {
+						closeWindow = showWarning("Template " + templateDetailsForVelocity.getTemplateName() + " contains variables "
+								+ this.visitor.getInvalidVariable().replaceFirst(COMMA, EMPTY_STR)
+								+ " which are neither inbuilt nor locally defined" + this.msg2, "Proceed Anyway", "Cancel");
+					}
+				}
 			}
-
+		} catch (final ParseErrorException ex) {
+			closeWindow = false;
+			/*MessageDialog.openError(new Shell(), "Error", "Error in parsing. Cannot validate the template now. Please validate manually and proceed. "
+					+ ex.getMessage());*/
+			return closeWindow;
 		} catch (final Exception ex) {
-			ex.printStackTrace();
+			System.out.println("Velocity Util -- parseTemplateBody" + ex.getMessage());
+			/*if (ex instanceof ParseErrorException) {
+				int lineNo = ((ParseErrorException) ex).getLineNumber() - 1; //pe.currentToken.next.beginLine - 1;
+				final int colNo = ((ParseErrorException) ex).getColumnNumber() - 1; //pe.currentToken.next.beginColumn - 1;
+				int lineOffset = 0;
+				int docLen = 0;
+				try {
+					final IRegion reg = templateBodyField.getDocument().getLineInformation(lineNo);
+					docLen = templateBodyField.getDocument().getLineLength(lineNo);
+					lineOffset = templateBodyField.getDocument().getLineOffset(lineNo);
+					final int lineOfOffset = templateBodyField.getDocument().getLineOfOffset(lineNo);
+					final String lineContent = templateBodyField.getDocument().get(reg.getOffset(), reg.getLength());
+					System.out.println(reg);
+					System.out.println(lineOffset);
+					System.out.println(docLen);
+					System.out.println("text-" + reg.toString());
+					System.out.println("line content-" + templateBodyField.getDocument().get(lineOffset - docLen, docLen));
+					System.out.println(lineOffset - docLen);
+					System.out.println("content-" + lineContent);
+					if (isEmpty(lineContent)) {
+						lineOffset = templateBodyField.getDocument().getLineOffset(lineNo - 1);
+						lineNo = lineNo - 1;
+
+					}
+				} catch (final BadLocationException badEx) {
+					// TODO Auto-generated catch block
+					badEx.printStackTrace();
+				}
+				final ErrorAnnotation errorAnnotation = templateBodyField.new ErrorAnnotation(lineNo, ex.getLocalizedMessage());
+
+				templateBodyField.addAnnotation(errorAnnotation, new Position(lineOffset, 5));
+				if (showErrorMessage) {
+					MessageDialog.openError(new Shell(), "Error", "Error in template body " + ex.getLocalizedMessage());
+				}
+			}*/
+			System.out.println("VelocityUtil line 192 ..exception block...");
+			closeWindow = false;
+			/*MessageDialog.openError(new Shell(), "Error",
+					"Error in parsing. Cannot validate the template now. Please validate manually and proceed. " + ex.getMessage());*/
+			return null;
 		}
 
 		return closeWindow;
@@ -112,6 +218,32 @@ public class VelocityUtil {
 		return setvars;
 	}
 
+	public String getForLoopLocVar() {
+		String forLoopVar = EMPTY_STR;
+		forLoopVar = this.visitor.getForLoopLocalVar();
+
+		return forLoopVar;
+	}
+
+	public List<FastCodeLocalVariables> getFastCodeLocVarList() {
+		List<FastCodeLocalVariables> fcLocalVars = null;
+		fcLocalVars = this.visitor.getLocalVarsList();
+		return fcLocalVars;
+	}
+
+	public void clearLocalVarsList() {
+		if (this.visitor.getLocalVarsList() != null) {
+			this.visitor.getLocalVarsList().clear();
+		}
+		this.visitor.setInvalidVariable(EMPTY_STR);
+	}
+
+	public List<ValidVariables> getValidVariableList() {
+		List<ValidVariables> validVars = null;
+		validVars = this.visitor.getValidVarsList();
+		return validVars;
+	}
+
 	/**
 	 * @param engine
 	 * @return
@@ -122,8 +254,23 @@ public class VelocityUtil {
 		final Properties p = new Properties();
 		p.setProperty("resource.loader", "string");
 		p.setProperty("string.resource.loader.class", "org.apache.velocity.runtime.resource.loader.StringResourceLoader");
-		engine = new VelocityEngine();
-		engine.init(p);
+		final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+		final ClassLoader classLoader = Activator.class.getClassLoader();
+		Thread.currentThread().setContextClassLoader(classLoader);
+		loadVelocityClasses(classLoader);
+		try {
+			engine = new VelocityEngine();
+			engine.init(p);
+
+		} catch (final Exception exp) {
+			MessageDialog.openError(new Shell(), "Error",
+					"Error in parsing (VelocityUtil ---> getVelocityEngine). Cannot validate the template now. Please validate manually and proceed. " + exp.getMessage());
+			//throw exp;
+			return null;
+		} finally {
+			Thread.currentThread().setContextClassLoader(contextClassLoader);
+		}
+
 		return engine;
 	}
 
@@ -198,19 +345,24 @@ public class VelocityUtil {
 	 * @param templateName
 	 * @param templatePrefix
 	 * @param preferenceStore
+	 * @param templateBodyField
+	 * @param showErrorMessage
 	 * @return
 	 */
-	public boolean validateVariablesAndMethods(final String templateBody, final String currentFirstTemplateItemValue,
+	public Boolean validateVariablesAndMethods(final String templateBody, final String currentFirstTemplateItemValue,
 			final String currentSecondTemplateItemValue, final String additionalParam, final String templateName,
-			final String templatePrefix, final IPreferenceStore preferenceStore) {
+			final String templatePrefix, final IPreferenceStore preferenceStore, final TemplateFieldEditor templateBodyField,
+			final boolean showErrorMessage) {
 		List<FastCodeAdditionalParams> fcAdditnlParamList = new ArrayList<FastCodeAdditionalParams>();
 		try {
 			if (!isEmpty(additionalParam)) {
 				fcAdditnlParamList = parseAdditonalParam(additionalParam);
 			}
 		} catch (final FastCodeException ex1) {
-			MessageDialog.openError(new Shell(), "Error",
-					"Error in parsing additional parameter in template " + templateName + SPACE + ex1.getMessage());
+			if (showErrorMessage) {
+				MessageDialog.openError(new Shell(), "Error", "Error in parsing additional parameter in template " + templateName + SPACE
+						+ ex1.getMessage());
+			}
 			return false;
 		}
 		String tmpTemplateName = null;
@@ -219,28 +371,24 @@ public class VelocityUtil {
 		} else {
 			tmpTemplateName = templateName + SPACE;
 		}
-		String key = EMPTY_STR;
-		if (templatePrefix.equals(P_DATABASE_TEMPLATE_PREFIX)) {
-			key = P_DATABASE_TEMPLATE_PREFIX;
-		} /*else if (templatePrefix.equals(P_FILE_TEMPLATE_PREFIX)) {//commented dont know is this required or not
-			key = P_FILE_TEMPLATE_PREFIX;
-			} */else {
+		final String key = getKey(currentFirstTemplateItemValue, currentSecondTemplateItemValue, templatePrefix);
+		final boolean validateVariables = true;
+		final boolean cursorAtEOF = false; //cursor pos needs to be considered while parsing template body while editing, not needed here, so false
+		final Map<String, Object> allVariablesMap = getVariablesFromTemplateBody(templateBody, currentFirstTemplateItemValue,
+				currentSecondTemplateItemValue, fcAdditnlParamList, tmpTemplateName, key, templatePrefix, preferenceStore,
+				validateVariables, cursorAtEOF, templateBodyField, showErrorMessage);
+		final List<String> validVariables = (List<String>) allVariablesMap.get(VALID_VARIABLES);
+		final List<String> localVariables = (List<String>) allVariablesMap.get(LOCAL_VARIABLES);
+		final List<String> setVariables = (List<String>) allVariablesMap.get(SET_VARIABLES);
+		final List<ValidVariables> validVarObjList = (List<ValidVariables>) allVariablesMap.get(VALID_VARIABLE_LIST);
 
-			key = currentFirstTemplateItemValue + UNDERSCORE + currentSecondTemplateItemValue;
+
+		final Boolean returnValue = (Boolean) allVariablesMap.get(RETURN_VALUE);
+
+		if (returnValue == null) {
+			return returnValue;
 		}
-		final TemplateDetailsForVelocity templateDetailsForVelocity = new TemplateDetailsForVelocity();
-		templateDetailsForVelocity.setAdditionalPram(fcAdditnlParamList);
-		templateDetailsForVelocity.setBuiltInVariables(getPropertyValue(key.toLowerCase(), EMPTY_STR));
-		templateDetailsForVelocity.setKey(key.toLowerCase());
-		templateDetailsForVelocity.setTemplateName(tmpTemplateName);
-		templateDetailsForVelocity.setTemplatePrefix(templatePrefix);
-		templateDetailsForVelocity.setFtPlaceholdeName(preferenceStore.getString(P_FILE_TEMPLATE_PLACHOLDER_NAME));
-		templateDetailsForVelocity.setFirstTemplateItem(currentFirstTemplateItemValue);
-		templateDetailsForVelocity.setSecondtemplateItem(currentSecondTemplateItemValue);
-		final boolean returnValue = parseTemplateBody(templateBody, templateDetailsForVelocity);
-		final List<String> validVariables = getVariablesList();
-		final List<String> localVariables = getLocalVarlist();
-		final List<String> setVariables = getSetVarlist();
+
 		String invalidMethods = EMPTY_STR;
 		String invalidMethodsStr = EMPTY_STR;
 		boolean hasMethods;
@@ -250,6 +398,7 @@ public class VelocityUtil {
 		if (templatePrefix.equals(P_DATABASE_TEMPLATE_PREFIX)) {
 			dbcollection = getPropertyValue("db_collection", EMPTY_STR);
 		}
+
 		for (final String velVar : validVariables) {
 			hasMethods = false;
 			String varName = EMPTY_STR;
@@ -346,11 +495,25 @@ public class VelocityUtil {
 							tmpMeth = tmpMeth.replace("get", EMPTY_STR);
 						}
 					}
-					if (!builtInMethods.toLowerCase().contains(tmpMeth.toLowerCase())) {
+
+					boolean matchFound = false;
+					for (final String builtInMth : builtInMethods.split(COMMA)) {
+						if (tmpMeth.equalsIgnoreCase(builtInMth)) {
+							matchFound = true;
+							break;
+						}
+					}
+
+					if (!matchFound) {
+						invalidMethods = invalidMethods + COMMA + tmpMeth;
+						invalidMethodsStr = invalidMethodsStr + COMMA + methods[i - 1] + DOT + tmpMeth;
+					}
+
+					/*if (!builtInMethods.toLowerCase().contains(tmpMeth.toLowerCase())) {
 						invalidMethods = invalidMethods + COMMA + tmpMeth;
 						invalidMethodsStr = invalidMethodsStr + COMMA + methods[i - 1] + DOT + tmpMeth;
 						break;
-					}
+					}*/
 					if (templatePrefix.equals(P_DATABASE_TEMPLATE_PREFIX)) {
 						builtInMethods = getPropertyValue(prefix + tmpMeth.toLowerCase(), EMPTY_STR);
 					} else {
@@ -427,16 +590,62 @@ public class VelocityUtil {
 		}
 		invalidMethodsStr = invalidMethodsStr.replaceFirst(COMMA, EMPTY_STR);
 		if (invalidMethodsStr.trim().length() > 0) {
-			final int closeWindow = openMessageDilalog("Template " + templateDetailsForVelocity.getTemplateName()
-					+ " contains invalid attributes or methods-- " + invalidMethodsStr + this.msg2, "Proceed Anyway", "Cancel");
+			for (final String invalidMethod : invalidMethodsStr.split(COMMA)) {
+				for (final ValidVariables validVarWithInvalidMethod : validVarObjList) {
+					String validVarInvalidMth = validVarWithInvalidMethod.getVarName();
+					if (validVarInvalidMth.contains("${")) {
+						validVarInvalidMth = validVarInvalidMth.replace("${", EMPTY_STR);
+					}
+					if (validVarInvalidMth.endsWith("}")) {
+						validVarInvalidMth = validVarInvalidMth.substring(0, validVarInvalidMth.length() - 1);
+					}
+					//System.out.println(validVarInvalidMth);
+					if (validVarInvalidMth.contains(invalidMethod)) {
+						final String methodName = validVarInvalidMth.substring(validVarInvalidMth.indexOf(DOT) + 1);
+						if (templateBodyField != null) {
+							int lineOffset = 0;
+							int pos = 0;
+							try {
+								final IRegion reg = templateBodyField.getDocument().getLineInformation(
+										validVarWithInvalidMethod.getVarLineNo() > 0 ? validVarWithInvalidMethod.getVarLineNo() - 1
+												: validVarWithInvalidMethod.getVarLineNo());
+								lineOffset = templateBodyField.getDocument().getLineOffset(
+										validVarWithInvalidMethod.getVarLineNo() > 0 ? validVarWithInvalidMethod.getVarLineNo() - 1
+												: validVarWithInvalidMethod.getVarLineNo());
+								final String lineContent = templateBodyField.getDocument().get(reg.getOffset(), reg.getLength());
+								/*System.out.println(lineContent);
+								System.out.println(lineContent.indexOf(invalidVar.getVarName()));
+								System.out.println(reg.toString());
+								System.out.println(lineOffset);*/
+								pos = lineOffset + validVarWithInvalidMethod.getVarCol() - getNoOfTabs(lineContent) * 7
+										+ validVarInvalidMth.indexOf(DOT) + 2; //lineContent.indexOf(methodName);
+							} catch (final BadLocationException ex) {
+								// TODO Auto-generated catch block
+								ex.printStackTrace();
+							}
+							final ErrorAnnotation errorAnnotation = templateBodyField.new ErrorAnnotation(
+									validVarWithInvalidMethod.getVarLineNo() > 0 ? validVarWithInvalidMethod.getVarLineNo() - 1
+											: validVarWithInvalidMethod.getVarLineNo(), "Invalid method '" + methodName + "'");
 
-			if (closeWindow != -1) {
-				if (closeWindow == 0) {
+							templateBodyField.addAnnotation(errorAnnotation, new Position(pos, methodName.length()));
+						}
+					}
+					//templateBodyField.getDocument().
 
-					return true;
+				}
+			}
+			if (showErrorMessage) {
+				final int closeWindow = openMessageDilalog("Template " + tmpTemplateName + " contains invalid attributes or methods-- "
+						+ invalidMethodsStr + this.msg2, "Proceed Anyway", "Cancel");
 
-				} else {
-					return false;
+				if (closeWindow != -1) {
+					if (closeWindow == 0) {
+
+						return true;
+
+					} else {
+						return false;
+					}
 				}
 			}
 
@@ -462,17 +671,19 @@ public class VelocityUtil {
 		}
 		unUsedAdditionalParam = unUsedAdditionalParam.replaceFirst(COMMA, EMPTY_STR);
 		if (unUsedAdditionalParam.trim().length() > 0) {
-			final int closeWindow = openMessageDilalog("Template " + templateDetailsForVelocity.getTemplateName()
-					+ " contains additional parmeters which are not used - " + unUsedAdditionalParam + this.msg2, "Proceed Anyway",
-					"Cancel");
+			if (showErrorMessage) {
+				final int closeWindow = openMessageDilalog("Template " + tmpTemplateName
+						+ " contains additional parmeters which are not used - " + unUsedAdditionalParam + this.msg2, "Proceed Anyway",
+						"Cancel");
 
-			if (closeWindow != -1) {
-				if (closeWindow == 0) {
+				if (closeWindow != -1) {
+					if (closeWindow == 0) {
 
-					return true;
+						return true;
 
-				} else {
-					return false;
+					} else {
+						return false;
+					}
 				}
 			}
 
@@ -493,16 +704,18 @@ public class VelocityUtil {
 		}
 		unUsedSetVars = unUsedSetVars.replaceFirst(COMMA, EMPTY_STR);
 		if (unUsedSetVars.trim().length() > 0) {
-			final int closeWindow = openMessageDilalog("Template " + templateDetailsForVelocity.getTemplateName()
-					+ " contains unused set variables " + unUsedSetVars + this.msg2, "Proceed Anyway", "Cancel");
+			if (showErrorMessage) {
+				final int closeWindow = openMessageDilalog("Template " + tmpTemplateName + " contains unused set variables "
+						+ unUsedSetVars + this.msg2, "Proceed Anyway", "Cancel");
 
-			if (closeWindow != -1) {
-				if (closeWindow == 0) {
+				if (closeWindow != -1) {
+					if (closeWindow == 0) {
 
-					return true;
+						return true;
 
-				} else {
-					return false;
+					} else {
+						return false;
+					}
 				}
 			}
 
@@ -551,21 +764,73 @@ public class VelocityUtil {
 			isStiUsed = arePlaceHolderUsed("property", "", validVariables);
 		}
 		if (!isStiUsed && !currentSecondTemplateItemValue.equals("none") && !currentSecondTemplateItemValue.equals("data")) {
-			final int closeWindow = openMessageDilalog("Template " + templateDetailsForVelocity.getTemplateName()
-					+ " is not using the second template item placeholder " + this.msg2, "Proceed Anyway", "Cancel");
+			if (showErrorMessage) {
+				final int closeWindow = openMessageDilalog("Template " + tmpTemplateName
+						+ " is not using the second template item placeholder " + this.msg2, "Proceed Anyway", "Cancel");
 
-			if (closeWindow != -1) {
-				if (closeWindow == 0) {
+				if (closeWindow != -1) {
+					if (closeWindow == 0) {
 
-					return true;
+						return true;
 
-				} else {
-					return false;
+					} else {
+						return false;
+					}
 				}
 			}
 
 		}
 		return returnValue;
+	}
+
+	public Map<String, Object> getVariablesFromTemplateBody(final String templateBody, final String currentFirstTemplateItemValue,
+			final String currentSecondTemplateItemValue, final List<FastCodeAdditionalParams> fcAdditnlParamList,
+			final String tmpTemplateName, final String key, final String templatePrefix, final IPreferenceStore preferenceStore,
+			final boolean validate, final boolean atEOF, final TemplateFieldEditor templateBodyField, final boolean showErrorMessage) {
+		final Map<String, Object> allVariablesMap = new HashMap<String, Object>();
+
+		//		System.out.println("In get variables from template body");
+		final TemplateDetailsForVelocity templateDetailsForVelocity = new TemplateDetailsForVelocity();
+		templateDetailsForVelocity.setAdditionalPram(fcAdditnlParamList);
+		templateDetailsForVelocity.setBuiltInVariables(getPropertyValue(key.toLowerCase(), EMPTY_STR));
+		templateDetailsForVelocity.setKey(key.toLowerCase());
+		templateDetailsForVelocity.setTemplateName(tmpTemplateName);
+		templateDetailsForVelocity.setTemplatePrefix(templatePrefix);
+		templateDetailsForVelocity.setFtPlaceholdeName(preferenceStore.getString(P_FILE_TEMPLATE_PLACHOLDER_NAME));
+		templateDetailsForVelocity.setFirstTemplateItem(currentFirstTemplateItemValue);
+		templateDetailsForVelocity.setSecondtemplateItem(currentSecondTemplateItemValue);
+		final Boolean returnValue = parseTemplateBody(templateBody, templateDetailsForVelocity, validate, atEOF, templateBodyField,
+				showErrorMessage);
+
+		allVariablesMap.put(VALID_VARIABLES, getVariablesList());
+		allVariablesMap.put(LOCAL_VARIABLES, getLocalVarlist());
+		allVariablesMap.put(SET_VARIABLES, getSetVarlist());
+		allVariablesMap.put(RETURN_VALUE, returnValue);
+		//allVariablesMap.put(FOR_LOOP_LOCAL_VAR, getForLoopLocVar());
+		allVariablesMap.put(FC_LOCAL_VAL_LIST, getFastCodeLocVarList());
+		//allVariablesMap.put("templateName", returnValue);
+		allVariablesMap.put(VALID_VARIABLE_LIST, getValidVariableList());
+		return allVariablesMap;
+	}
+
+	/**
+	 * @param currentFirstTemplateItemValue
+	 * @param currentSecondTemplateItemValue
+	 * @param templatePrefix
+	 * @return
+	 */
+	public String getKey(final String currentFirstTemplateItemValue, final String currentSecondTemplateItemValue,
+			final String templatePrefix) {
+		String key = EMPTY_STR;
+		if (templatePrefix.equals(P_DATABASE_TEMPLATE_PREFIX)) {
+			key = P_DATABASE_TEMPLATE_PREFIX;
+		} /*else if (templatePrefix.equals(P_FILE_TEMPLATE_PREFIX)) {//commented dont know is this required or not
+			key = P_FILE_TEMPLATE_PREFIX;
+			} */else {
+
+			key = currentFirstTemplateItemValue + UNDERSCORE + currentSecondTemplateItemValue;
+		}
+		return key;
 	}
 
 	/**
@@ -599,7 +864,7 @@ public class VelocityUtil {
 			}
 		}
 		if (!isValidVar) {
-			for (final FastCodeAdditionalParams additionlParam : fcAdditnlParamList) {
+			for (final FastCodeAdditionalParams additionlParam : getEmptyListForNull(fcAdditnlParamList)) {
 				if (additionlParam.getName().trim().equals(varName)) {
 					isValidVar = true;
 					break;
@@ -615,7 +880,7 @@ public class VelocityUtil {
 				isValidVar = true;
 			}
 			for (final String local : setVarLst) {
-				if (local.contains(varName)) {
+				if (local.contains(varName)) {//equalsIgnoreCase??
 					isValidVar = true;
 					break;
 				}
@@ -631,7 +896,9 @@ public class VelocityUtil {
 
 				}
 			}
+
 		}
+
 		return isValidVar;
 	}
 

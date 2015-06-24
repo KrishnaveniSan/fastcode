@@ -181,6 +181,7 @@ public class UnitTestExportView extends UnitTestImportExportView {
 				+ nodeName + ">" : leadingWhiteSpace + "<" + nodeName + ">" + preferenceValue + "</" + nodeName + ">";
 	}*/
 
+	@Override
 	public void dispose() {
 		// TODO Auto-generated method stub
 

@@ -808,6 +808,7 @@ public abstract class CreateSimilarPreferencePage extends FieldEditorPreferenceP
 	 * @see
 	 * org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
 	 */
+	@Override
 	public void init(final IWorkbench workbench) {
 	}
 

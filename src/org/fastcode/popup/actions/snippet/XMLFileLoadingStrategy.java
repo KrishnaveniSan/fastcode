@@ -17,6 +17,7 @@ public class XMLFileLoadingStrategy implements FileLoadingStrategy {
 	 * @param configuration
 	 *
 	 */
+	@Override
 	public Object[] loadFileElementsFromInputStream(final InputStream inputStream, final Object configuration) throws Exception {
 		return null;
 	}

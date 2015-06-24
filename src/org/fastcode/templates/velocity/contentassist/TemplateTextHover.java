@@ -41,6 +41,7 @@ public class TemplateTextHover implements ITextHover {
 	/*
 	 * @see org.eclipse.jface.text.ITextHover#getHoverInfo(org.eclipse.jface.text.ITextViewer, org.eclipse.jface.text.IRegion)
 	 */
+	@Override
 	public String getHoverInfo(final ITextViewer textViewer, final IRegion hoverRegion) {
 		String info = null;
 		try {
@@ -55,6 +56,7 @@ public class TemplateTextHover implements ITextHover {
 	/*
 	 * @see org.eclipse.jface.text.ITextHover#getHoverRegion(org.eclipse.jface.text.ITextViewer, int)
 	 */
+	@Override
 	public IRegion getHoverRegion(final ITextViewer textViewer, final int offset) {
 		IRegion region = null;
 		try {

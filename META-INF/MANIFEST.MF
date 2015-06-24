@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Fastcode
 Bundle-SymbolicName: org.fastcode;singleton:=true
-Bundle-Version: 2.2.0
+Bundle-Version: 2.3.0
 Bundle-ClassPath: .,
  resources/,
  lib/antlr-runtime-3.4.jar,
@@ -57,6 +57,6 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.jdt.launching;bundle-version="3.6.1",
  org.eclipse.team.core;bundle-version="3.6.0"
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Eclipse-LazyStart: true

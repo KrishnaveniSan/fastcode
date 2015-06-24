@@ -118,6 +118,7 @@ public abstract class AbstractActionSupport {
 			this.autoCheckinEnabled = versionControlPreferences.isEnable();
 
 			final IRunnableWithProgress op = new IRunnableWithProgress() {
+				@Override
 				public void run(final IProgressMonitor monitor) {
 					try {
 						monitor.beginTask(action.getDescription(), 1);

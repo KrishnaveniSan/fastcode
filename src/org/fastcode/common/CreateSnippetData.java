@@ -63,6 +63,7 @@ public class CreateSnippetData {
 	private FastCodeProject							selectedProject;
 	private String									selectedDatabaseName;
 	private boolean									doAutoCheckin;
+	private boolean									replaceSelectedText;
 
 	/**
 	 *
@@ -477,6 +478,14 @@ public class CreateSnippetData {
 	 */
 	public void setDoAutoCheckin(final boolean doAutoCheckin) {
 		this.doAutoCheckin = doAutoCheckin;
+	}
+
+	public boolean isReplaceSelectedText() {
+		return this.replaceSelectedText;
+	}
+
+	public void setReplaceSelectedText(final boolean replaceSelectedText) {
+		this.replaceSelectedText = replaceSelectedText;
 	}
 
 }

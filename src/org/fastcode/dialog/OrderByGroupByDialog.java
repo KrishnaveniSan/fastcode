@@ -186,6 +186,7 @@ public class OrderByGroupByDialog extends TitleAreaDialog {
 
 		this.table.addListener(SWT.Selection, new Listener() {
 
+			@Override
 			public void handleEvent(final Event event) {
 				if (event.detail == SWT.CHECK) {
 					setSelectedFields((DataBaseField) event.item.getData());
@@ -205,12 +206,14 @@ public class OrderByGroupByDialog extends TitleAreaDialog {
 
 		selectAllButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 
 				selectAllRows();
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -285,6 +288,7 @@ public class OrderByGroupByDialog extends TitleAreaDialog {
 	 */
 	private class TableLabelProviderForSelectField extends LabelProvider implements ITableLabelProvider {
 
+		@Override
 		public Image getColumnImage(final Object element, final int columnIndex) {
 
 			return null;
@@ -297,6 +301,7 @@ public class OrderByGroupByDialog extends TitleAreaDialog {
 		 * org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.
 		 * lang.Object, int)
 		 */
+		@Override
 		public String getColumnText(final Object element, final int columnIndex) {
 
 			final int FIELD_NAME_COLUMN = 0;
@@ -322,14 +327,17 @@ public class OrderByGroupByDialog extends TitleAreaDialog {
 	 * renders the object as a row in table
 	 */
 	private static class ContentProvider implements IStructuredContentProvider {
+		@Override
 		public Object[] getElements(final Object inputElement) {
 
 			return ((List<DataBaseField>) inputElement).toArray();
 		}
 
+		@Override
 		public void dispose() {
 		}
 
+		@Override
 		public void inputChanged(final Viewer viewer, final Object oldInput, final Object newInput) {
 		}
 	}

@@ -24,8 +24,8 @@ public class CreateNewPreferencePage extends FieldEditorPreferencePage implement
 	public CreateNewPreferencePage() {
 		super(GRID);
 		final IPreferenceStore store = new ScopedPreferenceStore(new InstanceScope(), FAST_CODE_PLUGIN_ID);
-		this.setPreferenceStore(store);
-		this.setDescription("Fast Code Create New Preference Page the plugin");
+		setPreferenceStore(store);
+		setDescription("Fast Code Create New Preference Page the plugin");
 	}
 
 	/*
@@ -45,6 +45,7 @@ public class CreateNewPreferencePage extends FieldEditorPreferencePage implement
 	 * @see
 	 * org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
 	 */
+	@Override
 	public void init(final IWorkbench arg0) {
 		// TODO Auto-generated method stub
 

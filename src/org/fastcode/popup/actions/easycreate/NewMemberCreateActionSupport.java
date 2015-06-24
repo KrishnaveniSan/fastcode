@@ -756,6 +756,7 @@ public abstract class NewMemberCreateActionSupport extends AbstractActionSupport
 				"Enter a name or names (space separated) for the field", defaultFieldName, new IInputValidator() {
 
 					//@Override
+					@Override
 					public String isValid(final String newText) {
 						if (isEmpty(newText)) {
 							return "Input cannot be blank";

@@ -6,6 +6,7 @@ public class FastCodeFolder extends FastCodeEntity {
 
 	private String	fullPath;
 	private IFolder	folder;
+	private String	projectRelativePath;
 
 	public FastCodeFolder(final IFolder iFolder) {
 		super();
@@ -16,6 +17,7 @@ public class FastCodeFolder extends FastCodeEntity {
 		this.folder = iFolder;
 		this.name = iFolder.getName();
 		this.fullPath = iFolder.getFullPath().toString();
+		this.projectRelativePath = iFolder.getProjectRelativePath().toString();
 	}
 
 	public String getFullPath() {
@@ -48,6 +50,14 @@ public class FastCodeFolder extends FastCodeEntity {
 
 	public int getSegmentCount() {
 		return this.folder.getFullPath().segmentCount();
+	}
+
+	public String getProjectRelativePath() {
+		return projectRelativePath;
+	}
+
+	public void setProjectRelativePath(String projectRelativePath) {
+		this.projectRelativePath = projectRelativePath;
 	}
 
 }

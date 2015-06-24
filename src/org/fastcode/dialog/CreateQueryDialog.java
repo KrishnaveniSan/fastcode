@@ -2,6 +2,7 @@ package org.fastcode.dialog;
 
 import static org.fastcode.common.FastCodeConstants.EMPTY_STR;
 import static org.fastcode.common.FastCodeConstants.FAST_CODE_PLUGIN_ID;
+import static org.fastcode.common.FastCodeConstants.FC_PLUGIN;
 import static org.fastcode.common.FastCodeConstants.HQL_NAMED_QUERY_WITH_ANNOTATION_STR;
 import static org.fastcode.common.FastCodeConstants.NAMED_QUERY;
 import static org.fastcode.common.FastCodeConstants.NAMED_QUERY_ANNOTATION_STR;
@@ -26,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
@@ -67,6 +69,7 @@ import org.fastcode.common.FastCodeConstants.FIELDS;
 import org.fastcode.common.FastCodeConstants.QUERY_CHOICES;
 import org.fastcode.common.FastCodeConstants.WHERE_CLAUSE_QUALIFIER;
 import org.fastcode.common.FastCodeConstants.WHERE_CLAUSE_SEPARATOR;
+import org.fastcode.common.FastCodeProject;
 import org.fastcode.popup.actions.snippet.FastCodeCache;
 import org.fastcode.preferences.DatabaseConnectionSettings;
 import org.fastcode.setting.GlobalSettings;
@@ -114,6 +117,9 @@ public class CreateQueryDialog extends TrayDialog {
 	private Combo				schemaCombo;
 	Map<String, Object>			browsedClassMap	= new HashMap<String, Object>();
 	private Combo				databaseNameCombo;
+	private Label				projectLabel;
+	private Combo				projectCombo;
+	Map<String, IProject>		prjMap			= new HashMap<String, IProject>();
 
 	/**
 	 * @param shell
@@ -153,6 +159,7 @@ public class CreateQueryDialog extends TrayDialog {
 		parent.setLayout(layout);
 
 		createErrorMessageText(parent);
+		createProjectSelectionPane(parent);
 		createQueryChoicesButtons(parent);
 
 		// try {
@@ -192,7 +199,81 @@ public class CreateQueryDialog extends TrayDialog {
 	/**
 	 * @param parent
 	 */
-	private void createDatabaseNameSelectionPane(Composite parent) {
+	private void createProjectSelectionPane(final Composite parent) {
+		final Composite composite = new Composite(parent, parent.getStyle());
+		final GridLayout layout = new GridLayout();
+		layout.numColumns = 3;
+		composite.setLayout(layout);
+
+		final GridData gridDataLabel = new GridData();
+		this.projectLabel = new Label(composite, SWT.NONE);
+		this.projectLabel.setText("Select Project:                    ");
+		this.projectLabel.setLayoutData(gridDataLabel);
+		//this.projectLabel.setVisible(false);
+
+		final GridData gridDataText = new GridData();
+		gridDataText.grabExcessHorizontalSpace = true;
+
+		this.projectCombo = new Combo(composite, SWT.READ_ONLY | SWT.DROP_DOWN);
+		this.projectCombo.setSize(200, 20);
+		this.projectCombo.setLayoutData(gridDataText);
+		gridDataText.minimumWidth = 500;
+		//this.projectCombo.setEnabled(false);
+		//this.projectCombo.setVisible(false);
+
+		final IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+		for (final IProject prj : projects) {
+			if (prj == null || !prj.exists() || !prj.isOpen()) {
+				continue;
+			}
+			if (prj.getName().equals(FC_PLUGIN)) {
+				continue;
+			}
+			this.projectCombo.add(prj.getName());
+			this.prjMap.put(prj.getName(), prj);
+		}
+		if (this.createQueryData.getJavaProject() != null) {
+			this.projectCombo.select(this.projectCombo.indexOf(this.createQueryData.getJavaProject().getElementName()));
+		}
+
+		this.projectCombo.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(final SelectionEvent event) {
+				final String projectName = CreateQueryDialog.this.projectCombo.getText();
+				if (!isEmpty(projectName)) {
+					CreateQueryDialog.this.createQueryData.setSelectedProject(new FastCodeProject(CreateQueryDialog.this.prjMap
+							.get(projectName)));
+					setErrorMessage(CreateQueryDialog.this.defaultMessage);
+					isPrjInSync(CreateQueryDialog.this.prjMap.get(projectName));
+				} else {
+					setErrorMessage("Please select a project");
+				}
+			}
+
+			@Override
+			public void widgetDefaultSelected(final SelectionEvent arg0) {
+
+			}
+		});
+	}
+
+	private boolean isPrjInSync(final IProject project) {
+		if (project != null && !project.isSynchronized(IResource.DEPTH_INFINITE)) {
+			//this.snippetCombo.setEnabled(false);
+			setErrorMessage("Project " + project.getName() + " is not synchronised. Please synchronise and try again.");
+			return false;
+		} else {
+			//this.snippetCombo.setEnabled(true);
+			setErrorMessage(this.defaultMessage);
+			return true;
+		}
+	}
+
+	/**
+	 * @param parent
+	 */
+	private void createDatabaseNameSelectionPane(final Composite parent) {
 		final Composite composite = new Composite(parent, parent.getStyle());
 
 		final GridLayout layout = new GridLayout();
@@ -207,7 +288,7 @@ public class CreateQueryDialog extends TrayDialog {
 		final DatabaseConnectionSettings databaseConnectionSettings = DatabaseConnectionSettings.getInstance();
 		int defaultDbNameIndex = 0;
 		int k = 0;
-		for (String dbName : databaseConnectionSettings.getConnMap().keySet()) {
+		for (final String dbName : databaseConnectionSettings.getConnMap().keySet()) {
 			if (databaseConnectionSettings.getNameofDabase().equals(dbName)) {
 				defaultDbNameIndex = k;
 			}
@@ -215,7 +296,7 @@ public class CreateQueryDialog extends TrayDialog {
 			k++;
 		}
 		this.databaseNameCombo.select(defaultDbNameIndex);
-		createQueryData.setSelectedDatabaseName(databaseNameCombo.getText());
+		this.createQueryData.setSelectedDatabaseName(this.databaseNameCombo.getText());
 		final FastCodeContentProposalProvider provider = new FastCodeContentProposalProvider(this.databaseNameCombo.getItems());
 		final ComboContentAdapter comboAdapter = new ComboContentAdapter();
 		final ContentProposalAdapter adapter = new ContentProposalAdapter(this.databaseNameCombo, comboAdapter, provider, null, null);
@@ -223,17 +304,18 @@ public class CreateQueryDialog extends TrayDialog {
 		adapter.setProposalAcceptanceStyle(ContentProposalAdapter.PROPOSAL_REPLACE);
 		this.databaseNameCombo.addFocusListener(new FocusListener() {
 
-			public void focusLost(FocusEvent event) {
-				String selectedDbName = databaseNameCombo.getText();
+			@Override
+			public void focusLost(final FocusEvent event) {
+				final String selectedDbName = databaseNameCombo.getText();
 				if (databaseConnectionSettings.getConnMap().keySet().contains(selectedDbName)) {
 					if (!selectedDbName.equalsIgnoreCase(DatabaseConnectionSettings.getInstance().getNameofDabase())
 							|| !createQueryData.getSelectedDatabaseName().equals(selectedDbName)) {
 						//updatePreferenceStore(selectedDbName);
 						//DatabaseConnectionSettings.setReload(true);
-						ConnectToDatabase connectToDatabase = ConnectToDatabase.getInstance();
+						final ConnectToDatabase connectToDatabase = ConnectToDatabase.getInstance();
 						connectToDatabase.closeConnection(ConnectToDatabase.getCon());
-						DatabaseCache databaseCache = DatabaseCache.getInstance();
-						DatabaseDetails databaseConnection = databaseConnectionSettings.getConnMap().get(selectedDbName);
+						final DatabaseCache databaseCache = DatabaseCache.getInstance();
+						final DatabaseDetails databaseConnection = databaseConnectionSettings.getConnMap().get(selectedDbName);
 						Connection connection = null;
 						try {
 							connection = connectToDatabase.getNewConnection(selectedDbName);
@@ -243,14 +325,15 @@ public class CreateQueryDialog extends TrayDialog {
 							poulateTableCombo(connectToDatabase);
 							createQueryData.setSelectedDatabaseName(selectedDbName);
 
-						} catch (Exception ex) {
+						} catch (final Exception ex) {
 							ex.printStackTrace();
 						}
 					}
 				}
 			}
 
-			public void focusGained(FocusEvent arg0) {
+			@Override
+			public void focusGained(final FocusEvent arg0) {
 				// TODO Auto-generated method stub
 
 			}
@@ -294,14 +377,14 @@ public class CreateQueryDialog extends TrayDialog {
 	}
 
 	/**
-	 * 
+	 *
 	 */
 	private void populateSchemaCombo() {
 		int schemaIndex = 0;
 		int k = 0;
 		final DatabaseConnectionSettings databaseConnectionSettings = DatabaseConnectionSettings.getInstance();
-		DatabaseDetails databaseConnection = databaseConnectionSettings.getConnMap().get(databaseNameCombo.getText());
-		String defaultSchema = databaseConnection.getDatabaseType().equalsIgnoreCase(ORACLE) ? databaseConnection.getUserName()
+		final DatabaseDetails databaseConnection = databaseConnectionSettings.getConnMap().get(this.databaseNameCombo.getText());
+		final String defaultSchema = databaseConnection.getDatabaseType().equalsIgnoreCase(ORACLE) ? databaseConnection.getUserName()
 				: databaseConnection.getDatabaseName();
 		if (this.schemaCombo != null) {
 			this.schemaCombo.removeAll();
@@ -370,10 +453,12 @@ public class CreateQueryDialog extends TrayDialog {
 		poulateTableCombo(connectToDatabase);
 		this.tableCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				CreateQueryDialog.this.setErrorMessage(CreateQueryDialog.this.defaultMessage);
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 
 			}
@@ -381,6 +466,7 @@ public class CreateQueryDialog extends TrayDialog {
 
 		this.tableCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 				CreateQueryDialog.this.createQueryData.setTableName(CreateQueryDialog.this.tableCombo.getText());
 
@@ -397,11 +483,13 @@ public class CreateQueryDialog extends TrayDialog {
 		});
 		this.tableCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent arg0) {
 				setErrorMessage(CreateQueryDialog.this.defaultMessage);
 
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				if (CreateQueryDialog.this.schemaCombo.getText().equals(EMPTY_STR)) {
 					setErrorMessage("Please select a schema first");
@@ -421,7 +509,22 @@ public class CreateQueryDialog extends TrayDialog {
 		if (this.createQueryData == null) {
 			this.createQueryData = new CreateQueryData();
 		}
-
+		if (this.projectCombo != null && this.projectCombo.getText() != null) {
+			if (!isPrjInSync(this.prjMap.get(this.projectCombo.getText()))) {
+				return;
+			}
+		}
+		if (this.createQueryData.getSelectedProject() == null) {
+			if (this.projectCombo != null && this.projectCombo.getText() != null) {
+				this.createQueryData.setSelectedProject(new FastCodeProject(this.prjMap.get(this.projectCombo.getText())));
+			}
+		}
+		if (this.createQueryData.getQueryChoices() == null) {
+			setErrorMessage("Please select one query choice");
+			return;
+		} else {
+			setErrorMessage(this.defaultMessage);
+		}
 		// this.namedQueryFileName = this.namedQueryFileNameText.getText();
 		this.createQueryData.setNamedQueryFileName(this.namedQueryFileNameText.getText());
 
@@ -535,6 +638,7 @@ public class CreateQueryDialog extends TrayDialog {
 		this.newNamedQueryButton.setText("Create new named query");
 		this.newNamedQueryButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (((Button) event.widget).getSelection()) {
 					CreateQueryDialog.this.createQueryData.setQueryChoices(QUERY_CHOICES.CREATE_NEW_NAMED_QUERY);
@@ -553,6 +657,7 @@ public class CreateQueryDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -569,6 +674,7 @@ public class CreateQueryDialog extends TrayDialog {
 		}
 		this.existingNamedQueryButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (((Button) event.widget).getSelection()) {
 					CreateQueryDialog.this.createQueryData.setQueryChoices(QUERY_CHOICES.USE_EXISTING_NAMED_QUERY);
@@ -588,6 +694,7 @@ public class CreateQueryDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -612,12 +719,14 @@ public class CreateQueryDialog extends TrayDialog {
 		this.createQueryData.setWhereClauseQualifier(WHERE_CLAUSE_QUALIFIER.EQUAL);
 		this.equalButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (((Button) event.widget).getSelection()) {
 					CreateQueryDialog.this.createQueryData.setWhereClauseQualifier(WHERE_CLAUSE_QUALIFIER.EQUAL);
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -627,12 +736,14 @@ public class CreateQueryDialog extends TrayDialog {
 		this.notEqualButton.setText("!=");
 		this.notEqualButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (((Button) event.widget).getSelection()) {
 					CreateQueryDialog.this.createQueryData.setWhereClauseQualifier(WHERE_CLAUSE_QUALIFIER.NOT_EQUAL);
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -642,12 +753,14 @@ public class CreateQueryDialog extends TrayDialog {
 		this.likeButton.setText("like");
 		this.likeButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (((Button) event.widget).getSelection()) {
 					CreateQueryDialog.this.createQueryData.setWhereClauseQualifier(WHERE_CLAUSE_QUALIFIER.LIKE);
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -657,12 +770,14 @@ public class CreateQueryDialog extends TrayDialog {
 		this.notLikeButton.setText("not like");
 		this.notLikeButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (((Button) event.widget).getSelection()) {
 					CreateQueryDialog.this.createQueryData.setWhereClauseQualifier(WHERE_CLAUSE_QUALIFIER.NOT_LIKE);
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -687,12 +802,14 @@ public class CreateQueryDialog extends TrayDialog {
 		this.createQueryData.setWhereClauseSeparator(WHERE_CLAUSE_SEPARATOR.AND);
 		this.andButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (((Button) event.widget).getSelection()) {
 					CreateQueryDialog.this.createQueryData.setWhereClauseSeparator(WHERE_CLAUSE_SEPARATOR.AND);
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -702,12 +819,14 @@ public class CreateQueryDialog extends TrayDialog {
 		this.orButton.setText("or");
 		this.orButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (((Button) event.widget).getSelection()) {
 					CreateQueryDialog.this.createQueryData.setWhereClauseSeparator(WHERE_CLAUSE_SEPARATOR.OR);
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -747,6 +866,7 @@ public class CreateQueryDialog extends TrayDialog {
 		this.browseNamedQueryFile.setLayoutData(gridDataButton);
 		this.browseNamedQueryFile.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				try {
 					final OpenResourceDialog resourceDialog = new OpenResourceDialog(new Shell(), ResourcesPlugin.getWorkspace().getRoot(),
@@ -786,6 +906,7 @@ public class CreateQueryDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -830,6 +951,7 @@ public class CreateQueryDialog extends TrayDialog {
 		gridDataText.minimumWidth = 500;
 		text.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent event) {
 				final String newNamedQuery = CreateQueryDialog.this.newNamedQueryText.getText();
 				if (isEmpty(newNamedQuery)) {
@@ -850,12 +972,14 @@ public class CreateQueryDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 
 			}
 		});
 		text.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent event) {
 				final String newNamedQuery = CreateQueryDialog.this.newNamedQueryText.getText();
 				if (isEmpty(newNamedQuery)) {
@@ -909,6 +1033,7 @@ public class CreateQueryDialog extends TrayDialog {
 		}
 		this.selectClassCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final String selectedClassName = CreateQueryDialog.this.selectClassCombo.getText();
 				try {
@@ -933,6 +1058,7 @@ public class CreateQueryDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -941,6 +1067,7 @@ public class CreateQueryDialog extends TrayDialog {
 		});
 		this.selectClassCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 				final String inputClassName = CreateQueryDialog.this.selectClassCombo.getText();
 				if (!isEmpty(inputClassName)) {
@@ -975,6 +1102,7 @@ public class CreateQueryDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -989,6 +1117,7 @@ public class CreateQueryDialog extends TrayDialog {
 
 		this.browseSelectClassName.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final SelectionDialog selectionDialog;
 				try {
@@ -1048,6 +1177,7 @@ public class CreateQueryDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1140,6 +1270,7 @@ public class CreateQueryDialog extends TrayDialog {
 
 		this.existingNamedQueriesCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				CreateQueryDialog.this.newNamedQueryText.setText(CreateQueryDialog.this.existingNamedQueriesCombo
 						.getItem(CreateQueryDialog.this.existingNamedQueriesCombo.getSelectionIndex()));
@@ -1157,11 +1288,13 @@ public class CreateQueryDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 			}
 		});
 		this.existingNamedQueriesCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent event) {
 				if (CreateQueryDialog.this.newNamedQueryText.getText() != null) {
 					for (final String namedQuery : getEmptyArrayForNull(CreateQueryDialog.this.namedQueries)) {
@@ -1337,6 +1470,7 @@ public class CreateQueryDialog extends TrayDialog {
 		}
 		this.pojoClassCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final String selectedPojoClassName = CreateQueryDialog.this.pojoClassCombo.getText();
 				try {
@@ -1364,6 +1498,7 @@ public class CreateQueryDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1372,6 +1507,7 @@ public class CreateQueryDialog extends TrayDialog {
 		});
 		this.pojoClassCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 				final String inputPojoClassName = CreateQueryDialog.this.pojoClassCombo.getText();
 				if (!isEmpty(inputPojoClassName)) {
@@ -1406,6 +1542,7 @@ public class CreateQueryDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1414,6 +1551,7 @@ public class CreateQueryDialog extends TrayDialog {
 
 		this.pojoClassCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 
 				if (isEmpty(CreateQueryDialog.this.pojoClassCombo.getText())) {
@@ -1434,6 +1572,7 @@ public class CreateQueryDialog extends TrayDialog {
 
 		this.pojoClassBrowseButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final SelectionDialog selectionDialog;
 				try {
@@ -1490,6 +1629,7 @@ public class CreateQueryDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1579,10 +1719,12 @@ public class CreateQueryDialog extends TrayDialog {
 
 		this.schemaCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent arg0) {
 				poulateTableCombo(connectToDatabase);
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1597,10 +1739,10 @@ public class CreateQueryDialog extends TrayDialog {
 	private void poulateTableCombo(final ConnectToDatabase connectToDatabase) {
 		Connection connection = null;
 		try {
-			connection = ConnectToDatabase.getCon() == null ? connectToDatabase.getNewConnection(databaseNameCombo.getText())
+			connection = ConnectToDatabase.getCon() == null ? connectToDatabase.getNewConnection(this.databaseNameCombo.getText())
 					: ConnectToDatabase.getCon();
-			DatabaseConnectionSettings databaseConnectionSettings = DatabaseConnectionSettings.getInstance();
-			String databaseType = databaseConnectionSettings.getConnMap().get(databaseNameCombo.getText()).getDatabaseType();
+			final DatabaseConnectionSettings databaseConnectionSettings = DatabaseConnectionSettings.getInstance();
+			final String databaseType = databaseConnectionSettings.getConnMap().get(this.databaseNameCombo.getText()).getDatabaseType();
 			getTableFromDb(connection, CreateQueryDialog.this.schemaCombo.getText(), databaseType);
 			CreateQueryDialog.this.tableCombo.removeAll();
 			final DatabaseCache databaseCache = DatabaseCache.getInstance();

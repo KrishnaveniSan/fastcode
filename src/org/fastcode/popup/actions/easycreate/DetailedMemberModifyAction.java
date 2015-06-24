@@ -32,6 +32,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
@@ -253,19 +254,27 @@ public class DetailedMemberModifyAction extends NewMemberCreateActionSupport imp
 						if (element.getElementName().equals(field.getSetter()) || element.getElementName().equals(field.getGetter())) {
 							continue;
 						} else {
-							openError(this.editorPart.getSite().getShell(), "Error",
+							final boolean confirm = MessageDialog.openQuestion(this.editorPart.getSite().getShell(), "Warning",
 									"Cannot modify the variable as it is referenced in other places.-"
-											+ element.getUnderlyingResource().getName());
-							return true;
+											+ element.getUnderlyingResource().getName()
+											+ "\n Want to proceed without changing variable in referenced places?");
+							/*openError(this.editorPart.getSite().getShell(), "Error",
+									"Cannot modify the variable as it is referenced in other places.-"
+											+ element.getUnderlyingResource().getName());*/
+
+							return !confirm;
 
 						}
 					} else if (type == IJavaSearchConstants.METHOD) {
-
-						openError(this.editorPart.getSite().getShell(), "Error",
+						final boolean confirm = MessageDialog.openQuestion(this.editorPart.getSite().getShell(), "Warning",
 								"Cannot modify the variable as it is referenced in other places.-"
-										+ element.getUnderlyingResource().getName());
+										+ element.getUnderlyingResource().getName()
+										+ "\n Want to proceed without changing variable in referenced places?");
+						/*openError(this.editorPart.getSite().getShell(), "Error",
+								"Cannot modify the variable as it is referenced in other places.-"
+										+ element.getUnderlyingResource().getName());*/
 
-						return true;
+						return !confirm;
 					}
 				}
 

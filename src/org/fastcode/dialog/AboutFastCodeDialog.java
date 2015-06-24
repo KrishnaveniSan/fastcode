@@ -32,7 +32,7 @@ public class AboutFastCodeDialog extends TrayDialog {
 	Shell					shell;
 	final IPreferenceStore	preferenceStore;
 
-	public AboutFastCodeDialog(Shell parentShell) {
+	public AboutFastCodeDialog(final Shell parentShell) {
 		super(parentShell);
 		this.shell = parentShell;
 		this.preferenceStore = new ScopedPreferenceStore(new InstanceScope(), FAST_CODE_PLUGIN_ID);
@@ -40,13 +40,13 @@ public class AboutFastCodeDialog extends TrayDialog {
 	}
 
 	@Override
-	protected void configureShell(Shell newShell) {
+	protected void configureShell(final Shell newShell) {
 		super.configureShell(newShell);
 		newShell.setText("About Fast-Code");
 	}
 
 	@Override
-	protected Control createDialogArea(Composite parent) {
+	protected Control createDialogArea(final Composite parent) {
 		final GridLayout layout = new GridLayout();
 		layout.numColumns = 1;
 		parent.setLayout(layout);
@@ -56,7 +56,7 @@ public class AboutFastCodeDialog extends TrayDialog {
 	}
 
 	@Override
-	protected void setButtonLayoutData(Button button) {
+	protected void setButtonLayoutData(final Button button) {
 		super.setButtonLayoutData(button);
 		final Control button1 = getButton(IDialogConstants.CANCEL_ID);
 		if (button1 != null) {
@@ -64,40 +64,42 @@ public class AboutFastCodeDialog extends TrayDialog {
 		}
 	}
 
-	private void createText(Composite parent) {
+	private void createText(final Composite parent) {
 		final GridData text = new GridData(480, 300);
 		text.grabExcessHorizontalSpace = true;
 
 		/*Text messageText = new Text(parent, SWT.READ_ONLY | SWT.MULTI);
 		messageText.setLayoutData(text);*/
 
-		Link link = new Link(parent, SWT.NONE);
+		final Link link = new Link(parent, SWT.NONE);
 		link.setLayoutData(text);
 		InputStream inputStream = null;
 		try {
 			inputStream = FileLocator.openStream(Activator.getDefault().getBundle(), new Path("resources/about.properties"), false);
 			final byte[] bytes = new byte[inputStream.available()];
 			inputStream.read(bytes);
-			String fileContent = new String(bytes);
+			final String fileContent = new String(bytes);
 			link.setText(fileContent.trim());
 			link.addSelectionListener(new SelectionListener() {
 
-				public void widgetSelected(SelectionEvent e) {
+				@Override
+				public void widgetSelected(final SelectionEvent e) {
 					try {
 						PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(e.text));
-					} catch (PartInitException ex) {
+					} catch (final PartInitException ex) {
 						ex.printStackTrace();
-					} catch (MalformedURLException ex) {
+					} catch (final MalformedURLException ex) {
 						ex.printStackTrace();
 					}
 				}
 
-				public void widgetDefaultSelected(SelectionEvent arg0) {
+				@Override
+				public void widgetDefaultSelected(final SelectionEvent arg0) {
 					// TODO Auto-generated method stub
 
 				}
 			});
-		} catch (Exception ex) {
+		} catch (final Exception ex) {
 			ex.printStackTrace();
 		} finally {
 			closeInputStream(inputStream);

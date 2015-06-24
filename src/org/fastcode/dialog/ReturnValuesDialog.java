@@ -26,7 +26,6 @@ import static org.fastcode.util.SourceUtil.getDefaultPathFromProject;
 import static org.fastcode.util.SourceUtil.getIJavaProjectFromName;
 import static org.fastcode.util.SourceUtil.getLocalVarFromCompUnit;
 import static org.fastcode.util.SourceUtil.getPackagesInProject;
-import static org.fastcode.util.SourceUtil.getTypeFromWorkspace;
 import static org.fastcode.util.SourceUtil.isFullNameOfFile;
 import static org.fastcode.util.StringUtil.isEmpty;
 
@@ -34,6 +33,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -55,12 +55,17 @@ import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TrayDialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -95,33 +100,42 @@ public class ReturnValuesDialog extends TrayDialog {
 	private ReturnValuesData				returnValuesData;
 	Label[]									label;
 	Text[]									valueText;
-	int										count, size = 0;
+	int										size						= 0;
 	StringBuffer							valueType					= new StringBuffer();
 	private Text							errorMessageText;
 	private final String					defaultMessage				= NEWLINE;
 	private final String					selectMsg					= "Select a ";
-	private Combo[]							fileNameCombo;
-	private Combo[]							classNameCombo;
-	private Combo[]							folderNameCombo;
+	//private Combo[]							fileNameCombo;
+	//private Combo[]							classNameCombo;
+	//private Combo[]							folderNameCombo;
 	private Combo							arrayDataCombo;
-	private Combo[]							packageCombo;
-	private Button							packageBrowseButton;
-	private Combo[]							projectCombo;
-	private Combo[]							localVarCombo;
+	//private Combo[]							packageCombo;
+	//private Button							packageBrowseButton;
+	//private Combo[]							projectCombo;
+	//private Combo[]							localVarCombo;
 	Map<String, IProject>					prjMap						= new HashMap<String, IProject>();
-	private Object[]						valuesObj;
+	//private Object[]						valuesObj;
 	private ICompilationUnit				compilationUnit;
 	private IType							currentClass;
 	private IFile							currentFile;
 	private IFolder							currentFolder;
 	private IPackageFragment				currentPackage;
-	private Button[]						booleanParam;
-	Map<String, FastCodeAdditionalParams>	labelFCAdditonalParamMap	= new HashMap<String, FastCodeAdditionalParams>();
-	private Combo[]							interfaceNameCombo;
+	//private Button[]						booleanParam;
+	//Map<String, FastCodeAdditionalParams>	labelFCAdditonalParamMap	= new HashMap<String, FastCodeAdditionalParams>();
+	//private Combo[]							interfaceNameCombo;
 	private IType							currentInterface;
-	private Combo[]							enumNameCombo;
-	private Combo[]							allowedValuesCombo;
-	String[]								placeHolderNames;
+	//private Combo[]							enumNameCombo;
+	//private Combo[]							allowedValuesCombo;
+	//String[]								placeHolderNames;
+
+	Map<Button, Combo>						browseButtonComboMap		= new HashMap<Button, Combo>();
+	Map<String, Object>						paramKeyParamValueMap		= new HashMap<String, Object>();
+	Map<String, Object>						paramKeySWTObjectMap		= new HashMap<String, Object>();
+	Map<String, String>						paramKeyParamTypeMap		= new HashMap<String, String>();					//used for String and primitive types
+	Map<String, List<String>>				parentKeyChildrenKeyMap		= new HashMap<String, List<String>>();
+	Map<String, Object>						paramKeyLableSWTMap			= new HashMap<String, Object>();					//to add * for required children, after there is value in the parent
+	Map<String, FastCodeAdditionalParams>	paramKeyFCAdditonalParamMap	= new HashMap<String, FastCodeAdditionalParams>();
+	ScrolledComposite						scrolledComposite;
 
 	/**
 	 * @param shell
@@ -138,17 +152,133 @@ public class ReturnValuesDialog extends TrayDialog {
 	public ReturnValuesDialog(final Shell shell, final ReturnValuesData returnValuesData) {
 		super(shell);
 		this.shell = shell;
+		/*this.shell.redraw();
+		this.shell.layout();*/
+		/*	this.shell.layout();
+			final Point newSize = this.shell.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
+			this.shell.setSize(newSize);*/
 		this.returnValuesData = returnValuesData;
 	}
 
 	@Override
 	protected Control createDialogArea(final Composite parent) {
-
 		final GridLayout layout = new GridLayout();
 		// layout.numColumns = 2;
 		parent.setLayout(layout);
-		createErrorMessageText(parent);
-		createValueText(parent);
+
+		this.scrolledComposite = new ScrolledComposite(parent, SWT.V_SCROLL | SWT.BORDER);
+		this.scrolledComposite.setExpandHorizontal(true);
+		this.scrolledComposite.setExpandVertical(false);
+
+		final Composite composite = new Composite(this.scrolledComposite, SWT.NONE);
+		final GridLayout gridLayout = new GridLayout();
+		gridLayout.numColumns = 2;
+		composite.setLayout(gridLayout);
+		composite.setSize(400, 400);
+
+		this.scrolledComposite.setContent(composite);
+
+		this.scrolledComposite.addControlListener(new ControlAdapter() {
+			@Override
+			public void controlResized(final ControlEvent e) {
+				final Rectangle clientArea = ReturnValuesDialog.this.scrolledComposite.getClientArea();
+				final Point minSize = ReturnValuesDialog.this.scrolledComposite.getContent().computeSize(clientArea.width, SWT.DEFAULT);
+				ReturnValuesDialog.this.scrolledComposite.getContent().setSize(minSize);
+			}
+		});
+		createErrorMessageText(composite);
+		this.size = this.returnValuesData.getFastCodeAdditionalParams().length;
+		if (this.returnValuesData.getEditorPart() != null) {
+			this.compilationUnit = getCompilationUnitFromEditor(this.returnValuesData.getEditorPart());
+		}
+		for (int count = 0; count < this.size; count++) {
+			final String paramKey = this.returnValuesData.getFastCodeAdditionalParams()[count].getName();
+			String labelName = this.returnValuesData.getFastCodeAdditionalParams()[count].getLabel();
+			final String valueType = this.returnValuesData.getFastCodeAdditionalParams()[count].getReturnTypes().getValue();
+			boolean required = Boolean.valueOf(this.returnValuesData.getFastCodeAdditionalParams()[count].getRequired());
+			final boolean requiredOrig = required;
+			final String defaultValue = this.returnValuesData.getFastCodeAdditionalParams()[count].getDefaultValue();
+			final String pattern = this.returnValuesData.getFastCodeAdditionalParams()[count].getPattern();
+			final String allowedValues = this.returnValuesData.getFastCodeAdditionalParams()[count].getAllowedValues();
+			final String project = this.returnValuesData.getFastCodeAdditionalParams()[count].getProject();
+			//boolean enabled = Boolean.valueOf(this.returnValuesData.getFastCodeAdditionalParams()[count].getEnabled());
+			boolean enabled = true;
+			final String max = this.returnValuesData.getFastCodeAdditionalParams()[count].getMax();
+			final String min = this.returnValuesData.getFastCodeAdditionalParams()[count].getMin();
+			final String localVarType = this.returnValuesData.getFastCodeAdditionalParams()[count].getType();
+			final String dependsOn = this.returnValuesData.getFastCodeAdditionalParams()[count].getDependsOn();
+
+			if (!isEmpty(dependsOn)) {
+				required = false;
+				enabled = false;
+				if (this.parentKeyChildrenKeyMap.containsKey(dependsOn)) {
+					final List<String> childrenList = this.parentKeyChildrenKeyMap.get(dependsOn);
+					childrenList.add(paramKey);
+				} else {
+					final List<String> childerenList = new ArrayList<String>();
+					childerenList.add(paramKey);
+					this.parentKeyChildrenKeyMap.put(dependsOn, childerenList);
+				}
+			}
+			if (!enabled) {
+				required = false;
+			}
+
+			//this.placeHolderNames[count] =
+			if (isEmpty(labelName)) {
+				labelName = paramKey; //this.returnValuesData.getFastCodeAdditionalParams()[count].getName();
+				final String labelNameSuffix = SPACE + LEFT_PAREN + valueType + RIGHT_PAREN;
+				if (!(valueType.equals(RETURN_TYPES.STRING.getValue()) || valueType.equals(RETURN_TYPES.BOOLEAN.getValue()))) {
+					labelName = labelName + labelNameSuffix;
+				}
+			}
+			this.paramKeyFCAdditonalParamMap.put(paramKey, this.returnValuesData.getFastCodeAdditionalParams()[count]);
+
+			final GridData gridDataLabel = new GridData();
+			final Label label = new Label(composite, SWT.NONE);
+			label.setText(required ? ASTERISK + labelName : labelName);
+			label.setLayoutData(gridDataLabel);
+
+			this.paramKeyLableSWTMap.put(paramKey, label);
+
+			if (valueType.equals(RETURN_TYPES.CLASS.getValue())) {
+				final Combo classCombo = createClassSelectionPane(composite, project, pattern, enabled, required, paramKey);
+				this.paramKeySWTObjectMap.put(paramKey, classCombo);
+			} else if (valueType.equals(RETURN_TYPES.FILE.getValue())) {
+				final Combo fileCombo = createFileSelectionPane(composite, project, pattern, enabled, required, paramKey);
+				this.paramKeySWTObjectMap.put(paramKey, fileCombo);
+			} else if (valueType.equals(RETURN_TYPES.FOLDER.getValue())) {
+				final Combo folderCombo = createFolderSelectionPane(composite, defaultValue, project, pattern, enabled, required, paramKey);
+				this.paramKeySWTObjectMap.put(paramKey, folderCombo);
+			} else if (valueType.equals(RETURN_TYPES.PACKAGE.getValue())) {
+				final Combo packageCombo = createPackageSelectionPane(composite, defaultValue, pattern, enabled, required, paramKey);
+				this.paramKeySWTObjectMap.put(paramKey, packageCombo);
+			} else if (valueType.equalsIgnoreCase(RETURN_TYPES.PROJECT.getValue())
+					|| valueType.equalsIgnoreCase(RETURN_TYPES.JAVAPROJECT.getValue())) {
+				final Combo prjCombo = createProjectSelectionPane(composite, valueType, defaultValue, pattern, enabled, required, paramKey);
+				this.paramKeySWTObjectMap.put(paramKey, prjCombo);
+			} else if (valueType.equalsIgnoreCase(RETURN_TYPES.LOCALVAR.getValue())) {
+				final Combo localVarCombo = createLocalVarSelectionPane(composite, defaultValue, pattern, enabled, localVarType, paramKey);
+				this.paramKeySWTObjectMap.put(paramKey, localVarCombo);
+			} else if (valueType.equalsIgnoreCase(RETURN_TYPES.BOOLEAN.getValue())) {
+				final Button booleanButton = createBooleanParamCheckBox(composite, defaultValue, enabled, paramKey);
+				this.paramKeySWTObjectMap.put(paramKey, booleanButton);
+			} else if (!isEmpty(allowedValues)) {
+				final Combo allowedValuesCombo = createDropDown(composite, allowedValues, defaultValue, enabled, required, paramKey);
+				this.paramKeySWTObjectMap.put(paramKey, allowedValuesCombo);
+			} else if (valueType.equalsIgnoreCase(RETURN_TYPES.INTERFACE.getValue())) {
+				final Combo interfaceCombo = createInterfaceSelectionPane(composite, defaultValue, pattern, enabled, required, paramKey);
+				this.paramKeySWTObjectMap.put(paramKey, interfaceCombo);
+			} else if (valueType.equalsIgnoreCase(RETURN_TYPES.ENUMERATION.getValue())) {
+				final Combo enumCombo = createEnumSelectionPane(composite, defaultValue, pattern, enabled, required, paramKey);
+				this.paramKeySWTObjectMap.put(paramKey, enumCombo);
+			} else { //for string, and primitive types
+				this.paramKeyParamTypeMap.put(paramKey, valueType);
+				final Text plainText = createPlainTextPane(composite, defaultValue, pattern, enabled, paramKey, required, max, min); //chk if reqd is needed
+				this.paramKeySWTObjectMap.put(paramKey, plainText);
+			}
+
+		}
 		parent.getShell().setText(this.returnValuesData.getShellTitle());
 		return parent;
 	}
@@ -167,23 +297,348 @@ public class ReturnValuesDialog extends TrayDialog {
 		final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
 		for (int i = 0; i < this.size; i++) {
 			final String placeHolderName = this.returnValuesData.getFastCodeAdditionalParams()[i].getName();
-			boolean required = Boolean.valueOf(this.labelFCAdditonalParamMap.get(placeHolderName).getRequired());
-			final boolean enabled = Boolean.valueOf(this.labelFCAdditonalParamMap.get(placeHolderName).getEnabled());
+			boolean required = Boolean.valueOf(this.returnValuesData.getFastCodeAdditionalParams()[i].getRequired()); //Boolean.valueOf(this.labelFCAdditonalParamMap.get(placeHolderName).getRequired());
+			final boolean enabled = Boolean.valueOf(this.returnValuesData.getFastCodeAdditionalParams()[i].getEnabled()); //Boolean.valueOf(this.labelFCAdditonalParamMap.get(placeHolderName).getEnabled());
 			if (!enabled) {
 				required = false;
 			}
-			if (this.valueText[i] != null) {
+
+			final String label = EMPTY_STR;
+			String additionalParamType = EMPTY_STR;
+			/*if (this.label[i].getText().contains(LEFT_PAREN)) {
+				label = this.label[i].getText().split(SPACE)[0].replace(ASTERISK, EMPTY_STR);
+				additionalParamType = this.label[i].getText().split(SPACE)[1].replace(LEFT_PAREN, EMPTY_STR).replace(RIGHT_PAREN,
+						EMPTY_STR);
+
+			} else {
+				label = this.label[i].getText().replace(ASTERISK, EMPTY_STR);
+				additionalParamType = this.returnValuesData.getFastCodeAdditionalParams()[i].getReturnTypes().getValue();
+			}*/
+			additionalParamType = this.returnValuesData.getFastCodeAdditionalParams()[i].getReturnTypes().getValue();
+			//final String placeHolderName = this.returnValuesData.getFastCodeAdditionalParams()[i].getName();
+			final String allowedVal = this.returnValuesData.getFastCodeAdditionalParams()[i].getAllowedValues();
+			required = Boolean.valueOf(this.returnValuesData.getFastCodeAdditionalParams()[i].getRequired()); //Boolean.valueOf(this.labelFCAdditonalParamMap.get(placeHolderName).getRequired());
+			final String dependsOn = this.returnValuesData.getFastCodeAdditionalParams()[i].getDependsOn();
+			if (!isEmpty(dependsOn)) {
+				final Object parentSWTObjct = this.paramKeySWTObjectMap.get(dependsOn);
+				if (parentSWTObjct instanceof Text) {
+					if (isEmpty(((Text) parentSWTObjct).getText())) {
+						required = false;
+					}
+				} else if (parentSWTObjct instanceof Combo) {
+					if (isEmpty(((Combo) parentSWTObjct).getText())) {
+						required = false;
+					}
+				} else if (parentSWTObjct instanceof Button) {
+					if (!((Button) parentSWTObjct).getSelection()) {
+						required = false;
+					}
+
+				}
+			}
+			final String pattern = this.returnValuesData.getFastCodeAdditionalParams()[i].getPattern(); //this.labelFCAdditonalParamMap.get(placeHolderName).getPattern();
+			if (!additionalParamType.equals(RETURN_TYPES.LOCALVAR.getValue())) {
+				/* else {
+					continue;
+				}*/
+			}
+
+			//final String placeHolderName= this.returnValuesData.getFastCodeAdditionalParams()[this.count].getName();
+			if (additionalParamType.equals(RETURN_TYPES.CLASS.getValue())) {
+				final String classComboText = ((Combo) this.paramKeySWTObjectMap.get(placeHolderName)).getText();
+				if (required && isEmpty(classComboText)) {
+					setErrorMessage("Please enter value for " + placeHolderName + ".");
+					return;
+				}
+
+				if (this.currentClass != null && !isEmpty(classComboText) && classComboText.contains(ENCLOSING_CLASS_STR)) {
+					if (!fastCodeCache.getTypeSet().contains(this.currentClass)) {
+						fastCodeCache.getTypeSet().add(this.currentClass);
+					}
+					if (this.paramKeyParamValueMap.get(placeHolderName) == null) {
+						this.paramKeyParamValueMap.put(placeHolderName, new FastCodeType(this.currentClass));
+					}
+				}
+				this.returnValuesData.addReturnValuesMap(placeHolderName, isEmpty(((Combo) this.paramKeySWTObjectMap.get(placeHolderName))
+						.getText()) ? null : this.paramKeyParamValueMap.get(placeHolderName));
+				/*if (this.currentClass != null && !isEmpty(this.classNameCombo[i].getText())
+						&& this.classNameCombo[i].getText().contains(ENCLOSING_CLASS_STR)) {
+					if (!fastCodeCache.getTypeSet().contains(this.currentClass)) {
+						fastCodeCache.getTypeSet().add(this.currentClass);
+					}
+					if (this.valuesObj[i] == null) {
+						this.valuesObj[i] = new FastCodeType(this.currentClass);
+					}
+				}
+				if (!valueAvailable(i, label, required)) {
+					return;
+				}
+				this.returnValuesData.addReturnValuesMap(placeHolderName, isEmpty(this.classNameCombo[i].getText()) ? null
+						: this.valuesObj[i]);*/
+
+			} else if (additionalParamType.equals(RETURN_TYPES.FILE.getValue())) {
+				final String fileComboText = ((Combo) this.paramKeySWTObjectMap.get(placeHolderName)).getText();
+
+				if (required && isEmpty(fileComboText)) {
+					setErrorMessage("Please enter value for " + placeHolderName + ".");
+					return;
+				}
+
+				final String textValue = isEmpty(fileComboText) ? EMPTY_STR : ((FastCodeFile) this.paramKeyParamValueMap
+						.get(placeHolderName)).getName(); //((Combo) this.paramKeySWTObjectMap.get(placeHolderName)).getText();
+				if (!isEmpty(textValue) && !validatePattern(pattern, textValue)) {
+					setErrorMessage("The selected value " + textValue + " does not match pattern " + pattern + " specified.");
+					return;
+				}
+
+				if (this.currentFile != null && !isEmpty(fileComboText) && fileComboText.contains(ENCLOSING_FILE_STR)) {
+					if (!fastCodeCache.getFileSet().contains(this.currentFile)) {
+						fastCodeCache.getFileSet().add(this.currentFile);
+					}
+					if (!validatePattern(pattern, this.currentFile.getName())) {
+						setErrorMessage("The selected value " + textValue + " does not match pattern " + pattern + " specified.");
+						return;
+					}
+					if (this.paramKeyParamValueMap.get(placeHolderName) == null) {
+						this.paramKeyParamValueMap.put(placeHolderName, new FastCodeFile(this.currentFile));
+					}
+				}
+
+				this.returnValuesData.addReturnValuesMap(placeHolderName,
+						isEmpty(fileComboText) ? null : this.paramKeyParamValueMap.get(placeHolderName));
+
+				/*final String textValue = this.fileNameCombo[i].getText();
+				if (!isEmpty(textValue) && !validatePattern(pattern, textValue)) {
+					setErrorMessage("The selected value " + textValue + " does not match pattern " + pattern + " specified.");
+					return;
+				} else {
+
+					}
+
+				if (this.currentFile != null && !isEmpty(textValue) && textValue.contains(ENCLOSING_FILE_STR)) {
+					if (!fastCodeCache.getFileSet().contains(this.currentFile)) {
+						fastCodeCache.getFileSet().add(this.currentFile);
+					}
+					if (this.valuesObj[i] == null) {
+						this.valuesObj[i] = new FastCodeFile(this.currentFile);
+					}
+				}
+				if (!valueAvailable(i, label, required)) {
+					return;
+				}
+				this.returnValuesData.addReturnValuesMap(placeHolderName, isEmpty(textValue) ? null : this.valuesObj[i]);*/
+
+			} else if (additionalParamType.equals(RETURN_TYPES.FOLDER.getValue())) {
+				final String textValue = ((Combo) this.paramKeySWTObjectMap.get(placeHolderName)).getText();
+				if (required && isEmpty(textValue)) {
+					setErrorMessage("Please enter value for " + placeHolderName + ".");
+					return;
+				}
+
+
+				if (!isEmpty(textValue) && !validatePattern(pattern, textValue)) {
+					setErrorMessage("The selected value " + textValue + " does not match pattern " + pattern + " specified.");
+					return;
+				}
+
+				if (this.currentFolder != null && !isEmpty(textValue)
+						&& textValue.contains(ENCLOSING_FOLDER_STR)) {
+					if (!fastCodeCache.getFolderSet().contains(this.currentFolder)) {
+						fastCodeCache.getFolderSet().add(this.currentFolder);
+					}
+					if (this.paramKeyParamValueMap.get(placeHolderName) == null) {
+						this.paramKeyParamValueMap.put(placeHolderName, new FastCodeFolder(this.currentFolder));
+					}
+				}
+				this.returnValuesData.addReturnValuesMap(placeHolderName, isEmpty(textValue) ? null : this.paramKeyParamValueMap.get(placeHolderName));
+
+				/*final String textValue = this.folderNameCombo[i].getText();
+				if (!isEmpty(textValue) && !validatePattern(pattern, textValue)) {
+					setErrorMessage("The selected value " + textValue + " does not match pattern " + pattern + " specified.");
+					return;
+				}
+
+				if (this.currentFolder != null && !isEmpty(this.folderNameCombo[i].getText())
+						&& this.folderNameCombo[i].getText().contains(ENCLOSING_FOLDER_STR)) {
+					if (!fastCodeCache.getFolderSet().contains(this.currentFolder)) {
+						fastCodeCache.getFolderSet().add(this.currentFolder);
+					}
+					if (this.valuesObj[i] == null) {
+						this.valuesObj[i] = new FastCodeFolder(this.currentFolder);
+					}
+				}
+				if (!valueAvailable(i, label, required)) {
+					return;
+				}
+				this.returnValuesData.addReturnValuesMap(placeHolderName, this.valuesObj[i]);*/
+
+			} else if (additionalParamType.equals(RETURN_TYPES.PACKAGE.getValue())) {
+				final String textValue = ((Combo) this.paramKeySWTObjectMap.get(placeHolderName)).getText();
+				if (required && isEmpty(textValue)) {
+					setErrorMessage("Please enter value for " + placeHolderName + ".");
+					return;
+				}
+
+				if (this.currentPackage != null && !isEmpty(textValue)
+						&& textValue.contains(ENCLOSING_PACKAGE_STR)) {
+
+
+					if (!isEmpty(textValue) && !validatePattern(pattern, textValue)) {
+						setErrorMessage("The selected value " + textValue + " does not match pattern " + pattern + " specified.");
+						return;
+					}
+					if (!fastCodeCache.getPackageSet().contains(this.currentPackage)) {
+						fastCodeCache.getPackageSet().add(this.currentPackage);
+					}
+					if (this.paramKeyParamValueMap.get(placeHolderName) == null) {
+						this.paramKeyParamValueMap.put(placeHolderName, new FastCodePackage(this.currentPackage));
+					}
+				}
+				this.returnValuesData.addReturnValuesMap(placeHolderName, isEmpty(textValue) ? null : this.paramKeyParamValueMap.get(placeHolderName));
+				/*if (this.currentPackage != null && !isEmpty(this.packageCombo[i].getText())
+						&& this.packageCombo[i].getText().contains(ENCLOSING_PACKAGE_STR)) {
+
+					final String textValue = this.packageCombo[i].getText();
+					if (!isEmpty(textValue) && !validatePattern(pattern, textValue)) {
+						setErrorMessage("The selected value " + textValue + " does not match pattern " + pattern + " specified.");
+						return;
+					}
+
+					if (!fastCodeCache.getPackageSet().contains(this.currentPackage)) {
+						fastCodeCache.getPackageSet().add(this.currentPackage);
+					}
+					if (this.valuesObj[i] == null) {
+						this.valuesObj[i] = new FastCodePackage(this.currentPackage);
+					}
+				}
+				if (!valueAvailable(i, label, required)) {
+					return;
+				}
+				this.returnValuesData.addReturnValuesMap(placeHolderName, this.valuesObj[i]);*/
+
+			} else if (additionalParamType.equals(RETURN_TYPES.PROJECT.getValue())
+					|| additionalParamType.equals(RETURN_TYPES.JAVAPROJECT.getValue())) {
+				final String prjComboText = ((Combo) this.paramKeySWTObjectMap.get(placeHolderName)).getText();
+				if (required && isEmpty(prjComboText)) {
+					setErrorMessage("Please enter value for " + placeHolderName + ".");
+					return;
+				}
+				this.returnValuesData.addReturnValuesMap(placeHolderName, isEmpty(prjComboText) ? null : this.paramKeyParamValueMap.get(placeHolderName));
+				/*if (required && isEmpty(this.projectCombo[i].getText())) {
+					setErrorMessage("please enter value for " + label);
+					return;
+				}
+				this.returnValuesData.addReturnValuesMap(label, this.valuesObj[i]);*/
+			} else if (additionalParamType.equals(RETURN_TYPES.LOCALVAR.getValue())) {
+				final String localValText = ((Combo) this.paramKeySWTObjectMap.get(placeHolderName)).getText();
+				if (required && isEmpty(localValText)) {
+					setErrorMessage("Please enter value for " + placeHolderName + ".");
+					return;
+				}
+				System.out.println(localValText);
+				for (final FastCodeReturn fastCodeReturn : getEmptyListForNull(this.returnValuesData.getLocalVars())) {
+
+					if (fastCodeReturn.getName().equals(this.paramKeyParamValueMap.get(placeHolderName))) {
+						this.returnValuesData.addReturnValuesMap(placeHolderName, fastCodeReturn);
+						break;
+					}
+				}
+
+				/*this.returnValuesData.addReturnValuesMap(placeHolderName, isEmpty(((Combo) this.paraKeySWTObjectMap.get(placeHolderName))
+						.getText()) ? null : this.paramKeyParamValueMap.get(placeHolderName));*/
+				/*if (required && isEmpty(this.localVarCombo[i].getText())) {
+					setErrorMessage("please enter value for " + label);
+					return;
+				}
+				for (final FastCodeReturn fastCodeReturn : getEmptyListForNull(this.returnValuesData.getLocalVars())) {
+					if (fastCodeReturn.getName().equals(this.valuesObj[i])) {
+						this.returnValuesData.addReturnValuesMap(placeHolderName, fastCodeReturn);
+						break;
+					}
+				}*/
+
+			} else if (additionalParamType.equals(RETURN_TYPES.BOOLEAN.getValue())) {
+				this.returnValuesData.addReturnValuesMap(
+						placeHolderName,
+						!((Button) this.paramKeySWTObjectMap.get(placeHolderName)).getSelection()
+								|| this.paramKeyParamValueMap.get(placeHolderName) == null ? false : this.paramKeyParamValueMap
+								.get(placeHolderName));
+				/*this.returnValuesData.addReturnValuesMap(placeHolderName, !this.booleanParam[i].getSelection()
+						|| this.valuesObj[i] == null ? false : this.valuesObj[i]);*/
+
+			} else if (additionalParamType.equals(RETURN_TYPES.INTERFACE.getValue())) {
+				final String interfaceComboText = ((Combo) this.paramKeySWTObjectMap.get(placeHolderName)).getText();
+				if (required && isEmpty(interfaceComboText )) {
+					setErrorMessage("Please enter value for " + placeHolderName + ".");
+					return;
+				}
+
+				if (this.currentClass != null && !isEmpty(interfaceComboText)
+						&& interfaceComboText.contains(ENCLOSING_INTERFACE_STR)) {
+					if (!fastCodeCache.getTypeSet().contains(this.currentInterface)) {
+						fastCodeCache.getTypeSet().add(this.currentInterface);
+					}
+					if (this.paramKeyParamValueMap.get(placeHolderName) == null) {
+						this.paramKeyParamValueMap.put(placeHolderName, new FastCodeType(this.currentInterface));
+					}
+				}
+				this.returnValuesData.addReturnValuesMap(placeHolderName, isEmpty(((Combo) this.paramKeySWTObjectMap.get(placeHolderName))
+						.getText()) ? null : this.paramKeyParamValueMap.get(placeHolderName));
+
+				/*if (this.currentInterface != null && !isEmpty(this.interfaceNameCombo[i].getText())
+						&& this.interfaceNameCombo[i].getText().contains(ENCLOSING_INTERFACE_STR)) {
+					final String textValue = this.interfaceNameCombo[i].getText();
+					if (!isEmpty(textValue) && !validatePattern(pattern, textValue)) {
+						setErrorMessage("The selected value " + textValue + " does not match pattern " + pattern + " specified.");
+						return;
+					}
+					if (!fastCodeCache.getTypeSet().contains(this.currentInterface)) {
+						fastCodeCache.getTypeSet().add(this.currentInterface);
+					}
+					if (this.valuesObj[i] == null) {
+						this.valuesObj[i] = new FastCodeType(this.currentInterface);
+					}
+				}
+				if (!valueAvailable(i, label, required)) {
+					return;
+				}
+				this.returnValuesData.addReturnValuesMap(placeHolderName, isEmpty(this.interfaceNameCombo[i].getText()) ? null
+						: this.valuesObj[i]);*/
+			} else if (additionalParamType.equals(RETURN_TYPES.ENUMERATION.getValue())) {
+				final String enumComboText = ((Combo) this.paramKeySWTObjectMap.get(placeHolderName)).getText();
+				if (required && isEmpty(enumComboText )) {
+					setErrorMessage("Please enter value for " + placeHolderName + ".");
+					return;
+				}
+				if (!fastCodeCache.getTypeSet().contains(((FastCodeType) this.paramKeyParamValueMap.get(placeHolderName)).getiType())) {
+					fastCodeCache.getTypeSet().add(((FastCodeType) this.paramKeyParamValueMap.get(placeHolderName)).getiType());
+				}
+				this.returnValuesData.addReturnValuesMap(placeHolderName, isEmpty(((Combo) this.paramKeySWTObjectMap.get(placeHolderName))
+						.getText()) ? null : this.paramKeyParamValueMap.get(placeHolderName));
+				/*if (!valueAvailable(i, label, required)) {
+					return;
+				}
+
+				if (!fastCodeCache.getTypeSet().contains(((FastCodeType) this.valuesObj[i]).getiType())) {
+					fastCodeCache.getTypeSet().add(((FastCodeType) this.valuesObj[i]).getiType());
+				}
+				this.returnValuesData.addReturnValuesMap(placeHolderName, this.valuesObj[i]);*/
+			} else if (!isEmpty(allowedVal)) {
+				this.returnValuesData.addReturnValuesMap(placeHolderName, this.paramKeyParamValueMap.get(placeHolderName));
+			} else { //if (this.returnValuesData.getFastCodeAdditionalParams()[i].equals(RETURN_TYPES.STRING.getValue())) {
 				if (ReturnValuesDialog.this.returnValuesData.isUnitTest()) {
-					if (isEmpty(this.valueText[i].getText())) {
-						setErrorMessage("please enter value for " + this.label[i].getText().replace(ASTERISK, EMPTY_STR));
+					if (isEmpty(((Text) this.paramKeySWTObjectMap.get(placeHolderName)).getText())) {
+						setErrorMessage("please enter value for " + placeHolderName /*this.label[i].getText().replace(ASTERISK, EMPTY_STR)*/);
 						return;
 					}
 				}
 
-				if (required && this.label[i].getText().split(SPACE)[0].replace(ASTERISK, EMPTY_STR).contains(STARTLINE_ENDLINE)) {
-					final String lines = this.valueText[i].getText();
+				if (required && placeHolderName.contains(STARTLINE_ENDLINE)) {
+					//if (required && this.label[i].getText().split(SPACE)[0].replace(ASTERISK, EMPTY_STR).contains(STARTLINE_ENDLINE)) {
+					final String lines = ((Text) this.paramKeySWTObjectMap.get(placeHolderName)).getText();//this.valueText[i].getText();
 					final String[] stringArray = lines.split(" ");
-					if (!this.valueText[i].getText().matches(".*\\d.*") || !this.valueText[i].getText().contains(HYPHEN)) {
+					if (!lines.matches(".*\\d.*") || !lines.contains(HYPHEN)) {
+						//if (!this.valueText[i].getText().matches(".*\\d.*") || !this.valueText[i].getText().contains(HYPHEN)) {
 						setErrorMessage("please provide startLine-endline in format(1-10 20-30) with space seperated");
 						return;
 					}
@@ -206,219 +661,41 @@ public class ReturnValuesDialog extends TrayDialog {
 					}
 				}
 
-				if (required && isEmpty(this.valueText[i].getText())) {
-					setErrorMessage("please enter value for " + this.label[i].getText().replace(ASTERISK, EMPTY_STR));
+				if (required && isEmpty(((Text) this.paramKeySWTObjectMap.get(placeHolderName)).getText())) {
+					setErrorMessage("please enter value for " + placeHolderName/*this.label[i].getText().replace(ASTERISK, EMPTY_STR)*/);
 					return;
 				}
 				if (this.returnValuesData.getFastCodeAdditionalParams()[i].getReturnTypes().getValue() == INT) {
 					this.returnValuesData.addReturnValuesMap(this.returnValuesData.getFastCodeAdditionalParams()[i].getName(), new Integer(
-							this.valueText[i].getText()));
+							((Text) this.paramKeySWTObjectMap.get(placeHolderName)).getText()));
 				} else if (this.returnValuesData.getFastCodeAdditionalParams()[i].getReturnTypes().getValue() == RETURN_TYPES.INTRANGE
 						.getValue()) {
 					IntRange intRangeObj = null;
 					try {
-						intRangeObj = parseIntrange(this.valueText[i].getText());
+						intRangeObj = parseIntrange(((Text) this.paramKeySWTObjectMap.get(placeHolderName)).getText());//this.valueText[i].getText());
 
 						if (Integer.parseInt(this.returnValuesData.getFastCodeAdditionalParams()[i].getMax()) != 0) {
 							validateIntRange(this.returnValuesData.getFastCodeAdditionalParams()[i].getMin(),
-									this.returnValuesData.getFastCodeAdditionalParams()[i].getMax(), this.valueText[i], intRangeObj);
+									this.returnValuesData.getFastCodeAdditionalParams()[i].getMax(),
+									(Text) this.paramKeySWTObjectMap.get(placeHolderName)/*this.valueText[i]*/, intRangeObj);
 						}
 					} catch (final Exception ex) {
 						setErrorMessage(ex.getMessage());
-						this.valueText[i].setFocus();
+						((Text) this.paramKeySWTObjectMap.get(placeHolderName)).setFocus();
 						return;
 					}
 					this.returnValuesData.addReturnValuesMap(this.returnValuesData.getFastCodeAdditionalParams()[i].getName(), intRangeObj);
 				} else {
 					this.returnValuesData.addReturnValuesMap(this.returnValuesData.getFastCodeAdditionalParams()[i].getName(),
-							this.valueText[i].getText());
+							((Text) this.paramKeySWTObjectMap.get(placeHolderName)).getText());
 				}
-			} else {
-				String label = EMPTY_STR;
-				String additionalParamType = EMPTY_STR;
-				//boolean required = false;
-				if (this.label[i].getText().contains(LEFT_PAREN)) {
-					label = this.label[i].getText().split(SPACE)[0].replace(ASTERISK, EMPTY_STR);
-					additionalParamType = this.label[i].getText().split(SPACE)[1].replace(LEFT_PAREN, EMPTY_STR).replace(RIGHT_PAREN,
-							EMPTY_STR);
-
-				} else {
-					label = this.label[i].getText().replace(ASTERISK, EMPTY_STR);
-					additionalParamType = this.returnValuesData.getFastCodeAdditionalParams()[i].getReturnTypes().getValue();
-				}
-				additionalParamType = this.returnValuesData.getFastCodeAdditionalParams()[i].getReturnTypes().getValue();
-				//final String placeHolderName = this.returnValuesData.getFastCodeAdditionalParams()[i].getName();
-				final String allowedVal = this.returnValuesData.getFastCodeAdditionalParams()[i].getAllowedValues();
-				//required = Boolean.valueOf(this.labelFCAdditonalParamMap.get(placeHolderName).getRequired());
-				final String pattern = this.labelFCAdditonalParamMap.get(placeHolderName).getPattern();
-				if (!additionalParamType.equals(RETURN_TYPES.LOCALVAR.getValue())) {
-					/* else {
-						continue;
-					}*/
-				}
-
-				//final String placeHolderName= this.returnValuesData.getFastCodeAdditionalParams()[this.count].getName();
-				if (additionalParamType.equals(RETURN_TYPES.CLASS.getValue())) {
-					/*if (required && this.valuesObj[i] == null) {
-						setErrorMessage("please enter value for " + label);
-						return;
-					}*/
-					if (this.currentClass != null && !isEmpty(this.classNameCombo[i].getText())
-							&& this.classNameCombo[i].getText().contains(ENCLOSING_CLASS_STR)) {
-						if (!fastCodeCache.getTypeSet().contains(this.currentClass)) {
-							fastCodeCache.getTypeSet().add(this.currentClass);
-						}
-						if (this.valuesObj[i] == null) {
-							this.valuesObj[i] = new FastCodeType(this.currentClass);
-						}
-					}
-					if (!valueAvailable(i, label, required)) {
-						return;
-					}
-					this.returnValuesData.addReturnValuesMap(placeHolderName, isEmpty(this.classNameCombo[i].getText()) ? null
-							: this.valuesObj[i]);
-
-				} else if (additionalParamType.equals(RETURN_TYPES.FILE.getValue())) {
-					/*if (required && this.valuesObj[i] == null) {
-						setErrorMessage("please enter value for " + label);
-						return;
-					}*/
-					final String textValue = this.fileNameCombo[i].getText();
-					if (!isEmpty(textValue) && !validatePattern(pattern, textValue)) {
-						setErrorMessage("The selected value " + textValue + " does not match pattern " + pattern + " specified.");
-						return;
-					}/* else {
-
-						}*/
-
-					if (this.currentFile != null && !isEmpty(textValue) && textValue.contains(ENCLOSING_FILE_STR)) {
-						if (!fastCodeCache.getFileSet().contains(this.currentFile)) {
-							fastCodeCache.getFileSet().add(this.currentFile);
-						}
-						if (this.valuesObj[i] == null) {
-							this.valuesObj[i] = new FastCodeFile(this.currentFile);
-						}
-					}
-					if (!valueAvailable(i, label, required)) {
-						return;
-					}
-					this.returnValuesData.addReturnValuesMap(placeHolderName, isEmpty(textValue) ? null : this.valuesObj[i]);
-
-				} else if (additionalParamType.equals(RETURN_TYPES.FOLDER.getValue())) {
-
-					final String textValue = this.folderNameCombo[i].getText();
-					if (!isEmpty(textValue) && !validatePattern(pattern, textValue)) {
-						setErrorMessage("The selected value " + textValue + " does not match pattern " + pattern + " specified.");
-						return;
-					}
-
-					if (this.currentFolder != null && !isEmpty(this.folderNameCombo[i].getText())
-							&& this.folderNameCombo[i].getText().contains(ENCLOSING_FOLDER_STR)) {
-						if (!fastCodeCache.getFolderSet().contains(this.currentFolder)) {
-							fastCodeCache.getFolderSet().add(this.currentFolder);
-						}
-						if (this.valuesObj[i] == null) {
-							this.valuesObj[i] = new FastCodeFolder(this.currentFolder);
-						}
-					}
-					if (!valueAvailable(i, label, required)) {
-						return;
-					}
-					this.returnValuesData.addReturnValuesMap(placeHolderName, this.valuesObj[i]);
-
-				} else if (additionalParamType.equals(RETURN_TYPES.PACKAGE.getValue())) {
-					/*if (required && this.valuesObj[i] == null) {
-						setErrorMessage("please enter value for " + label);
-						return;
-					}*/
-					if (this.currentPackage != null && !isEmpty(this.packageCombo[i].getText())
-							&& this.packageCombo[i].getText().contains(ENCLOSING_PACKAGE_STR)) {
-
-						final String textValue = this.packageCombo[i].getText();
-						if (!isEmpty(textValue) && !validatePattern(pattern, textValue)) {
-							setErrorMessage("The selected value " + textValue + " does not match pattern " + pattern + " specified.");
-							return;
-						}
-
-						if (!fastCodeCache.getPackageSet().contains(this.currentPackage)) {
-							fastCodeCache.getPackageSet().add(this.currentPackage);
-						}
-						if (this.valuesObj[i] == null) {
-							this.valuesObj[i] = new FastCodePackage(this.currentPackage);
-						}
-					}
-					if (!valueAvailable(i, label, required)) {
-						return;
-					}
-					this.returnValuesData.addReturnValuesMap(placeHolderName, this.valuesObj[i]);
-
-				} else if (additionalParamType.equals(RETURN_TYPES.PROJECT.getValue())
-						|| additionalParamType.equals(RETURN_TYPES.JAVAPROJECT.getValue())) {
-					if (required && isEmpty(this.projectCombo[i].getText())) {
-						setErrorMessage("please enter value for " + label);
-						return;
-					}
-					this.returnValuesData.addReturnValuesMap(label, this.valuesObj[i]);
-				} else if (additionalParamType.equals(RETURN_TYPES.LOCALVAR.getValue())) {
-					if (required && isEmpty(this.localVarCombo[i].getText())) {
-						setErrorMessage("please enter value for " + label);
-						return;
-					}
-					for (final FastCodeReturn fastCodeReturn : getEmptyListForNull(this.returnValuesData.getLocalVars())) {
-						if (fastCodeReturn.getName().equals(this.valuesObj[i])) {
-							this.returnValuesData.addReturnValuesMap(placeHolderName, fastCodeReturn);
-							break;
-						}
-					}
-
-				} else if (additionalParamType.equals(RETURN_TYPES.BOOLEAN.getValue())) {
-					this.returnValuesData.addReturnValuesMap(placeHolderName, !this.booleanParam[i].getSelection()
-							|| this.valuesObj[i] == null ? false : this.valuesObj[i]);
-
-				} else if (additionalParamType.equals(RETURN_TYPES.INTERFACE.getValue())) {
-					if (this.currentInterface != null && !isEmpty(this.interfaceNameCombo[i].getText())
-							&& this.interfaceNameCombo[i].getText().contains(ENCLOSING_INTERFACE_STR)) {
-						final String textValue = this.interfaceNameCombo[i].getText();
-						if (!isEmpty(textValue) && !validatePattern(pattern, textValue)) {
-							setErrorMessage("The selected value " + textValue + " does not match pattern " + pattern + " specified.");
-							return;
-						}
-						if (!fastCodeCache.getTypeSet().contains(this.currentInterface)) {
-							fastCodeCache.getTypeSet().add(this.currentInterface);
-						}
-						if (this.valuesObj[i] == null) {
-							this.valuesObj[i] = new FastCodeType(this.currentInterface);
-						}
-					}
-					if (!valueAvailable(i, label, required)) {
-						return;
-					}
-					this.returnValuesData.addReturnValuesMap(placeHolderName, isEmpty(this.interfaceNameCombo[i].getText()) ? null
-							: this.valuesObj[i]);
-				} else if (additionalParamType.equals(RETURN_TYPES.ENUMERATION.getValue())) {
-					/*if (this.valuesObj[i] == null) {
-						setErrorMessage("please enter value for " + label);
-						return;
-					}*/
-					if (!valueAvailable(i, label, required)) {
-						return;
-					}
-					/*final String textValue = this.valuesObj[i].getText();
-					validatePattern(pattern, textValue);*/
-					if (!fastCodeCache.getTypeSet().contains(((FastCodeType) this.valuesObj[i]).getiType())) {
-						fastCodeCache.getTypeSet().add(((FastCodeType) this.valuesObj[i]).getiType());
-					}
-					this.returnValuesData.addReturnValuesMap(placeHolderName, this.valuesObj[i]);
-				} else if (!isEmpty(allowedVal)) {
-					this.returnValuesData.addReturnValuesMap(placeHolderName, this.valuesObj[i]);
-				}
-				/*
-				}
-				* else if (this.arrayData) {
-				* this.returnValuesData.addReturnValuesMap
-				* (this.label[i].getText(), this.arrayValue); }
-				*/
 			}
+			/*
+			}
+			* else if (this.arrayData) {
+			* this.returnValuesData.addReturnValuesMap
+			* (this.label[i].getText(), this.arrayValue); }
+			*/
 		}
 		super.okPressed();
 	}
@@ -428,13 +705,13 @@ public class ReturnValuesDialog extends TrayDialog {
 	 * @param label
 	 * @param required
 	 */
-	public boolean valueAvailable(final int i, final String label, final boolean required) {
+	/*public boolean valueAvailable(final int i, final String label, final boolean required) {
 		if (required && this.valuesObj[i] == null) {
 			setErrorMessage("please enter value for " + label);
 			return false;
 		}
 		return true;
-	}
+	}*/
 
 	/**
 	 * @param pattern
@@ -453,44 +730,36 @@ public class ReturnValuesDialog extends TrayDialog {
 
 	/**
 	 * @param parent
+	 * @param required
+	 * @param paramKey
+	 * @param enabled
+	 * @param pattern
+	 * @param defaultValue
+	 * @param min
+	 * @param max
+	 * @return
 	 */
-	private void createValueText(final Composite parent) {
+	private Text createPlainTextPane(final Composite parent, final String defaultValue, final String pattern, final boolean enabled,
+			final String paramKey, final boolean required, final String max, final String min) {
 		final Composite composite = new Composite(parent, parent.getStyle());
 		final GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		composite.setLayout(layout);
 		composite.setSize(300, 500);
-		// String[] labelText;
 
-		this.size = this.returnValuesData.getFastCodeAdditionalParams().length;
+		/*final GridData gridDataLabel = new GridData();
+		final Label label = new Label(composite, SWT.NONE);
+		label.setText(required ? ASTERISK + labelName : labelName);
+		label.setLayoutData(gridDataLabel);*/
+
+		/*this.size = this.returnValuesData.getFastCodeAdditionalParams().length;
 		if (this.returnValuesData.getEditorPart() != null) {
 			this.compilationUnit = getCompilationUnitFromEditor(this.returnValuesData.getEditorPart());
 		}
 
-		/*final int noStringValues = 0;
-		int noClassValues = 0;
-		int noFileValues = 0;
-		int noPackageValues = 0;
-		int noFolderValues = 0;
-		int noProjectValues = 0;
-		for (int i = 0; i <= this.size; i++) {
-			final String valueType = this.returnValuesData.getFastCodeAdditionalParams()[this.count].getReturnTypes().getValue();
-			if (valueType.equals(RETURN_TYPES.CLASS.getValue())) {
-				noClassValues++;
-			} else if (valueType.equals(RETURN_TYPES.FILE.getValue())) {
-				noFileValues++;
-			} else if (valueType.equals(RETURN_TYPES.FOLDER.getValue())) {
-				noFolderValues++;
-			} else if (valueType.equals(RETURN_TYPES.PACKAGE.getValue())) {
-				noPackageValues++;
-			} else if (valueType.equalsIgnoreCase(RETURN_TYPES.PROJECT.getValue())
-					|| valueType.equalsIgnoreCase(RETURN_TYPES.JAVAPROJECT.getValue())) {
-				noProjectValues++;
-			}
-		}*/
+		*/
 
-		this.label = new Label[this.size];
-		//this.placeHolderNames = new String[this.size];
+		/*this.label = new Label[this.size];
 		this.valueText = new Text[this.size]; //new Text[noStringValues];
 		this.classNameCombo = new Combo[this.size]; //[noClassValues];
 		this.fileNameCombo = new Combo[this.size]; //[noFileValues];
@@ -501,21 +770,11 @@ public class ReturnValuesDialog extends TrayDialog {
 		this.booleanParam = new Button[this.size];
 		this.interfaceNameCombo = new Combo[this.size];
 		this.enumNameCombo = new Combo[this.size];
-		this.allowedValuesCombo = new Combo[this.size];
+		this.allowedValuesCombo = new Combo[this.size];*/
 
-		/*this.classSelected = new FastCodeType[this.size];
-		this.fileSelected = new FastCodeFile[this.size];
-		this.packageSelected = new FastCodePackage[this.size];
-		this.folderSelected = new FastCodeFolder[this.size];
-		this.projectSelected = new FastCodeProject[this.size];*/
-		this.valuesObj = new Object[this.size];
-		// final Text[] countText = new Text[this.size];
-		// labelText = this.returnValuesData.getLabelText();
-		// //labelTestStr.toString().split(COMMA);
-		// this.valueTypeArray = this.returnValuesData.getValueTypes();
-		// //this.valueType.toString().split(COMMA);
+		//this.valuesObj = new Object[this.size];
 
-		for (int count = 0; count < this.size; count++) {
+		/*for (int count = 0; count < this.size; count++) {
 			String labelName = this.returnValuesData.getFastCodeAdditionalParams()[count].getLabel();
 			final String valueType = this.returnValuesData.getFastCodeAdditionalParams()[count].getReturnTypes().getValue();
 			boolean required = Boolean.valueOf(this.returnValuesData.getFastCodeAdditionalParams()[count].getRequired());
@@ -535,7 +794,6 @@ public class ReturnValuesDialog extends TrayDialog {
 			if (!enabled) {
 				required = false;
 			}
-			//this.placeHolderNames[count] =
 			if (isEmpty(labelName)) {
 				labelName = this.returnValuesData.getFastCodeAdditionalParams()[count].getName();
 				final String labelNameSuffix = SPACE + LEFT_PAREN + valueType + RIGHT_PAREN;
@@ -549,182 +807,179 @@ public class ReturnValuesDialog extends TrayDialog {
 			final GridData gridDataLabel = new GridData();
 			this.label[count] = new Label(composite, SWT.NONE);
 			this.label[count].setText(required ? ASTERISK + labelName : labelName);
-			this.label[count].setLayoutData(gridDataLabel);
+			this.label[count].setLayoutData(gridDataLabel);*/
 
-			/*
-			 * if (labelName.contains(COLON)) { final String[] classFileDet =
-			 * labelText[count].split(COLON); this.placeHolderName =
-			 * classFileDet[0]; classOrFile = classFileDet[1]; if
-			 * (valueType.equals(RETURN_TYPES.CLASS.getValue())) {
-			 * this.requireClass = true; createClassSelectionPane(composite); }
-			 * else if (valueType.equals(RETURN_TYPES.FILE.getValue())) {
-			 * this.requireFile = true; createFileSelectionPane(composite); }
-			 * classOrFile = EMPTY_STR;
-			 */
-			if (valueType.equals(RETURN_TYPES.CLASS.getValue())) {
-				createClassSelectionPane(composite, count, project, pattern, enabled);
-			} else if (valueType.equals(RETURN_TYPES.FILE.getValue())) {
-				createFileSelectionPane(composite, count, project, pattern, enabled);
-			} else if (valueType.equals(RETURN_TYPES.FOLDER.getValue())) {
-				createFolderSelectionPane(composite, count, defaultValue, project, pattern, enabled);
-			} else if (valueType.equals(RETURN_TYPES.PACKAGE.getValue())) {
-				createPackageSelectionPane(composite, count, defaultValue, pattern, enabled);
-			} else if (valueType.equalsIgnoreCase(RETURN_TYPES.PROJECT.getValue())
-					|| valueType.equalsIgnoreCase(RETURN_TYPES.JAVAPROJECT.getValue())) {
-				createProjectSelectionPane(composite, valueType, count, defaultValue, pattern, enabled);
-			} else if (valueType.equalsIgnoreCase(RETURN_TYPES.LOCALVAR.getValue())) {
-				createLocalVarSelectionPane(composite, count, defaultValue, pattern, enabled, type);
-			} else if (valueType.equalsIgnoreCase(RETURN_TYPES.BOOLEAN.getValue())) {
-				createBooleanParamCheckBox(composite, count, defaultValue, enabled);
-			} else if (!isEmpty(allowedValues)) {
-				createDropDown(composite, count, allowedValues, defaultValue, required, enabled);
-			} else if (valueType.equalsIgnoreCase(RETURN_TYPES.INTERFACE.getValue())) {
-				createInterfaceSelectionPane(composite, count, defaultValue, pattern, enabled);
-			} else if (valueType.equalsIgnoreCase(RETURN_TYPES.ENUMERATION.getValue())) {
-				craeteEnumSelectionPane(composite, count, defaultValue, pattern, enabled);
-			}
-			/*
-				* else if (valueType.matches("[*\\s+*]")) { this.arrayData = true;
-				* final String values = valueType.substring(1, valueType.length());
-				* createComboBoxPane(composite, values); }
-				*/
-			else {
-				final GridData gridDataText = new GridData();
-				gridDataText.grabExcessHorizontalSpace = true;
+		/*if (valueType.equals(RETURN_TYPES.CLASS.getValue())) {
+			//createClassSelectionPane(composite, count, project, pattern, enabled);
+		} else if (valueType.equals(RETURN_TYPES.FILE.getValue())) {
+			//createFileSelectionPane(composite, count, project, pattern, enabled);
+		} else if (valueType.equals(RETURN_TYPES.FOLDER.getValue())) {
+			//createFolderSelectionPane(composite, count, defaultValue, project, pattern, enabled);
+		} else if (valueType.equals(RETURN_TYPES.PACKAGE.getValue())) {
+			//createPackageSelectionPane(composite, count, defaultValue, pattern, enabled);
+		} else if (valueType.equalsIgnoreCase(RETURN_TYPES.PROJECT.getValue())
+				|| valueType.equalsIgnoreCase(RETURN_TYPES.JAVAPROJECT.getValue())) {
+			//createProjectSelectionPane(composite, valueType, count, defaultValue, pattern, enabled);
+		} else if (valueType.equalsIgnoreCase(RETURN_TYPES.LOCALVAR.getValue())) {
+			//createLocalVarSelectionPane(composite, count, defaultValue, pattern, enabled, type);
+		} else if (valueType.equalsIgnoreCase(RETURN_TYPES.BOOLEAN.getValue())) {
+			//createBooleanParamCheckBox(composite, count, defaultValue, enabled);
+		} else if (!isEmpty(allowedValues)) {
+			//createDropDown(composite, count, allowedValues, defaultValue, required, enabled);
+		} else if (valueType.equalsIgnoreCase(RETURN_TYPES.INTERFACE.getValue())) {
+			//createInterfaceSelectionPane(composite, count, defaultValue, pattern, enabled);
+		} else if (valueType.equalsIgnoreCase(RETURN_TYPES.ENUMERATION.getValue())) {
+			//craeteEnumSelectionPane(composite, count, defaultValue, pattern, enabled);
+		}*/
+		/*
+			* else if (valueType.matches("[*\\s+*]")) { this.arrayData = true;
+			* final String values = valueType.substring(1, valueType.length());
+			* createComboBoxPane(composite, values); }
+			*/
+		/*else {*/
+		final GridData gridDataText = new GridData();
+		gridDataText.grabExcessHorizontalSpace = true;
 
-				this.valueText[count] = new Text(composite, SWT.BORDER);
-				this.valueText[count].setLayoutData(gridDataText);
-				gridDataText.minimumWidth = 250;
-				this.valueText[count].setEnabled(enabled);
-				this.valueText[count].setText(defaultValue);
+		final Text stringText = new Text(composite, SWT.BORDER);
+		stringText.setLayoutData(gridDataText);
+		gridDataText.minimumWidth = 250;
+		stringText.setEnabled(enabled);
+		stringText.setText(defaultValue);
 
-				/*
-				 * if (this.valueTypeArray.length == 1) { // check this scenario
-				 * this.valueText[count].setToolTipText("String"); //chk when it
-				 * comes here } else {
-				 */
-				this.valueText[count].setToolTipText(valueType);
-				// }
-				//this.valueText[count].setText(this.returnValuesData.getDefaultValue());
-				final boolean req = required;
-				this.valueText[count].addModifyListener(new ModifyListener() {
+		//stringText.setToolTipText(this.valueType);
 
-					public void modifyText(final ModifyEvent e) {
-						final Text text = (Text) e.widget;
-						final String value = text.getText();
+		final boolean req = required;
+		stringText.addModifyListener(new ModifyListener() {
 
-						if (req) {
-							if (isEmpty(value)) {
-								ReturnValuesDialog.this.setErrorMessage("Please enter a value.");
-								text.setFocus();
-							} else {
-								ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
-							}
+			@Override
+			public void modifyText(final ModifyEvent e) {
+				final Text text = (Text) e.widget;
+				final String value = text.getText();
+				final String dataType = ReturnValuesDialog.this.paramKeyParamTypeMap.get(paramKey);
+				if (req) {
+					if (isEmpty(value)) {
+						ReturnValuesDialog.this.setErrorMessage("Please enter a value.");
+						text.setFocus();
+					} else {
+						ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
+					}
+				}
+				//if (text.getToolTipText().equals("double") || text.getToolTipText().equals("Double")) {
+				if (!isEmpty(value)) {
+					if (dataType.equals("double") || dataType.equals("Double")) {
+						try {
+							Double.parseDouble(value);
+							ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
+						} catch (final NumberFormatException exception) {
+							ReturnValuesDialog.this.setErrorMessage("Please enter a " + dataType + " value.");
+							text.setFocus();
 						}
-						if (text.getToolTipText().equals("double") || text.getToolTipText().equals("Double")) {
-							try {
-								Double.parseDouble(value);
-								ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
-							} catch (final NumberFormatException exception) {
-								ReturnValuesDialog.this.setErrorMessage("Please enter a " + text.getToolTipText() + " value.");
-								text.setFocus();
-							}
-						} else if (text.getToolTipText().equals("int") || text.getToolTipText().equals("Integer")) {
-							try {
-								final int intVal = Integer.parseInt(value);
-								if (!isEmpty(min)) {
-									final int minVal = Integer.parseInt(min);
-									if (intVal < minVal) {
-										ReturnValuesDialog.this.setErrorMessage("Please enter a value greater than " + min + ".");
-										text.setFocus();
-										return;
-									} else {
-										ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
-									}
+					} else if (dataType.equals("int") || dataType.equals("Integer")) {
+						//else if (text.getToolTipText().equals("int") || text.getToolTipText().equals("Integer")) {
+						try {
+							final int intVal = Integer.parseInt(value);
+							if (!isEmpty(min)) {
+								final int minVal = Integer.parseInt(min);
+								if (intVal < minVal) {
+									ReturnValuesDialog.this.setErrorMessage("Please enter a value greater than " + min + ".");
+									text.setFocus();
+									return;
+								} else {
+									ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
 								}
-								if (!isEmpty(max)) {
-									final int maxVal = Integer.parseInt(max);
-									if (intVal > maxVal) {
-										ReturnValuesDialog.this.setErrorMessage("Please enter a value lesser than " + max + ".");
-										text.setFocus();
-										return;
-									} else {
-										ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
-									}
-								}
-								//ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
-							} catch (final NumberFormatException exception) {
-								ReturnValuesDialog.this.setErrorMessage("Please enter a " + text.getToolTipText() + " value.");
-								text.setFocus();
 							}
-						} else if (text.getToolTipText().equals("float") || text.getToolTipText().equals("Float")) {
-							try {
-								Float.parseFloat(value);
-								ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
-							} catch (final NumberFormatException exception) {
-								ReturnValuesDialog.this.setErrorMessage("Please enter a " + text.getToolTipText() + " value.");
-								text.setFocus();
-							}
-						} else if (text.getToolTipText().equals("boolean") || text.getToolTipText().equals("Boolean")) {
-							if (value.equalsIgnoreCase(TRUE_STR) || value.equalsIgnoreCase(FALSE_STR)) {
-								ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
-							} else {
-								ReturnValuesDialog.this.setErrorMessage("Please enter a " + text.getToolTipText() + " value.");
-								text.setFocus();
-							}
-
-						} else if (text.getToolTipText().equals("char")) {
-							if (value.length() == 1) {
-								ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
-							} else {
-								ReturnValuesDialog.this.setErrorMessage("Please enter a " + text.getToolTipText() + " value.");
-								text.setFocus();
-							}
-						} else if (text.getToolTipText().equals("long")) {
-							try {
-								Long.parseLong(value);
-								ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
-							} catch (final NumberFormatException exception) {
-								ReturnValuesDialog.this.setErrorMessage("Please enter a " + text.getToolTipText() + " value.");
-								text.setFocus();
-							}
-						} else if (text.getToolTipText().equals("short")) {
-							try {
-								Short.parseShort(value);
-								ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
-							} catch (final NumberFormatException exception) {
-								ReturnValuesDialog.this.setErrorMessage("Please enter a " + text.getToolTipText() + " value.");
-								text.setFocus();
-							}
-						} else if (text.getToolTipText().equals("byte")) {
-							try {
-								Byte.parseByte(value);
-								ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
-							} catch (final NumberFormatException exception) {
-								ReturnValuesDialog.this.setErrorMessage("Please enter a " + text.getToolTipText() + " value.");
-								text.setFocus();
-							}
-						}
-						if (text.getToolTipText().equals(RETURN_TYPES.INTRANGE.getValue())) {
 							if (!isEmpty(max)) {
-								if (Integer.parseInt(max) != 0) {
-									try {
-										if (!isEmpty(value)) {
-											final IntRange intRange = parseIntrange(value);
-
-											validateIntRange(min, max, text, intRange);
-										}
-									} catch (final Exception ex) {
-										ReturnValuesDialog.this.setErrorMessage(ex.getMessage());
-									}
+								final int maxVal = Integer.parseInt(max);
+								if (intVal > maxVal) {
+									ReturnValuesDialog.this.setErrorMessage("Please enter a value lesser than " + max + ".");
+									text.setFocus();
+									return;
+								} else {
+									ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
 								}
+							}
+							//ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
+						} catch (final NumberFormatException exception) {
+							ReturnValuesDialog.this.setErrorMessage("Please enter a " + dataType + " value.");
+							text.setFocus();
+						}
+					} else if (dataType.equals("float") || dataType.equals("Float")) {
+						//else if (text.getToolTipText().equals("float") || text.getToolTipText().equals("Float")) {
+						try {
+							Float.parseFloat(value);
+							ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
+						} catch (final NumberFormatException exception) {
+							ReturnValuesDialog.this.setErrorMessage("Please enter a " + dataType + " value.");
+							text.setFocus();
+						}
+					} else if (dataType.equals("boolean") || dataType.equals("Boolean")) {
+						//else if (text.getToolTipText().equals("boolean") || text.getToolTipText().equals("Boolean")) {
+						if (value.equalsIgnoreCase(TRUE_STR) || value.equalsIgnoreCase(FALSE_STR)) {
+							ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
+						} else {
+							ReturnValuesDialog.this.setErrorMessage("Please enter a " + dataType + " value.");
+							text.setFocus();
+						}
+
+					} else if (dataType.equals("char")) {
+						//else if (text.getToolTipText().equals("char")) {
+						if (value.length() == 1) {
+							ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
+						} else {
+							ReturnValuesDialog.this.setErrorMessage("Please enter a " + dataType + " value.");
+							text.setFocus();
+						}
+					} else if (dataType.equals("long")) {
+						//else if (text.getToolTipText().equals("long")) {
+						try {
+							Long.parseLong(value);
+							ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
+						} catch (final NumberFormatException exception) {
+							ReturnValuesDialog.this.setErrorMessage("Please enter a " + dataType + " value.");
+							text.setFocus();
+						}
+					} else if (dataType.equals("short")) {
+						//else if (text.getToolTipText().equals("short")) {
+						try {
+							Short.parseShort(value);
+							ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
+						} catch (final NumberFormatException exception) {
+							ReturnValuesDialog.this.setErrorMessage("Please enter a " + dataType + " value.");
+							text.setFocus();
+						}
+					} else if (dataType.equals("byte")) {
+						//else if (text.getToolTipText().equals("byte")) {
+						try {
+							Byte.parseByte(value);
+							ReturnValuesDialog.this.setErrorMessage(ReturnValuesDialog.this.defaultMessage);
+						} catch (final NumberFormatException exception) {
+							ReturnValuesDialog.this.setErrorMessage("Please enter a " + dataType + " value.");
+							text.setFocus();
+						}
+					}
+				}
+				if (dataType.equals(RETURN_TYPES.INTRANGE.getValue())) {
+					//(text.getToolTipText().equals(RETURN_TYPES.INTRANGE.getValue())) {
+					if (!isEmpty(max)) {
+						if (Integer.parseInt(max) != 0) {
+							try {
+								if (!isEmpty(value)) {
+									final IntRange intRange = parseIntrange(value);
+
+									validateIntRange(min, max, text, intRange);
+								}
+							} catch (final Exception ex) {
+								ReturnValuesDialog.this.setErrorMessage(ex.getMessage());
 							}
 						}
 					}
-				});
+				}
+				enableOrDisableChildren(paramKey);
 			}
-		}
-
+		});
+		//}
+		//}
+		return stringText;
 	}
 
 	/**
@@ -799,94 +1054,112 @@ public class ReturnValuesDialog extends TrayDialog {
 
 	/**
 	 * @param parent
-	 * @param count
 	 * @param allowedValues
 	 * @param defaultValue
 	 * @param required
-	 * @param enabled
+	 * @param required2
+	 * @param paramKey
 	 */
-	private void createDropDown(final Composite parent, final int count, final String allowedValues, final String defaultValue,
-			final boolean required, final boolean enabled) {
+	private Combo createDropDown(final Composite parent, final String allowedValues, final String defaultValue, final boolean enabled,
+			final boolean required, final String paramKey) {
 		final Composite composite = new Composite(parent, parent.getStyle());
 		final GridLayout layout = new GridLayout();
-		layout.numColumns = 3;
+		layout.numColumns = 2;
 		composite.setLayout(layout);
+
+		/*final GridData gridDataLabel = new GridData();
+		final Label label = new Label(composite, SWT.NONE);
+		label.setText(required ? ASTERISK + labelName : labelName);
+		label.setLayoutData(gridDataLabel);*/
 
 		final GridData gridDataCombo = new GridData();
 		gridDataCombo.grabExcessHorizontalSpace = true;
 
-		this.allowedValuesCombo[count] = new Combo(composite, SWT.NONE | SWT.READ_ONLY);
-		this.allowedValuesCombo[count].setSize(200, 20);
-		this.allowedValuesCombo[count].setLayoutData(gridDataCombo);
-		this.allowedValuesCombo[count].setToolTipText(Integer.toString(count));
-		this.allowedValuesCombo[count].setEnabled(enabled);
+		final Combo allowedValuesCombo = new Combo(composite, SWT.NONE | SWT.READ_ONLY);
+		allowedValuesCombo.setSize(200, 20);
+		allowedValuesCombo.setLayoutData(gridDataCombo);
+		allowedValuesCombo.setEnabled(enabled);
 		gridDataCombo.minimumWidth = 500;
 
 		if (!required) {
-			this.allowedValuesCombo[count].add(EMPTY_STR);
+			allowedValuesCombo.add(EMPTY_STR);
 		}
 		for (final String allowedValue : allowedValues.split(SPACE)) {
-			this.allowedValuesCombo[count].add(allowedValue);
+			allowedValuesCombo.add(allowedValue);
 		}
 
 		if (!isEmpty(defaultValue)) {
-			this.allowedValuesCombo[count].setText(defaultValue);
+			allowedValuesCombo.setText(defaultValue);
 		}
-		this.valuesObj[count] = defaultValue;
-		this.allowedValuesCombo[count].addSelectionListener(new SelectionListener() {
+		ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, defaultValue);
+		//this.valuesObj[count] = defaultValue;
+		allowedValuesCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final String selectedValue = ((Combo) event.widget).getText();
-				ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) event.widget).getToolTipText())] = selectedValue;
+				ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, selectedValue);
+				//New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) event.widget).getToolTipText())] = selectedValue;
+				enableOrDisableChildren(paramKey);
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
-				// TODO Auto-generated method stub
 
 			}
 		});
+		return allowedValuesCombo;
 	}
 
 	/**
 	 * @param parent
-	 * @param count
 	 * @param defaultValue
 	 * @param pattern
 	 * @param enabled
+	 * @param required
+	 * @param required
+	 * @param paramKey
 	 */
-	private void craeteEnumSelectionPane(final Composite parent, final int count, final String defaultValue, final String pattern,
-			final boolean enabled) {
+	private Combo createEnumSelectionPane(final Composite parent, final String defaultValue, final String pattern, final boolean enabled,
+			final boolean required, final String paramKey) {
 		final Composite composite = new Composite(parent, parent.getStyle());
 		final GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
 		composite.setLayout(layout);
 
+		/*final GridData gridDataLabel = new GridData();
+		final Label label = new Label(composite, SWT.NONE);
+		label.setText(required ? ASTERISK + labelName : labelName);
+		label.setLayoutData(gridDataLabel);*/
+
 		final GridData gridDataCombo = new GridData();
 		gridDataCombo.grabExcessHorizontalSpace = true;
 
-		this.enumNameCombo[count] = new Combo(composite, SWT.NONE);// new
+		final Combo enumNameCombo = new Combo(composite, SWT.READ_ONLY);// new
 		// Text(composite,
 		// SWT.BORDER);
-		this.enumNameCombo[count].setSize(200, 20);
-		this.enumNameCombo[count].setLayoutData(gridDataCombo);
-		this.enumNameCombo[count].setToolTipText(Integer.toString(count));
-		this.enumNameCombo[count].setEnabled(enabled);
+		enumNameCombo.setSize(200, 20);
+		enumNameCombo.setLayoutData(gridDataCombo);
+		enumNameCombo.setEnabled(enabled);
 		gridDataCombo.minimumWidth = 500;
-
+		if (!required) {
+			enumNameCombo.add(EMPTY_STR);
+		}
 		final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
 		if (!fastCodeCache.getTypeSet().isEmpty()) {
 			for (final IType type : fastCodeCache.getTypeSet()) {
 				try {
 					if (type.isEnum()) {
-						this.enumNameCombo[count].add(type.getFullyQualifiedName());
+						enumNameCombo.add(type.getFullyQualifiedName());
 					}
 				} catch (final Exception ex) {
 
 				}
 			}
 		}
-		this.enumNameCombo[count].addSelectionListener(new SelectionListener() {
+		enumNameCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final String selectedEnumName = ((Combo) event.widget).getText();
 				try {
@@ -894,8 +1167,9 @@ public class ReturnValuesDialog extends TrayDialog {
 						for (final IType type : fastCodeCache.getTypeSet()) {
 							if (type.isEnum()) {
 								if (type.getFullyQualifiedName().equals(selectedEnumName)) {
-									ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) event.widget).getToolTipText())] = new FastCodeType(
-											type);
+									ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodeType(type));
+									/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) event.widget).getToolTipText())] = new FastCodeType(
+											type);*/
 								}
 							}
 						}
@@ -903,15 +1177,17 @@ public class ReturnValuesDialog extends TrayDialog {
 				} catch (final Exception ex) {
 					ex.printStackTrace();
 				}
+				enableOrDisableChildren(paramKey);
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
-				// TODO Auto-generated method stub
 
 			}
 		});
-		this.enumNameCombo[count].addFocusListener(new FocusListener() {
+		enumNameCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 				final String inputEnumName = ((Combo) e.widget).getText();
 				if (!isEmpty(inputEnumName)) {
@@ -928,31 +1204,40 @@ public class ReturnValuesDialog extends TrayDialog {
 							}
 						}
 					}
-					try {
-						final IType inputEnumType = getTypeFromWorkspace(inputEnumName);
-						if (inputEnumType != null) {
-							ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) e.widget).getToolTipText())] = new FastCodeType(
-									inputEnumType);
-							if (!fastCodeCache.getTypeSet().contains(inputEnumType)) {
-								fastCodeCache.getTypeSet().add(inputEnumType);
-							}
-						} else {
-							setErrorMessage("Enumeration does not exist,Please enter an enumeration  name ");
-						}
-					} catch (final Exception ex) {
-						ex.printStackTrace();
-					}
+					//					try {
+					//						final IType inputEnumType = getTypeFromWorkspace(inputEnumName);
+					//						if (inputEnumType != null) {
+					//							ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodeType(inputEnumType));
+					//							/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) e.widget).getToolTipText())] = new FastCodeType(
+					//									inputEnumType);*/
+					//							if (!fastCodeCache.getTypeSet().contains(inputEnumType)) {
+					//								fastCodeCache.getTypeSet().add(inputEnumType);
+					//							}
+					//						} else {
+					//							setErrorMessage("Enumeration does not exist,Please enter an enumeration  name ");
+					//						}
+					//					} catch (final Exception ex) {
+					//						ex.printStackTrace();
+					//					}
+					enableOrDisableChildren(paramKey);
 				}
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
-				// TODO Auto-generated method stub
 
 			}
 		});
-		this.enumNameCombo[count].addModifyListener(new ModifyListener() {
+		enumNameCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent event) {
+				if (required && isEmpty(((Combo) event.widget).getText())) {
+					setErrorMessage("Please choose a value for " + paramKey);
+					enableOrDisableChildren(paramKey);
+				} else {
+					setErrorMessage(ReturnValuesDialog.this.defaultMessage);
+				}
 
 			}
 		});
@@ -961,11 +1246,13 @@ public class ReturnValuesDialog extends TrayDialog {
 		final Button browse = new Button(composite, SWT.PUSH);
 		browse.setText("Browse");
 		browse.setLayoutData(gridDataButton);
-		browse.setToolTipText(Integer.toString(count));
 		browse.setEnabled(enabled);
+		this.browseButtonComboMap.put(browse, enumNameCombo);
 		browse.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
+				final Button b = (Button) e.getSource();
 				SelectionDialog selectionDialog = null;
 				try {
 					selectionDialog = JavaUI.createTypeDialog(parent.getShell() == null ? new Shell() : parent.getShell(), null,
@@ -980,15 +1267,11 @@ public class ReturnValuesDialog extends TrayDialog {
 
 					final IType browsedEnumType = (IType) selectionDialog.getResult()[0];
 					boolean addItem = true;
-					if (ReturnValuesDialog.this.enumNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())].getItems() != null) {
-						for (final String existingEnum : ReturnValuesDialog.this.enumNameCombo[Integer.parseInt(((Button) e.widget)
-								.getToolTipText())].getItems()) {
+					if (enumNameCombo.getItems() != null) {
+						for (final String existingEnum : enumNameCombo.getItems()) {
 							if (existingEnum.equals(browsedEnumType.getFullyQualifiedName())) {
-								if (!existingEnum.equals(ReturnValuesDialog.this.enumNameCombo[Integer.parseInt(((Button) e.widget)
-										.getToolTipText())].getText())) {
-									ReturnValuesDialog.this.enumNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())]
-											.select(ReturnValuesDialog.this.enumNameCombo[Integer.parseInt(((Button) e.widget)
-													.getToolTipText())].indexOf(existingEnum));
+								if (!existingEnum.equals(enumNameCombo.getText())) {
+									enumNameCombo.select(enumNameCombo.indexOf(existingEnum));
 								}
 								addItem = false;
 								break;
@@ -996,60 +1279,68 @@ public class ReturnValuesDialog extends TrayDialog {
 						}
 					}
 					if (addItem) {
-						ReturnValuesDialog.this.enumNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())].add(browsedEnumType
-								.getFullyQualifiedName());
-						ReturnValuesDialog.this.enumNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())]
-								.select(ReturnValuesDialog.this.enumNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())]
-										.getItemCount() - 1);
+						enumNameCombo.add(browsedEnumType.getFullyQualifiedName());
+						enumNameCombo.select(enumNameCombo.getItemCount() - 1);
 					}
-					ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Button) e.widget).getToolTipText())] = new FastCodeType(
-							browsedEnumType);
+					ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodeType(browsedEnumType));
+					/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Button) e.widget).getToolTipText())] = new FastCodeType(
+							browsedEnumType);*/
 					if (!fastCodeCache.getTypeSet().contains(selectionDialog.getResult()[0])) {
 						fastCodeCache.getTypeSet().add((IType) selectionDialog.getResult()[0]);
 					}
 				} catch (final JavaModelException ex) {
 					ex.printStackTrace();
 				}
+				enableOrDisableChildren(paramKey);
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
-				// TODO Auto-generated method stub
 
 			}
 		});
+		return enumNameCombo;
 	}
 
 	/**
 	 * @param composite
-	 * @param count
 	 * @param pattern
 	 * @param defaultValue
 	 * @param enabled
+	 * @param required
+	 * @param required
+	 * @param paramKey
 	 */
-	private void createInterfaceSelectionPane(final Composite parent, final int count, final String defaultValue, final String pattern,
-			final boolean enabled) {
+	private Combo createInterfaceSelectionPane(final Composite parent, final String defaultValue, final String pattern,
+			final boolean enabled, final boolean required, final String paramKey) {
 		final Composite composite = new Composite(parent, parent.getStyle());
 		final GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
 		composite.setLayout(layout);
 
+		/*final GridData gridDataLabel = new GridData();
+		final Label label = new Label(composite, SWT.NONE);
+		label.setText(required ? ASTERISK + labelName : labelName);
+		label.setLayoutData(gridDataLabel);*/
+
 		final GridData gridDataCombo = new GridData();
 		gridDataCombo.grabExcessHorizontalSpace = true;
 
-		this.interfaceNameCombo[count] = new Combo(composite, SWT.NONE);// new
+		final Combo interfaceCombo = new Combo(composite, SWT.READ_ONLY);// new
 		// Text(composite,
 		// SWT.BORDER);
-		this.interfaceNameCombo[count].setSize(200, 20);
-		this.interfaceNameCombo[count].setLayoutData(gridDataCombo);
-		this.interfaceNameCombo[count].setToolTipText(Integer.toString(count));
-		this.interfaceNameCombo[count].setEnabled(enabled);
+		interfaceCombo.setSize(200, 20);
+		interfaceCombo.setLayoutData(gridDataCombo);
+		interfaceCombo.setEnabled(enabled);
 		gridDataCombo.minimumWidth = 500;
-
+		if (!required) {
+			interfaceCombo.add(EMPTY_STR);
+		}
 		final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
 		try {
 			if (this.compilationUnit != null && this.compilationUnit.getPrimary().findPrimaryType().isInterface()) {
 				this.currentInterface = this.compilationUnit.getPrimary().findPrimaryType();
-				this.interfaceNameCombo[count].add(ENCLOSING_INTERFACE_STR + HYPHEN + this.currentInterface.getFullyQualifiedName());
+				interfaceCombo.add(ENCLOSING_INTERFACE_STR + HYPHEN + this.currentInterface.getFullyQualifiedName());
 				//this.interfaceNameCombo[count].select(0);
 			}
 		} catch (final JavaModelException ex1) {
@@ -1064,8 +1355,8 @@ public class ReturnValuesDialog extends TrayDialog {
 							continue;
 						}
 						boolean addItem = true;
-						if (this.interfaceNameCombo[count].getItems() != null) {
-							for (final String existingInterface : this.interfaceNameCombo[count].getItems()) {
+						if (interfaceCombo.getItems() != null) {
+							for (final String existingInterface : interfaceCombo.getItems()) {
 								if (existingInterface.contains(ENCLOSING_INTERFACE_STR)) {
 									continue;
 								}
@@ -1075,7 +1366,7 @@ public class ReturnValuesDialog extends TrayDialog {
 								}
 							}
 							if (addItem) {
-								this.interfaceNameCombo[count].add(type.getFullyQualifiedName());
+								interfaceCombo.add(type.getFullyQualifiedName());
 							}
 						}
 					}
@@ -1084,8 +1375,9 @@ public class ReturnValuesDialog extends TrayDialog {
 				}
 			}
 		}
-		this.interfaceNameCombo[count].addSelectionListener(new SelectionListener() {
+		interfaceCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				String selectedInterfaceName = ((Combo) event.widget).getText(); //ReturnValuesDialog.this.classNameCombo.getText();
 				try {
@@ -1096,8 +1388,9 @@ public class ReturnValuesDialog extends TrayDialog {
 						for (final IType type : fastCodeCache.getTypeSet()) {
 							if (type.isInterface()) {
 								if (type.getFullyQualifiedName().equals(selectedInterfaceName)) {
-									ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) event.widget).getToolTipText())] = new FastCodeType(
-											type);
+									ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodeType(type));
+									/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) event.widget).getToolTipText())] = new FastCodeType(
+											type);*/
 								}
 							}
 						}
@@ -1105,15 +1398,17 @@ public class ReturnValuesDialog extends TrayDialog {
 				} catch (final Exception ex) {
 					ex.printStackTrace();
 				}
+				enableOrDisableChildren(paramKey);
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
-				// TODO Auto-generated method stub
 
 			}
 		});
-		this.interfaceNameCombo[count].addFocusListener(new FocusListener() {
+		interfaceCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 				String inputInterfaceName = ((Combo) e.widget).getText();
 				if (!isEmpty(inputInterfaceName)) {
@@ -1133,33 +1428,37 @@ public class ReturnValuesDialog extends TrayDialog {
 							}
 						}
 					}
-					try {
-						final IType inputInterfaceType = getTypeFromWorkspace(inputInterfaceName);
-						if (inputInterfaceType != null) {
-							ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) e.widget).getToolTipText())] = new FastCodeType(
-									inputInterfaceType);
-							if (!fastCodeCache.getTypeSet().contains(inputInterfaceType)) {
-								fastCodeCache.getTypeSet().add(inputInterfaceType);
-							}
-						} else {
-							setErrorMessage("Interface does not exist,Please enter an existing interface name ");
-						}
-					} catch (final Exception ex) {
-						ex.printStackTrace();
-					}
+					//					try {
+					//						final IType inputInterfaceType = getTypeFromWorkspace(inputInterfaceName);
+					//						if (inputInterfaceType != null) {
+					//							ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodeType(inputInterfaceType));
+					//							/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) e.widget).getToolTipText())] = new FastCodeType(
+					//									inputInterfaceType);*/
+					//							if (!fastCodeCache.getTypeSet().contains(inputInterfaceType)) {
+					//								fastCodeCache.getTypeSet().add(inputInterfaceType);
+					//							}
+					//						} else {
+					//							setErrorMessage("Interface does not exist,Please enter an existing interface name ");
+					//						}
+					//					} catch (final Exception ex) {
+					//						ex.printStackTrace();
+					//					}
+					enableOrDisableChildren(paramKey);
 				}
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
-				// TODO Auto-generated method stub
 
 			}
 		});
-		this.interfaceNameCombo[count].addModifyListener(new ModifyListener() {
+		interfaceCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent event) {
-				if (isEmpty(((Combo) event.widget).getText())) {
-					setErrorMessage("Please choose a Class");
+				if (required && isEmpty(((Combo) event.widget).getText())) {
+					setErrorMessage("Please choose a value for " + paramKey);
+					enableOrDisableChildren(paramKey);
 				} else {
 					setErrorMessage(ReturnValuesDialog.this.defaultMessage);
 				}
@@ -1170,11 +1469,13 @@ public class ReturnValuesDialog extends TrayDialog {
 		final Button browse = new Button(composite, SWT.PUSH);
 		browse.setText("Browse");
 		browse.setLayoutData(gridDataButton);
-		browse.setToolTipText(Integer.toString(count));
 		browse.setEnabled(enabled);
+		this.browseButtonComboMap.put(browse, interfaceCombo);
 		browse.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
+				final Button b = (Button) e.getSource();
 				SelectionDialog selectionDialog = null;
 				try {
 					selectionDialog = JavaUI.createTypeDialog(parent.getShell() == null ? new Shell() : parent.getShell(), null,
@@ -1189,15 +1490,11 @@ public class ReturnValuesDialog extends TrayDialog {
 
 					final IType browsedInterfaceType = (IType) selectionDialog.getResult()[0];
 					boolean addItem = true;
-					if (ReturnValuesDialog.this.interfaceNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())].getItems() != null) {
-						for (final String existingInterface : ReturnValuesDialog.this.interfaceNameCombo[Integer
-								.parseInt(((Button) e.widget).getToolTipText())].getItems()) {
+					if (interfaceCombo.getItems() != null) {
+						for (final String existingInterface : interfaceCombo.getItems()) {
 							if (existingInterface.equals(browsedInterfaceType.getFullyQualifiedName())) {
-								if (!existingInterface.equals(ReturnValuesDialog.this.interfaceNameCombo[Integer
-										.parseInt(((Button) e.widget).getToolTipText())].getText())) {
-									ReturnValuesDialog.this.interfaceNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())]
-											.select(ReturnValuesDialog.this.interfaceNameCombo[Integer.parseInt(((Button) e.widget)
-													.getToolTipText())].indexOf(existingInterface));
+								if (!existingInterface.equals(interfaceCombo.getText())) {
+									interfaceCombo.select(interfaceCombo.indexOf(existingInterface));
 								}
 								addItem = false;
 								break;
@@ -1205,92 +1502,100 @@ public class ReturnValuesDialog extends TrayDialog {
 						}
 					}
 					if (addItem) {
-						ReturnValuesDialog.this.interfaceNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())]
-								.add(browsedInterfaceType.getFullyQualifiedName());
-						ReturnValuesDialog.this.interfaceNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())]
-								.select(ReturnValuesDialog.this.interfaceNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())]
-										.getItemCount() - 1);
+						interfaceCombo.add(browsedInterfaceType.getFullyQualifiedName());
+						interfaceCombo.select(interfaceCombo.getItemCount() - 1);
 					}
-					ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Button) e.widget).getToolTipText())] = new FastCodeType(
-							browsedInterfaceType);
+					ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodeType(browsedInterfaceType));
+					/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Button) e.widget).getToolTipText())] = new FastCodeType(
+							browsedInterfaceType);*/
 					if (!fastCodeCache.getTypeSet().contains(selectionDialog.getResult()[0])) {
 						fastCodeCache.getTypeSet().add((IType) selectionDialog.getResult()[0]);
 					}
 				} catch (final JavaModelException ex) {
 					ex.printStackTrace();
 				}
+				enableOrDisableChildren(paramKey);
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
-				// TODO Auto-generated method stub
 
 			}
 		});
-
+		return interfaceCombo;
 	}
 
 	/**
 	 * @param parent
-	 * @param count
 	 * @param defaultValue
 	 * @param enabled
+	 * @param required
+	 * @param paramKey
 	 */
-	private void createBooleanParamCheckBox(final Composite parent, final int count, final String defaultValue, final boolean enabled) {
+	private Button createBooleanParamCheckBox(final Composite parent, final String defaultValue, final boolean enabled,
+			final String paramKey) {
 		final Composite composite = new Composite(parent, parent.getStyle());
 		final GridLayout layout = new GridLayout();
-		layout.numColumns = 3;
+		layout.numColumns = 1;
 		composite.setLayout(layout);
 
-		final GridData gridDataLabel = new GridData();
+		/*final GridData gridDataLabel = new GridData();
 		final Label label = new Label(composite, SWT.NONE);
-		label.setLayoutData(gridDataLabel);
+		label.setText(required ? ASTERISK + labelName : labelName);
+		label.setLayoutData(gridDataLabel);*/
 
-		this.booleanParam[count] = new Button(composite, SWT.CHECK);
-		this.booleanParam[count].setToolTipText(Integer.toString(count));
-		this.booleanParam[count].setSelection(Boolean.valueOf(defaultValue));
-		this.valuesObj[count] = Boolean.valueOf(defaultValue);
-		this.booleanParam[count].setEnabled(enabled);
-		this.booleanParam[count].addSelectionListener(new SelectionListener() {
+		final Button booleanParam = new Button(composite, SWT.CHECK);
+		booleanParam.setSelection(Boolean.valueOf(defaultValue));
+		ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, Boolean.valueOf(defaultValue));
+		//this.valuesObj[count] = Boolean.valueOf(defaultValue);
+		booleanParam.setEnabled(enabled);
+		booleanParam.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
-
-				ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Button) event.widget).getToolTipText())] = ReturnValuesDialog.this.booleanParam[Integer
-						.parseInt(((Button) event.widget).getToolTipText())].getSelection();
+				final Button b = (Button) event.getSource();
+				ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, b.getSelection());
+				enableOrDisableChildren(paramKey);
+				/*New__ReturnValuesDialog.this.New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Button) event.widget).getToolTipText())] = New__ReturnValuesDialog.this.booleanParam[Integer
+						.parseInt(((Button) event.widget).getToolTipText())].getSelection();*/
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
 		});
+		return booleanParam;
 	}
 
 	/**
 	 * @param parent
-	 * @param count
 	 * @param defaultValue
 	 * @param pattern
 	 * @param enabled
 	 * @param type
+	 * @param required
+	 * @param paramKey
 	 */
-	private void createLocalVarSelectionPane(final Composite parent, final int count, final String defaultValue, final String pattern,
-			final boolean enabled, final String type) {
+	private Combo createLocalVarSelectionPane(final Composite parent, final String defaultValue, final String pattern,
+			final boolean enabled, final String type, final String paramKey) {
 		final Composite composite = new Composite(parent, parent.getStyle());
 		final GridLayout layout = new GridLayout();
-		layout.numColumns = 3;
+		layout.numColumns = 2;
 		composite.setLayout(layout);
 
-		final GridData gridDataLabel = new GridData();
+		/*final GridData gridDataLabel = new GridData();
 		final Label label = new Label(composite, SWT.NONE);
-		label.setLayoutData(gridDataLabel);
+		label.setText(required ? ASTERISK + labelName : labelName);
+		label.setLayoutData(gridDataLabel);*/
 
 		final GridData gridDataText = new GridData();
 		gridDataText.grabExcessHorizontalSpace = true;
 
-		this.localVarCombo[count] = new Combo(composite, SWT.READ_ONLY | SWT.DROP_DOWN);
-		this.localVarCombo[count].setSize(200, 20);
-		this.localVarCombo[count].setLayoutData(gridDataText);
-		this.localVarCombo[count].setToolTipText(Integer.toString(count));
-		this.localVarCombo[count].setEnabled(enabled);
+		final Combo localVarCombo = new Combo(composite, SWT.READ_ONLY | SWT.DROP_DOWN);
+		localVarCombo.setSize(200, 20);
+		localVarCombo.setLayoutData(gridDataText);
+		localVarCombo.setEnabled(enabled);
 		gridDataText.minimumWidth = 500;
 
 		try {
@@ -1309,24 +1614,29 @@ public class ReturnValuesDialog extends TrayDialog {
 		}
 
 		for (final FastCodeReturn localVar : getEmptyListForNull(this.returnValuesData.getLocalVars())) {
-			this.localVarCombo[count].add(localVar.getType().getName() + SPACE + localVar.getName());
+			localVarCombo.add(localVar.getType().getName() + SPACE + localVar.getName());
 		}
-		this.localVarCombo[count].addSelectionListener(new SelectionListener() {
+		localVarCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final Combo loclVar = (Combo) event.widget;
-				ReturnValuesDialog.this.valuesObj[Integer.parseInt(loclVar.getToolTipText())] = loclVar.getText().split(SPACE)[1].trim();
+				ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, loclVar.getText().split(SPACE)[1].trim());
+				/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(loclVar.getToolTipText())] = loclVar.getText().split(SPACE)[1]
+						.trim();*/
+				enableOrDisableChildren(paramKey);
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
-				// TODO Auto-generated method stub
 
 			}
 
 		});
 
-		this.localVarCombo[count].addModifyListener(new ModifyListener() {
+		localVarCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent arg0) {
 				/*final Combo loclVar = (Combo) arg0.widget;
 				if (isEmpty(loclVar.getText())) {
@@ -1338,6 +1648,7 @@ public class ReturnValuesDialog extends TrayDialog {
 			}
 		});
 
+		return localVarCombo;
 	}
 
 	private List<FastCodeReturn> getLocalVarsOfType(final List<FastCodeReturn> localVarFromCompUnit, final String type) {
@@ -1353,33 +1664,36 @@ public class ReturnValuesDialog extends TrayDialog {
 	/**
 	 * @param parent
 	 * @param valueType
-	 * @param count
 	 * @param defaultValue
 	 * @param pattern
 	 * @param enabled
+	 * @param required
+	 * @param required
+	 * @param paramKey
 	 */
-	private void createProjectSelectionPane(final Composite parent, final String valueType, final int count, final String defaultValue,
-			final String pattern, final boolean enabled) {
+	private Combo createProjectSelectionPane(final Composite parent, final String valueType, final String defaultValue,
+			final String pattern, final boolean enabled, final boolean required, final String paramKey) {
 		final Composite composite = new Composite(parent, parent.getStyle());
 		final GridLayout layout = new GridLayout();
-		layout.numColumns = 3;
+		layout.numColumns = 2;
 		composite.setLayout(layout);
 
-		final GridData gridDataLabel = new GridData();
+		/*final GridData gridDataLabel = new GridData();
 		final Label label = new Label(composite, SWT.NONE);
-		label.setLayoutData(gridDataLabel);
+		label.setText(required ? ASTERISK + labelName : labelName);
+		label.setLayoutData(gridDataLabel);*/
 
 		final GridData gridDataText = new GridData();
 		gridDataText.grabExcessHorizontalSpace = true;
 
-		this.projectCombo[count] = new Combo(composite, SWT.READ_ONLY | SWT.DROP_DOWN);
-		this.projectCombo[count].setSize(200, 20);
-		this.projectCombo[count].setLayoutData(gridDataText);
-		this.projectCombo[count].setToolTipText(Integer.toString(count));
-		this.projectCombo[count].setEnabled(enabled);
+		final Combo projectCombo = new Combo(composite, SWT.READ_ONLY | SWT.DROP_DOWN);
+		projectCombo.setSize(200, 20);
+		projectCombo.setLayoutData(gridDataText);
+		projectCombo.setEnabled(enabled);
 		gridDataText.minimumWidth = 500;
-
-		final int curPrjIndex;
+		if (!required) {
+			projectCombo.add(EMPTY_STR);
+		}
 		final IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 		for (final IProject prj : projects) {
 			if (prj == null || !prj.exists() || !prj.isOpen()) {
@@ -1394,33 +1708,39 @@ public class ReturnValuesDialog extends TrayDialog {
 					continue;
 				}
 			}
-			this.projectCombo[count].add(prj.getName());
+			projectCombo.add(prj.getName());
 			this.prjMap.put(prj.getName(), prj);
 
 		}
 
 		if (this.returnValuesData.getJavaProject() != null) {
-			this.projectCombo[count].select(this.projectCombo[count].indexOf(this.returnValuesData.getJavaProject().getElementName()));
-			this.valuesObj[count] = new FastCodeProject(this.prjMap.get(this.projectCombo[count].getText()));
+			projectCombo.select(projectCombo.indexOf(this.returnValuesData.getJavaProject().getElementName()));
+			ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodeProject(this.prjMap.get(projectCombo.getText())));
+			/*	this.valuesObj[count] = new FastCodeProject(this.prjMap.get(projectCombo.getText()));*/
 		}
 
-		this.projectCombo[count].addSelectionListener(new SelectionListener() {
+		projectCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final Combo prjCombo = (Combo) event.widget;
-				ReturnValuesDialog.this.valuesObj[Integer.parseInt(prjCombo.getToolTipText())] = new FastCodeProject(
-						ReturnValuesDialog.this.prjMap.get(prjCombo.getText())); //ReturnValuesDialog.this.projectCombo[count].getText()
+				ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey,
+						new FastCodeProject(ReturnValuesDialog.this.prjMap.get(prjCombo.getText())));
+				/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(prjCombo.getToolTipText())] = new FastCodeProject(
+						New__ReturnValuesDialog.this.prjMap.get(prjCombo.getText()));*///ReturnValuesDialog.this.projectCombo[count].getText()
+				enableOrDisableChildren(paramKey);
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
-				// TODO Auto-generated method stub
 
 			}
 
 		});
 
-		this.projectCombo[count].addModifyListener(new ModifyListener() {
+		projectCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent arg0) {
 				/*	final Combo prjCombo = (Combo) arg0.widget;
 					if (isEmpty(prjCombo.getText())) {
@@ -1431,43 +1751,49 @@ public class ReturnValuesDialog extends TrayDialog {
 
 			}
 		});
-
+		return projectCombo;
 	}
 
 	/**
 	 * @param parent
-	 * @param count
 	 * @param defaultValue
 	 * @param pattern
 	 * @param enabled
+	 * @param required
+	 * @param required
+	 * @param paramKey
 	 */
-	private void createPackageSelectionPane(final Composite parent, final int count, final String project, final String pattern,
-			final boolean enabled) {
+	private Combo createPackageSelectionPane(final Composite parent, final String project, final String pattern, final boolean enabled,
+			final boolean required, final String paramKey) {
 		final Composite composite = new Composite(parent, parent.getStyle());
 		final GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
 		composite.setLayout(layout);
 
-		final GridData gridDataLabel = new GridData();
+		/*final GridData gridDataLabel = new GridData();
 		final Label label = new Label(composite, SWT.NONE);
-		label.setLayoutData(gridDataLabel);
+		label.setText(required ? ASTERISK + labelName : labelName);
+		label.setLayoutData(gridDataLabel);*/
 
 		final GridData gridDataText = new GridData();
 		gridDataText.grabExcessHorizontalSpace = true;
 
-		this.packageCombo[count] = new Combo(composite, SWT.READ_ONLY | SWT.DROP_DOWN);// new
+		final Combo pkgCombo = new Combo(composite, SWT.READ_ONLY | SWT.DROP_DOWN);// new
 		// Text(composite,
 		// SWT.BORDER);
-		this.packageCombo[count].setSize(200, 20);
-		this.packageCombo[count].setLayoutData(gridDataText);
-		this.packageCombo[count].setToolTipText(Integer.toString(count));
-		this.packageCombo[count].setEnabled(enabled);
+		pkgCombo.setSize(200, 20);
+		pkgCombo.setLayoutData(gridDataText);
+		pkgCombo.setEnabled(enabled);
 		gridDataText.minimumWidth = 500;
+
+		if (!required) {
+			pkgCombo.add(EMPTY_STR);
+		}
 
 		final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
 		if (this.compilationUnit != null) {
 			this.currentPackage = this.compilationUnit.getPrimary().findPrimaryType().getPackageFragment();
-			this.packageCombo[count].add(ENCLOSING_PACKAGE_STR + HYPHEN + getAlteredPackageName(this.currentPackage));
+			pkgCombo.add(ENCLOSING_PACKAGE_STR + HYPHEN + getAlteredPackageName(this.currentPackage));
 			//this.packageCombo[count].select(0);
 		}
 		if (!fastCodeCache.getPackageSet().isEmpty()) {
@@ -1486,8 +1812,8 @@ public class ReturnValuesDialog extends TrayDialog {
 					}
 				}
 				boolean addItem = true;
-				if (this.packageCombo[count].getItems() != null) {
-					for (final String existingPkg : this.packageCombo[count].getItems()) {
+				if (pkgCombo.getItems() != null) {
+					for (final String existingPkg : pkgCombo.getItems()) {
 						if (existingPkg.contains(ENCLOSING_PACKAGE_STR)) {
 							continue;
 						}
@@ -1497,13 +1823,14 @@ public class ReturnValuesDialog extends TrayDialog {
 						}
 					}
 					if (addItem) {
-						this.packageCombo[count].add(getAlteredPackageName(pkgFrgmt));
+						pkgCombo.add(getAlteredPackageName(pkgFrgmt));
 					}
 				}
 			}
 		}
-		this.packageCombo[count].addSelectionListener(new SelectionListener() {
+		pkgCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final Combo pkgCombo = (Combo) event.widget;
 				String selectedPkgName = pkgCombo.getText();
@@ -1513,23 +1840,26 @@ public class ReturnValuesDialog extends TrayDialog {
 				try {
 					for (final IPackageFragment pkg : fastCodeCache.getPackageSet()) {
 						if (getAlteredPackageName(pkg).equals(selectedPkgName)) {
-							ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) event.widget).getToolTipText())] = new FastCodePackage(
-									pkg);
+							ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodePackage(pkg));
+							/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) event.widget).getToolTipText())] = new FastCodePackage(
+									pkg);*/
 						}
 					}
 				} catch (final Exception ex) {
 					ex.printStackTrace();
 				}
+				enableOrDisableChildren(paramKey);
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
-				// TODO Auto-generated method stub
 
 			}
 
 		});
-		this.packageCombo[count].addFocusListener(new FocusListener() {
+		pkgCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 				final Combo pkgCombo = (Combo) e.widget;
 				String inputPkgName = pkgCombo.getText();
@@ -1550,21 +1880,25 @@ public class ReturnValuesDialog extends TrayDialog {
 
 						}
 					}*/
+					enableOrDisableChildren(paramKey);
 				}
+
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
-				// TODO Auto-generated method stub
 
 			}
 		});
 
-		this.packageCombo[count].addModifyListener(new ModifyListener() {
+		pkgCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 				final Combo pkgCombo = (Combo) e.widget;
-				if (isEmpty(pkgCombo.getText())) {
+				if (required && isEmpty(pkgCombo.getText())) {
 					setErrorMessage("Please choose a package");
+					enableOrDisableChildren(paramKey);
 				} else {
 					setErrorMessage(ReturnValuesDialog.this.defaultMessage);
 				}
@@ -1574,15 +1908,16 @@ public class ReturnValuesDialog extends TrayDialog {
 
 		final GridData gridDataButton = new GridData();
 
-		this.packageBrowseButton = new Button(composite, SWT.PUSH);
-		this.packageBrowseButton.setText("Browse");
-		this.packageBrowseButton.setLayoutData(gridDataButton);
-		this.packageBrowseButton.setToolTipText(Integer.toString(count));
-		this.packageBrowseButton.setEnabled(enabled);
-		this.packageBrowseButton.addSelectionListener(new SelectionListener() {
+		final Button browse = new Button(composite, SWT.PUSH);
+		browse.setText("Browse");
+		browse.setLayoutData(gridDataButton);
+		browse.setEnabled(enabled);
+		this.browseButtonComboMap.put(browse, pkgCombo);
+		browse.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
-				final Button brw = (Button) event.widget;
+				final Button b = (Button) event.getSource();
 				try {
 					final String srcPath = getDefaultPathFromProject(
 							isEmpty(project) ? ReturnValuesDialog.this.returnValuesData.getJavaProject() : getIJavaProjectFromName(project),
@@ -1606,15 +1941,11 @@ public class ReturnValuesDialog extends TrayDialog {
 							}
 						}*/
 						boolean addItem = true;
-						if (ReturnValuesDialog.this.packageCombo[Integer.parseInt(((Button) event.widget).getToolTipText())].getItems() != null) {
-							for (final String existingPkg : ReturnValuesDialog.this.packageCombo[Integer.parseInt(((Button) event.widget)
-									.getToolTipText())].getItems()) {
+						if (pkgCombo.getItems() != null) {
+							for (final String existingPkg : pkgCombo.getItems()) {
 								if (existingPkg.equals(getAlteredPackageName(packageFragment))) {
-									if (!ReturnValuesDialog.this.packageCombo[Integer.parseInt(((Button) event.widget).getToolTipText())]
-											.getText().equals(existingPkg)) {
-										ReturnValuesDialog.this.packageCombo[Integer.parseInt(((Button) event.widget).getToolTipText())]
-												.select(ReturnValuesDialog.this.packageCombo[Integer.parseInt(((Button) event.widget)
-														.getToolTipText())].indexOf(existingPkg));
+									if (!pkgCombo.getText().equals(existingPkg)) {
+										pkgCombo.select(pkgCombo.indexOf(existingPkg));
 
 									}
 									addItem = false;
@@ -1623,29 +1954,29 @@ public class ReturnValuesDialog extends TrayDialog {
 							}
 						}
 						if (addItem) {
-							ReturnValuesDialog.this.packageCombo[Integer.parseInt(((Button) event.widget).getToolTipText())]
-									.add(getAlteredPackageName(packageFragment));
-							ReturnValuesDialog.this.packageCombo[Integer.parseInt(((Button) event.widget).getToolTipText())]
-									.select(ReturnValuesDialog.this.packageCombo[Integer.parseInt(((Button) event.widget).getToolTipText())]
-											.getItemCount() - 1);
+							pkgCombo.add(getAlteredPackageName(packageFragment));
+							pkgCombo.select(pkgCombo.getItemCount() - 1);
 						}
 						if (!fastCodeCache.getPackageSet().contains(packageFragment)) {
 							fastCodeCache.getPackageSet().add(packageFragment);
 						}
-						ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Button) event.widget).getToolTipText())] = new FastCodePackage(
-								packageFragment);
+						ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodePackage(packageFragment));
+						/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Button) event.widget).getToolTipText())] = new FastCodePackage(
+								packageFragment);*/
 					}
 
 				} catch (final Exception ex) {
 					ex.printStackTrace();
 				}
+				enableOrDisableChildren(paramKey);
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
-				// TODO Auto-generated method stub
 
 			}
 		});
+		return pkgCombo;
 	}
 
 	private void createComboBoxPane(final Composite parent, final String values) {
@@ -1670,29 +2001,39 @@ public class ReturnValuesDialog extends TrayDialog {
 
 	/**
 	 * @param parent
-	 * @param count
 	 * @param defaultValue
 	 * @param pattern
 	 * @param enabled
+	 * @param required
+	 * @param required
+	 * @param paramKey
 	 */
-	private void createFolderSelectionPane(final Composite parent, final int count, final String defaultValue, final String project,
-			final String pattern, final boolean enabled) {
+	private Combo createFolderSelectionPane(final Composite parent, final String defaultValue, final String project, final String pattern,
+			final boolean enabled, final boolean required, final String paramKey) {
 		final Composite composite = new Composite(parent, parent.getStyle());
 		final GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
 		composite.setLayout(layout);
 
+		/*final GridData gridDataLabel = new GridData();
+		final Label label = new Label(composite, SWT.NONE);
+		label.setText(required ? ASTERISK + labelName : labelName);
+		label.setLayoutData(gridDataLabel);*/
+
 		final GridData gridDataCombo = new GridData();
 		gridDataCombo.grabExcessHorizontalSpace = true;
 
-		this.folderNameCombo[count] = new Combo(composite, SWT.READ_ONLY | SWT.DROP_DOWN);// new
+		final Combo folderCombo = new Combo(composite, SWT.READ_ONLY | SWT.DROP_DOWN);// new
 		// Text(composite,
 		// SWT.BORDER);
-		this.folderNameCombo[count].setSize(200, 20);
-		this.folderNameCombo[count].setLayoutData(gridDataCombo);
-		this.folderNameCombo[count].setToolTipText(Integer.toString(count));
+		folderCombo.setSize(200, 20);
+		folderCombo.setLayoutData(gridDataCombo);
 		gridDataCombo.minimumWidth = 500;
-		this.folderNameCombo[count].setEnabled(enabled);
+		folderCombo.setEnabled(enabled);
+
+		if (!required) {
+			folderCombo.add(EMPTY_STR);
+		}
 
 		final FastCodeCache fcCache = FastCodeCache.getInstance();
 		if (this.compilationUnit == null) {
@@ -1707,7 +2048,7 @@ public class ReturnValuesDialog extends TrayDialog {
 					final IFolder folder = this.returnValuesData.getJavaProject().getProject().getFolder(srcPath);
 					if (folder != null) {
 						this.currentFolder = folder;
-						this.folderNameCombo[count].add(ENCLOSING_FOLDER_STR + HYPHEN + this.currentFolder.getFullPath().toString());
+						folderCombo.add(ENCLOSING_FOLDER_STR + HYPHEN + this.currentFolder.getFullPath().toString());
 
 						//this.folderNameCombo[count].select(0);
 					}
@@ -1733,8 +2074,8 @@ public class ReturnValuesDialog extends TrayDialog {
 					}
 				}
 				boolean addItem = true;
-				if (this.folderNameCombo[count].getItems() != null) {
-					for (final String existingFolder : this.folderNameCombo[count].getItems()) {
+				if (folderCombo.getItems() != null) {
+					for (final String existingFolder : folderCombo.getItems()) {
 						if (existingFolder.contains(ENCLOSING_FOLDER_STR)) {
 							continue;
 						}
@@ -1745,13 +2086,14 @@ public class ReturnValuesDialog extends TrayDialog {
 						}
 					}
 					if (addItem) {
-						this.folderNameCombo[count].add(folder.getFullPath().toString());
+						folderCombo.add(folder.getFullPath().toString());
 					}
 				}
 			}
 		}
-		this.folderNameCombo[count].addSelectionListener(new SelectionListener() {
+		folderCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 
 				String selectedFolderPath = ((Combo) event.widget).getText(); // ReturnValuesDialog.this.folderNameCombo.getText();
@@ -1762,24 +2104,27 @@ public class ReturnValuesDialog extends TrayDialog {
 					if (!fcCache.getFolderSet().isEmpty()) {
 						for (final IFolder folder : fcCache.getFolderSet()) {
 							if (folder.getFullPath().toString().equals(selectedFolderPath)) {
-								ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) event.widget).getToolTipText())] = new FastCodeFolder(
-										folder);
+								ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodeFolder(folder));
+								/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) event.widget).getToolTipText())] = new FastCodeFolder(
+										folder);*/
 							}
 						}
 					}
 				} catch (final Exception ex) {
 					ex.printStackTrace();
 				}
+				enableOrDisableChildren(paramKey);
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
-				// TODO Auto-generated method stub
 
 			}
 
 		});
-		this.folderNameCombo[count].addFocusListener(new FocusListener() {
+		folderCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 				String inputFolderPath = ((Combo) e.widget).getText();
 				if (!isEmpty(inputFolderPath)) {
@@ -1791,22 +2136,24 @@ public class ReturnValuesDialog extends TrayDialog {
 							return;
 						}
 					}
-
+					enableOrDisableChildren(paramKey);
 				}
 
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
-				// TODO Auto-generated method stub
 
 			}
 		});
 
-		this.folderNameCombo[count].addModifyListener(new ModifyListener() {
+		folderCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent arg0) {
-				if (isEmpty(((Combo) arg0.widget).getText())) {
+				if (required && isEmpty(((Combo) arg0.widget).getText())) {
 					setErrorMessage("Please select a folder.");
+					enableOrDisableChildren(paramKey);
 				} else {
 					setErrorMessage(ReturnValuesDialog.this.defaultMessage);
 				}
@@ -1818,17 +2165,19 @@ public class ReturnValuesDialog extends TrayDialog {
 		final Button browse = new Button(composite, SWT.PUSH);
 		browse.setText("Browse");
 		browse.setLayoutData(gridDataButton);
-		browse.setToolTipText(Integer.toString(count));
 		browse.setEnabled(enabled);
+		this.browseButtonComboMap.put(browse, folderCombo);
 		browse.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 			}
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				try {
 					Path path = null;
-
+					final Button b = (Button) e.getSource();
 					final ContainerSelectionDialog dialog = new ContainerSelectionDialog(new Shell(), null, true, "Select a folder:");
 					dialog.setTitle("Select a Folder");
 					dialog.showClosedProjects(false);
@@ -1841,26 +2190,16 @@ public class ReturnValuesDialog extends TrayDialog {
 						}
 						final IFolder folder = ReturnValuesDialog.this.returnValuesData.getJavaProject().getProject()
 								.getFolder(new Path(srcPath));
+						ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodeFolder(folder));
+						/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Button) e.widget).getToolTipText())] = new FastCodeFolder(
+								folder);*/
 
-						ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Button) e.widget).getToolTipText())] = new FastCodeFolder(
-								folder);
-						//ReturnValuesDialog.this.folderNameCombo.setText(folder.getFullPath().toString());
-						/*for (final Combo fldrCombo : ReturnValuesDialog.this.folderNameCombo) {
-							if (((Button) e.widget).getToolTipText().equals(fldrCombo.getToolTipText())) {
-								fldrCombo.add(folder.getFullPath().toString());
-								fldrCombo.select(fldrCombo.getItemCount() - 1);
-							}
-						}*/
 						boolean addItem = true;
-						if (ReturnValuesDialog.this.folderNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())].getItems() != null) {
-							for (final String existingFolder : ReturnValuesDialog.this.folderNameCombo[Integer.parseInt(((Button) e.widget)
-									.getToolTipText())].getItems()) {
+						if (folderCombo.getItems() != null) {
+							for (final String existingFolder : folderCombo.getItems()) {
 								if (existingFolder.equals(folder.getFullPath().toString())) {
-									if (!existingFolder.equals(ReturnValuesDialog.this.folderNameCombo[Integer.parseInt(((Button) e.widget)
-											.getToolTipText())].getText())) {
-										ReturnValuesDialog.this.folderNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())]
-												.select(ReturnValuesDialog.this.folderNameCombo[Integer.parseInt(((Button) e.widget)
-														.getToolTipText())].indexOf(existingFolder));
+									if (!existingFolder.equals(folderCombo.getText())) {
+										folderCombo.select(folderCombo.indexOf(existingFolder));
 									}
 									addItem = false;
 									break;
@@ -1868,54 +2207,59 @@ public class ReturnValuesDialog extends TrayDialog {
 							}
 						}
 						if (addItem) {
-							ReturnValuesDialog.this.folderNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())].add(folder
-									.getFullPath().toString());
-							ReturnValuesDialog.this.folderNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())]
-									.select(ReturnValuesDialog.this.folderNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())]
-											.getItemCount() - 1);
+							folderCombo.add(folder.getFullPath().toString());
+							folderCombo.select(folderCombo.getItemCount() - 1);
 						}
 						if (!fcCache.getFolderSet().contains(folder)) {
 							fcCache.getFolderSet().add(folder);
 						}
 					}
 				} catch (final Exception ex) {
-					// TODO Auto-generated catch block
 					ex.printStackTrace();
 				}
+				enableOrDisableChildren(paramKey);
 			}
 
 		});
+		return folderCombo;
 	}
 
 	/**
 	 * @param parent
-	 * @param count
 	 * @param enabled
+	 * @param required
+	 * @param required
+	 * @param labelName
 	 * @param defaultValue
 	 */
-	private void createClassSelectionPane(final Composite parent, final int count, final String project, final String pattern,
-			final boolean enabled) {
-		final Composite composite = new Composite(parent, parent.getStyle());
+	private Combo createClassSelectionPane(final Composite parent, final String project, final String pattern, final boolean enabled,
+			final boolean required, final String paramKey/*, final String labelName*/) {
+		final Composite composite = new Composite(parent, SWT.NONE/*parent.getStyle()*/);
 		final GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
 		composite.setLayout(layout);
 
-		final GridData gridDataCombo = new GridData();
+		final GridData gridDataCombo = new GridData(/*SWT.FILL, SWT.NONE, true, false*/);
+		gridDataCombo.horizontalAlignment = GridData.FILL;
 		gridDataCombo.grabExcessHorizontalSpace = true;
 
-		this.classNameCombo[count] = new Combo(composite, SWT.NONE);// new
+		final Combo classCombo = new Combo(composite, SWT.READ_ONLY);// new
 		// Text(composite,
 		// SWT.BORDER);
-		this.classNameCombo[count].setSize(200, 20);
-		this.classNameCombo[count].setLayoutData(gridDataCombo);
-		this.classNameCombo[count].setToolTipText(Integer.toString(count));
+		//classCombo.setSize(200, 20);
+		classCombo.setLayoutData(gridDataCombo);
+		classCombo.setRedraw(true);
 		gridDataCombo.minimumWidth = 500;
-		this.classNameCombo[count].setEnabled(enabled);
+		classCombo.setEnabled(enabled);
+
+		if (!required) {
+			classCombo.add(EMPTY_STR);
+		}
 
 		final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
 		if (this.compilationUnit != null) {
 			this.currentClass = this.compilationUnit.getPrimary().findPrimaryType();
-			this.classNameCombo[count].add(ENCLOSING_CLASS_STR + HYPHEN + this.currentClass.getFullyQualifiedName());
+			classCombo.add(ENCLOSING_CLASS_STR + HYPHEN + this.currentClass.getFullyQualifiedName());
 			//this.classNameCombo[count].select(0);
 		}
 
@@ -1936,8 +2280,8 @@ public class ReturnValuesDialog extends TrayDialog {
 				}
 
 				boolean addItem = true;
-				if (this.classNameCombo[count].getItems() != null) {
-					for (final String existingClass : this.classNameCombo[count].getItems()) {
+				if (classCombo.getItems() != null) {
+					for (final String existingClass : classCombo.getItems()) {
 						if (existingClass.contains(ENCLOSING_CLASS_STR)) {
 							continue;
 						}
@@ -1947,14 +2291,15 @@ public class ReturnValuesDialog extends TrayDialog {
 						}
 					}
 					if (addItem) {
-						this.classNameCombo[count].add(type.getFullyQualifiedName());
+						classCombo.add(type.getFullyQualifiedName());
 					}
 				}
 			}
 		}
 
-		this.classNameCombo[count].addSelectionListener(new SelectionListener() {
+		classCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				String selectedFromClassName = ((Combo) event.widget).getText(); //ReturnValuesDialog.this.classNameCombo.getText();
 				try {
@@ -1964,24 +2309,26 @@ public class ReturnValuesDialog extends TrayDialog {
 					if (!fastCodeCache.getTypeSet().isEmpty()) {
 						for (final IType type : fastCodeCache.getTypeSet()) {
 							if (type.getFullyQualifiedName().equals(selectedFromClassName)) {
-								ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) event.widget).getToolTipText())] = new FastCodeType(
-										type);
+								ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodeType(type));
+								/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) event.widget).getToolTipText())] = new FastCodeType(
+										type);*/
 							}
 						}
 					}
 				} catch (final Exception ex) {
 					ex.printStackTrace();
 				}
-
+				enableOrDisableChildren(paramKey);
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
-				// TODO Auto-generated method stub
 
 			}
 		});
-		this.classNameCombo[count].addFocusListener(new FocusListener() {
+		classCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 				String inputFromClassName = ((Combo) e.widget).getText();
 				if (!isEmpty(inputFromClassName)) {
@@ -1996,33 +2343,37 @@ public class ReturnValuesDialog extends TrayDialog {
 						}
 					}
 					try {
-						final IType inputClassType = getTypeFromWorkspace(inputFromClassName);
-						if (inputClassType != null) {
-							ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) e.widget).getToolTipText())] = new FastCodeType(
-									inputClassType);
-							if (!fastCodeCache.getTypeSet().contains(inputClassType)) {
-								fastCodeCache.getTypeSet().add(inputClassType);
-							}
-						} else {
-							setErrorMessage("Class does not exist,Please enter an existing class name ");
-						}
+						//						final IType inputClassType = getTypeFromWorkspace(inputFromClassName);
+						//						if (inputClassType != null) {
+						//							ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodeType(inputClassType));
+						/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) e.widget).getToolTipText())] = new FastCodeType(
+								inputClassType);*/
+						//							if (!fastCodeCache.getTypeSet().contains(inputClassType)) {
+						//								fastCodeCache.getTypeSet().add(inputClassType);
+						//							}
+						//						} else {
+						//							setErrorMessage("Class does not exist,Please enter an existing class name ");
+						//						}
 					} catch (final Exception ex) {
 						ex.printStackTrace();
 					}
+					enableOrDisableChildren(paramKey);
 				}
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
-				// TODO Auto-generated method stub
 
 			}
 		});
-		this.classNameCombo[count].addModifyListener(new ModifyListener() {
+		classCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 
-				if (isEmpty(((Combo) e.widget).getText())) {
+				if (required && isEmpty(((Combo) e.widget).getText())) {
 					setErrorMessage("Please choose a Class");
+					enableOrDisableChildren(paramKey);
 				} else {
 					setErrorMessage(ReturnValuesDialog.this.defaultMessage);
 				}
@@ -2030,19 +2381,21 @@ public class ReturnValuesDialog extends TrayDialog {
 
 		});
 
-		final GridData gridDataButton = new GridData();
+		final GridData gridDataButton = new GridData(SWT.FILL, SWT.NONE, true, false);
 		final Button browse = new Button(composite, SWT.PUSH);
 		browse.setText("Browse");
 		browse.setLayoutData(gridDataButton);
-		browse.setToolTipText(Integer.toString(count));
 		browse.setEnabled(enabled);
+		this.browseButtonComboMap.put(browse, classCombo);
 		browse.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 			}
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
-
+				final Button b = (Button) e.getSource();
 				SelectionDialog selectionDialog = null;
 				try {
 					IProject prj = null;
@@ -2050,7 +2403,7 @@ public class ReturnValuesDialog extends TrayDialog {
 						prj = getIJavaProjectFromName(project).getProject();
 					}
 					final IProject prjArr[] = new IProject[] { prj };
-					selectionDialog = JavaUI.createTypeDialog(parent.getShell() == null ? new Shell() : parent.getShell(), null,
+					selectionDialog = JavaUI.createTypeDialog(composite.getShell() == null ? new Shell() : composite.getShell(), null,
 							isEmpty(project) ? SearchEngine.createWorkspaceScope() : SearchEngine.createJavaSearchScope(prjArr),
 							IJavaElementSearchConstants.CONSIDER_ALL_TYPES, false, pattern);
 					selectionDialog.setTitle(ReturnValuesDialog.this.selectMsg + "Class");
@@ -2061,15 +2414,12 @@ public class ReturnValuesDialog extends TrayDialog {
 					}
 					final IType browsedClassType = (IType) selectionDialog.getResult()[0];
 					boolean addItem = true;
-					if (ReturnValuesDialog.this.classNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())].getItems() != null) {
-						for (final String existingClass : ReturnValuesDialog.this.classNameCombo[Integer.parseInt(((Button) e.widget)
-								.getToolTipText())].getItems()) {
+
+					if (classCombo.getItems() != null) {
+						for (final String existingClass : classCombo.getItems()) {
 							if (existingClass.equals(browsedClassType.getFullyQualifiedName())) {
-								if (!existingClass.equals(ReturnValuesDialog.this.classNameCombo[Integer.parseInt(((Button) e.widget)
-										.getToolTipText())].getText())) {
-									ReturnValuesDialog.this.classNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())]
-											.select(ReturnValuesDialog.this.classNameCombo[Integer.parseInt(((Button) e.widget)
-													.getToolTipText())].indexOf(existingClass));
+								if (!existingClass.equals(classCombo.getText())) {
+									classCombo.select(classCombo.indexOf(existingClass));
 								}
 								addItem = false;
 								break;
@@ -2077,14 +2427,10 @@ public class ReturnValuesDialog extends TrayDialog {
 						}
 					}
 					if (addItem) {
-						ReturnValuesDialog.this.classNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())].add(browsedClassType
-								.getFullyQualifiedName());
-						ReturnValuesDialog.this.classNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())]
-								.select(ReturnValuesDialog.this.classNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())]
-										.getItemCount() - 1);
+						classCombo.add(browsedClassType.getFullyQualifiedName());
+						classCombo.select(classCombo.getItemCount() - 1);
 					}
-					ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Button) e.widget).getToolTipText())] = new FastCodeType(
-							browsedClassType);
+					ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodeType(browsedClassType));
 					/*for (final Combo clsCombo : ReturnValuesDialog.this.classNameCombo) {
 						if (clsCombo != null && ((Button) e.widget).getToolTipText().equals(clsCombo.getToolTipText())) {
 							clsCombo.setText(((IType) selectionDialog.getResult()[0]).getFullyQualifiedName());
@@ -2096,48 +2442,114 @@ public class ReturnValuesDialog extends TrayDialog {
 						fastCodeCache.getTypeSet().add((IType) selectionDialog.getResult()[0]);
 					}
 				} catch (final JavaModelException ex) {
-					// TODO Auto-generated catch block
 					ex.printStackTrace();
 				} catch (final Exception ex) {
-					// TODO Auto-generated catch block
 					ex.printStackTrace();
 				}
+				enableOrDisableChildren(paramKey);
 			}
 
 		});
+		return classCombo;
+	}
+
+	protected void enableOrDisableChildren(final String paramKey) {
+		final Object parentSWTObject = this.paramKeySWTObjectMap.get(paramKey);
+		boolean enable = false;
+		if (parentSWTObject instanceof Text) {
+			final Text textObj = (Text) parentSWTObject;
+			enable = !isEmpty(textObj.getText());
+		} else if (parentSWTObject instanceof Combo) {
+			final Combo comboObj = (Combo) parentSWTObject;
+			enable = !isEmpty(comboObj.getText());
+		} else if (parentSWTObject instanceof Button) {
+			final Button buttonObj = (Button) parentSWTObject;
+			enable = buttonObj.getSelection();
+		}
+		if (this.parentKeyChildrenKeyMap.containsKey(paramKey)) {
+			final List<String> childrenList = this.parentKeyChildrenKeyMap.get(paramKey);
+			for (final String childKey : childrenList) {
+				final Object childSWTObjct = this.paramKeySWTObjectMap.get(childKey);
+				if (childSWTObjct instanceof Text) {
+					final Text textObj = (Text) childSWTObjct;
+					textObj.setEnabled(enable);
+				} else if (childSWTObjct instanceof Combo) {
+					final Combo comboObj = (Combo) childSWTObjct;
+					comboObj.setEnabled(enable);
+					for (final Entry<Button, Combo> browseComboEntries : this.browseButtonComboMap.entrySet()) {
+						if (comboObj.equals(browseComboEntries.getValue())) {
+							final Button browseButton = browseComboEntries.getKey();
+							browseButton.setEnabled(enable);
+							break;
+						}
+					}
+				} else if (childSWTObjct instanceof Button) {
+					final Button buttonObj = (Button) childSWTObjct;
+					buttonObj.setEnabled(enable);
+				}
+
+				if (enable) {
+					if (Boolean.valueOf(this.paramKeyFCAdditonalParamMap.get(childKey).getRequired())) {
+						final Label label = (Label) this.paramKeyLableSWTMap.get(childKey);
+						final String labelText = label.getText();
+						label.setText(ASTERISK + labelText);
+						label.redraw();
+						label.getParent().layout();
+					}
+				} else {
+					final Label label = (Label) this.paramKeyLableSWTMap.get(childKey);
+					final String labelText = label.getText().replace(ASTERISK, EMPTY_STR);
+					label.setText(labelText);
+					label.redraw();
+					label.getParent().layout();
+				}
+
+			}
+		}
+
 	}
 
 	/**
 	 * @param parent
-	 * @param count
 	 * @param defaultValue
 	 * @param pattern
 	 * @param enabled
+	 * @param required
+	 * @param required
+	 * @param paramKey
 	 */
-	private void createFileSelectionPane(final Composite parent, final int count, final String project, final String pattern,
-			final boolean enabled) {
+	private Combo createFileSelectionPane(final Composite parent, final String project, final String pattern, final boolean enabled,
+			final boolean required, final String paramKey) {
 		final Composite composite = new Composite(parent, parent.getStyle());
 		final GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
 		composite.setLayout(layout);
 
+		/*final GridData gridDataLabel = new GridData();
+		final Label label = new Label(composite, SWT.NONE);
+		label.setText(required ? ASTERISK + labelName : labelName);
+		label.setLayoutData(gridDataLabel);*/
+
 		final GridData gridDataCombo = new GridData();
 		gridDataCombo.grabExcessHorizontalSpace = true;
 
-		this.fileNameCombo[count] = new Combo(composite, SWT.NONE);// new
+		final Combo fileCombo = new Combo(composite, SWT.READ_ONLY);// new
 		// Text(composite,
 		// SWT.BORDER);
-		this.fileNameCombo[count].setSize(200, 20);
-		this.fileNameCombo[count].setLayoutData(gridDataCombo);
-		this.fileNameCombo[count].setToolTipText(Integer.toString(count));
+		fileCombo.setSize(200, 20);
+		fileCombo.setLayoutData(gridDataCombo);
 		gridDataCombo.minimumWidth = 500;
-		this.fileNameCombo[count].setEnabled(enabled);
+		fileCombo.setEnabled(enabled);
+
+		if (!required) {
+			fileCombo.add(EMPTY_STR);
+		}
 
 		final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
 		if (this.compilationUnit == null) {
 			final IFile file = (IFile) this.returnValuesData.getEditorPart().getEditorInput().getAdapter(IFile.class);
 			this.currentFile = file;
-			this.fileNameCombo[count].add(ENCLOSING_FILE_STR + HYPHEN + this.currentFile.getFullPath().toString());
+			fileCombo.add(ENCLOSING_FILE_STR + HYPHEN + this.currentFile.getFullPath().toString());
 			//this.fileNameCombo[count].select(0);
 		}
 		if (!fastCodeCache.getFileSet().isEmpty()) {
@@ -2156,8 +2568,8 @@ public class ReturnValuesDialog extends TrayDialog {
 					}
 				}
 				boolean addItem = true;
-				if (this.fileNameCombo[count].getItems() != null) {
-					for (final String existingFile : this.fileNameCombo[count].getItems()) {
+				if (fileCombo.getItems() != null) {
+					for (final String existingFile : fileCombo.getItems()) {
 						if (existingFile.contains(ENCLOSING_FILE_STR)) {
 							continue;
 						}
@@ -2167,15 +2579,16 @@ public class ReturnValuesDialog extends TrayDialog {
 						}
 					}
 					if (addItem) {
-						this.fileNameCombo[count].add(file.getFullPath().toString());
+						fileCombo.add(file.getFullPath().toString());
 					}
 				}
 
 			}
 		}
 
-		this.fileNameCombo[count].addSelectionListener(new SelectionListener() {
+		fileCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				String selectedFileName = ((Combo) event.widget).getText(); //ReturnValuesDialog.this.fileNameCombo.getText();
 				try {
@@ -2185,35 +2598,39 @@ public class ReturnValuesDialog extends TrayDialog {
 					if (!fastCodeCache.getFileSet().isEmpty()) {
 						for (final IFile file : fastCodeCache.getFileSet()) {
 							if (file.getName().equals(selectedFileName.substring(selectedFileName.lastIndexOf(FORWARD_SLASH) + 1))) {
-								ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) event.widget).getToolTipText())] = new FastCodeFile(
-										file);//new FastCodeFile(file.getName(), file.getProjectRelativePath().toString());
+								ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodeFile(file));
+								/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) event.widget).getToolTipText())] = new FastCodeFile(
+										file);*///new FastCodeFile(file.getName(), file.getProjectRelativePath().toString());
 							}
 						}
 					}
 				} catch (final Exception ex) {
 					ex.printStackTrace();
 				}
-
+				enableOrDisableChildren(paramKey);
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
-				// TODO Auto-generated method stub
 
 			}
 		});
-		this.fileNameCombo[count].addModifyListener(new ModifyListener() {
+		fileCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 
-				if (isEmpty(((Combo) e.widget).getText())) {
+				if (required && isEmpty(((Combo) e.widget).getText())) {
 					setErrorMessage("Please choose a file");
+					enableOrDisableChildren(paramKey);
 				} else {
 					setErrorMessage(ReturnValuesDialog.this.defaultMessage);
 				}
 			}
 		});
-		this.fileNameCombo[count].addFocusListener(new FocusListener() {
+		fileCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 				setErrorMessage(ReturnValuesDialog.this.defaultMessage);
 				String inputFileName = ((Combo) e.widget).getText();
@@ -2237,7 +2654,8 @@ public class ReturnValuesDialog extends TrayDialog {
 							final IFile inputFile = ResourcesPlugin.getWorkspace().getRoot().getFile(iInputPath);
 							if (inputFile != null && inputFile.exists()) {
 								final FastCodeFile inputFastCodeFile = new FastCodeFile(inputFile);//new FastCodeFile(inputFile.getName(), inputFile.getProjectRelativePath().toString());
-								ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) e.widget).getToolTipText())] = inputFastCodeFile;
+								ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, inputFastCodeFile);
+								//New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) e.widget).getToolTipText())] = inputFastCodeFile;
 								if (!fastCodeCache.getFileSet().contains(inputFile)) {
 									fastCodeCache.getFileSet().add(inputFile);
 								}
@@ -2252,9 +2670,12 @@ public class ReturnValuesDialog extends TrayDialog {
 						ReturnValuesDialog.this
 								.setErrorMessage("Please enter file name with full path like /Project Name/....../file name ");
 					}
+					enableOrDisableChildren(paramKey);
 				}
+
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 
 			}
@@ -2264,14 +2685,17 @@ public class ReturnValuesDialog extends TrayDialog {
 		final Button browse = new Button(composite, SWT.PUSH);
 		browse.setText("Browse");
 		browse.setLayoutData(gridDataButton);
-		browse.setToolTipText(Integer.toString(count));
 		browse.setEnabled(enabled);
+		this.browseButtonComboMap.put(browse, fileCombo);
 		browse.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 			}
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
+				final Button b = (Button) e.getSource();
 				OpenResourceDialog resourceDialog = null;
 				/*resourceDialog = new OpenResourceDialog(parent.getShell() == null ? new Shell() : parent.getShell(), ResourcesPlugin
 						.getWorkspace().getRoot(), IResource.FILE);*/
@@ -2294,16 +2718,15 @@ public class ReturnValuesDialog extends TrayDialog {
 
 				final IFile browseFile = (IFile) resourceDialog.getResult()[0];
 				final String browsePath = browseFile.getFullPath().toString();
-				ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Button) e.widget).getToolTipText())] = new FastCodeFile(browseFile);
+				ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodeFile(browseFile));
+				/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Button) e.widget).getToolTipText())] = new FastCodeFile(
+						browseFile);*/
 				boolean addItem = true;
-				if (ReturnValuesDialog.this.fileNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())].getItems() != null) {
-					for (final String existingFile : ReturnValuesDialog.this.fileNameCombo[Integer.parseInt(((Button) e.widget)
-							.getToolTipText())].getItems()) {
+				if (fileCombo.getItems() != null) {
+					for (final String existingFile : fileCombo.getItems()) {
 						if (existingFile.equals(browsePath)) {
-							if (!existingFile.equals(ReturnValuesDialog.this.fileNameCombo[Integer.parseInt(((Button) e.widget)
-									.getToolTipText())].getText())) {
-								ReturnValuesDialog.this.fileNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())].select(ReturnValuesDialog.this.fileNameCombo[Integer
-										.parseInt(((Button) e.widget).getToolTipText())].indexOf(existingFile));
+							if (!existingFile.equals(fileCombo.getText())) {
+								fileCombo.select(fileCombo.indexOf(existingFile));
 							}
 							addItem = false;
 							break;
@@ -2311,18 +2734,17 @@ public class ReturnValuesDialog extends TrayDialog {
 					}
 				}
 				if (addItem) {
-					ReturnValuesDialog.this.fileNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())].add(browsePath);
-					ReturnValuesDialog.this.fileNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())]
-							.select(ReturnValuesDialog.this.fileNameCombo[Integer.parseInt(((Button) e.widget).getToolTipText())]
-									.getItemCount() - 1);
+					fileCombo.add(browsePath);
+					fileCombo.select(fileCombo.getItemCount() - 1);
 				}
 				if (!fastCodeCache.getFileSet().contains(browseFile)) {
 					fastCodeCache.getFileSet().add(browseFile);
 				}
-
+				enableOrDisableChildren(paramKey);
 			}
 
 		});
+		return fileCombo;
 	}
 
 	/**
@@ -2336,13 +2758,14 @@ public class ReturnValuesDialog extends TrayDialog {
 	 * @param parent
 	 */
 	private void createErrorMessageText(final Composite parent) {
+		/*final Composite composite = new Composite(parent, SWT.NONE);
+		final GridLayout layout = new GridLayout();
+		layout.numColumns = 2;
+		composite.setLayout(layout);*/
 
-		final GridData errText = new GridData(200, 30);
-		errText.grabExcessHorizontalSpace = true;
-
-		this.errorMessageText = new Text(parent, SWT.READ_ONLY | SWT.WRAP);
-		// this.errorMessageText.setBackground(new Color(null, 255, 255, 255));
-		//this.errorMessageText.setForeground(new Color(null, 255, 0, 0));
+		final GridData errText = new GridData(700, 20);
+		errText.horizontalSpan = 3;
+		this.errorMessageText = new Text(parent, SWT.READ_ONLY | SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
 		this.errorMessageText.setForeground(FastCodeColor.getErrorMsgColor());
 		this.errorMessageText.setLayoutData(errText);
 		setErrorMessage(this.defaultMessage);
@@ -2356,10 +2779,12 @@ public class ReturnValuesDialog extends TrayDialog {
 	public void setErrorMessage(final String errorMessage) {
 		// this.errorMessage = errorMessage;
 		if (this.errorMessageText != null && !this.errorMessageText.isDisposed()) {
+
 			this.errorMessageText.setText(errorMessage == null ? " \n " : errorMessage); //$NON-NLS-1$
 			boolean hasError = false;
 			if (errorMessage != null && !errorMessage.equals(this.defaultMessage)) {
 				hasError = true;
+
 			}
 			this.errorMessageText.setEnabled(hasError);
 			this.errorMessageText.setVisible(hasError);
@@ -2369,6 +2794,7 @@ public class ReturnValuesDialog extends TrayDialog {
 				button.setEnabled(errorMessage.equals(this.defaultMessage));
 			}
 		}
+
 	}
 
 	/**
@@ -2400,4 +2826,14 @@ public class ReturnValuesDialog extends TrayDialog {
 		}
 		display.dispose();
 	}
+
+	@Override
+	protected boolean isResizable() {
+		/*if (this.shell != null) {
+			this.shell.redraw();
+			this.shell.layout();
+		}*/
+		return true;
+	}
+
 }

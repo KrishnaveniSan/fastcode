@@ -76,6 +76,7 @@ public class SelectFieldsSelectionDialog extends TitleAreaDialog {
 		 * org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java
 		 * .lang.Object, int)
 		 */
+		@Override
 		public Image getColumnImage(final Object element, final int columnIndex) {
 
 			return null;
@@ -84,6 +85,7 @@ public class SelectFieldsSelectionDialog extends TitleAreaDialog {
 		/* (non-Javadoc)
 		 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
 		 */
+		@Override
 		public String getColumnText(final Object element, final int columnIndex) {
 
 			final DataBaseFieldInfo dataBaseFieldInfo = (DataBaseFieldInfo) element;
@@ -114,14 +116,17 @@ public class SelectFieldsSelectionDialog extends TitleAreaDialog {
 	}
 
 	private static class ContentProvider implements IStructuredContentProvider {
+		@Override
 		public Object[] getElements(final Object inputElement) {
 
 			return ((List<DataBaseFieldInfo>) inputElement).toArray();
 		}
 
+		@Override
 		public void dispose() {
 		}
 
+		@Override
 		public void inputChanged(final Viewer viewer, final Object oldInput, final Object newInput) {
 		}
 	}
@@ -315,6 +320,7 @@ public class SelectFieldsSelectionDialog extends TitleAreaDialog {
 		this.tableViewer.refresh();
 
 		this.table.addListener(SWT.Selection, new Listener() {
+			@Override
 			public void handleEvent(final Event event) {
 				if (event.detail == SWT.CHECK) {
 
@@ -393,6 +399,7 @@ public class SelectFieldsSelectionDialog extends TitleAreaDialog {
 		final Button selectAllButton = createButton(parent, IDialogConstants.SELECT_ALL_ID, "Select All", false);
 
 		selectAllButton.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				for (final TableItem tableItem : SelectFieldsSelectionDialog.this.tableViewer.getTable().getItems()) {
 					tableItem.setChecked(true);
@@ -400,6 +407,7 @@ public class SelectFieldsSelectionDialog extends TitleAreaDialog {
 				selectAllRows();
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 				// TODO Auto-generated method stub
 

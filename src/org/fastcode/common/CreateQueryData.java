@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.fastcode.common.FastCodeConstants.QUERY_CHOICES;
 import org.fastcode.common.FastCodeConstants.WHERE_CLAUSE_QUALIFIER;
@@ -33,6 +34,8 @@ public class CreateQueryData {
 	private String					schemaSelected;
 	private List<String>			schemasInDB				= new ArrayList<String>();
 	private String					selectedDatabaseName;
+	private IJavaProject			javaProject;
+	private FastCodeProject			selectedProject;
 
 	/**
 	 * @param queryChoices
@@ -332,14 +335,30 @@ public class CreateQueryData {
 	 * @return the selectedDatabaseName
 	 */
 	public String getSelectedDatabaseName() {
-		return selectedDatabaseName;
+		return this.selectedDatabaseName;
 	}
 
 	/**
 	 * @param selectedDatabaseName the selectedDatabaseName to set
 	 */
-	public void setSelectedDatabaseName(String selectedDatabaseName) {
+	public void setSelectedDatabaseName(final String selectedDatabaseName) {
 		this.selectedDatabaseName = selectedDatabaseName;
+	}
+
+	public IJavaProject getJavaProject() {
+		return this.javaProject;
+	}
+
+	public void setJavaProject(final IJavaProject javaProject) {
+		this.javaProject = javaProject;
+	}
+
+	public FastCodeProject getSelectedProject() {
+		return this.selectedProject;
+	}
+
+	public void setSelectedProject(final FastCodeProject selectedProject) {
+		this.selectedProject = selectedProject;
 	}
 
 }

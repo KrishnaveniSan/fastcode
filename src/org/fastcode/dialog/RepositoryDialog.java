@@ -131,6 +131,7 @@ public class RepositoryDialog extends TrayDialog {
 
 		this.repositoryURL.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent arg0) {
 				setErrorMessage(RepositoryDialog.this.defaultMessage);
 			}
@@ -239,6 +240,7 @@ public class RepositoryDialog extends TrayDialog {
 
 		this.project.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final String projectName = RepositoryDialog.this.project.getText();
 				if (!isEmpty(projectName)) {
@@ -256,6 +258,7 @@ public class RepositoryDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -453,26 +456,31 @@ public class RepositoryDialog extends TrayDialog {
 
 		private Image	image;
 
+		@Override
 		public void addListener(final ILabelProviderListener arg0) {
 			// TODO Auto-generated method stub
 
 		}
 
+		@Override
 		public void dispose() {
 			// TODO Auto-generated method stub
 
 		}
 
+		@Override
 		public boolean isLabelProperty(final Object arg0, final String arg1) {
 			// TODO Auto-generated method stub
 			return false;
 		}
 
+		@Override
 		public void removeListener(final ILabelProviderListener arg0) {
 			// TODO Auto-generated method stub
 
 		}
 
+		@Override
 		public Image getImage(final Object input) {
 			if (input instanceof RepositoryFolder) {
 				return getImageForRepositoryFolder((RepositoryFolder) input);
@@ -491,7 +499,7 @@ public class RepositoryDialog extends TrayDialog {
 		 */
 		private Image getImageForRepositoryFolder(final RepositoryFolder input) {
 			final GlobalSettings globalSettings = GlobalSettings.getInstance();
-			FastCodeCache fastCodeCache = FastCodeCache.getInstance();
+			final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
 			String imageName = null;
 			Image image = null;
 			if (input.getType().equals("FILE")) {
@@ -543,6 +551,7 @@ public class RepositoryDialog extends TrayDialog {
 			return this.image;
 		}
 
+		@Override
 		public String getText(final Object input) {
 			if (input instanceof RepositoryFolder) {
 				return ((RepositoryFolder) input).getName();
@@ -563,16 +572,19 @@ public class RepositoryDialog extends TrayDialog {
 	 */
 	private class RepFldrContentProvider implements ITreeContentProvider {
 
+		@Override
 		public void dispose() {
 			// TODO Auto-generated method stub
 
 		}
 
+		@Override
 		public void inputChanged(final Viewer arg0, final Object arg1, final Object arg2) {
 			// TODO Auto-generated method stub
 
 		}
 
+		@Override
 		public Object[] getChildren(final Object input) {
 			if (!(input instanceof RepositoryFolders || input instanceof RepositoryFolder)) {
 				return null;
@@ -598,14 +610,17 @@ public class RepositoryDialog extends TrayDialog {
 			return null;
 		}
 
+		@Override
 		public Object[] getElements(final Object input) {
 			return getChildren(input);
 		}
 
+		@Override
 		public Object getParent(final Object input) {
 			return input instanceof RepositoryFolder ? input : null;
 		}
 
+		@Override
 		public boolean hasChildren(final Object input) {
 			if (!(input instanceof RepositoryFolder || input instanceof RepositoryFolders)) {
 				return false;

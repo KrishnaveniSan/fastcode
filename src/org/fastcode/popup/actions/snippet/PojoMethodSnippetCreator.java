@@ -49,6 +49,7 @@ public class PojoMethodSnippetCreator implements SnippetCreator {
 	 * @param memberSelection
 	 * @param spacesBeforeCursor
 	 */
+	@Override
 	public Object createSnippet(final IEditorPart editorPart, final String template, final Map<String, Object> placeHolders,
 			final Map<String, Object> memberSelection, final String spacesBeforeCursor) throws Exception {
 		getGlobalSettings(placeHolders);

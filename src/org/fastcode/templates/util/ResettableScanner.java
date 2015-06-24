@@ -40,6 +40,7 @@ public class ResettableScanner implements ICharacterScanner {
 	/*
 	 * @see org.eclipse.jface.text.rules.ICharacterScanner#getColumn()
 	 */
+	@Override
 	public int getColumn() {
 		return this.delegate.getColumn();
 	}
@@ -47,6 +48,7 @@ public class ResettableScanner implements ICharacterScanner {
 	/*
 	 * @see org.eclipse.jface.text.rules.ICharacterScanner#getLegalLineDelimiters()
 	 */
+	@Override
 	public char[][] getLegalLineDelimiters() {
 		return this.delegate.getLegalLineDelimiters();
 	}
@@ -54,6 +56,7 @@ public class ResettableScanner implements ICharacterScanner {
 	/*
 	 * @see org.eclipse.jface.text.rules.ICharacterScanner#read()
 	 */
+	@Override
 	public int read() {
 		final int ch = this.delegate.read();
 		if (ch != ICharacterScanner.EOF) {
@@ -65,6 +68,7 @@ public class ResettableScanner implements ICharacterScanner {
 	/*
 	 * @see org.eclipse.jface.text.rules.ICharacterScanner#unread()
 	 */
+	@Override
 	public void unread() {
 		if (this.readCount > 0) {
 			this.readCount--;

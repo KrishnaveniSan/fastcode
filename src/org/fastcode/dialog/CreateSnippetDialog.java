@@ -185,7 +185,7 @@ public class CreateSnippetDialog extends TrayDialog {
 	private Combo				databaseNameCombo;
 	private String				selectedDatabaseName;
 	private Button				autoCheckin;
-
+	private Button				replaceSelectedText;
 	/**
 	 * @param shell
 	 */
@@ -238,14 +238,21 @@ public class CreateSnippetDialog extends TrayDialog {
 		}
 
 		final String templatePrefix = this.createSnippetData.getTemplatePrefix();
+		createProjectSelectionPane(parent);
 		if (templatePrefix.equals(TEMPLATE)) {
-			createProjectSelectionPane(parent);
 			createSelectionPane(parent);
 			createFromClassInstacnePane(parent);
 			createToClassSelectionPane(parent);
 			createToClassInstancePane(parent);
 			if (this.createSnippetData.getLocalVariables() != null && this.createSnippetData.getLocalVariables().size() > 0) {
 				createShowLocaVarButton(parent);
+			}
+			if (this.createSnippetData.getSelectedText() != null && !this.createSnippetData.getSelectedText().isEmpty()) {
+				createSurroundWithButton(parent);
+			}
+			final String projectName = CreateSnippetDialog.this.projectCombo.getText();
+			if (!isEmpty(projectName)) {
+				isPrjInSync(CreateSnippetDialog.this.prjMap.get(projectName));
 			}
 		} else if (templatePrefix.equals(P_DATABASE_TEMPLATE_PREFIX)) {
 			createDatabaseNameSelectionPane(parent);
@@ -267,6 +274,9 @@ public class CreateSnippetDialog extends TrayDialog {
 		return parent;
 	}
 
+	/**
+	 * @param parent
+	 */
 	private void createAutoCheckinPane(final Composite parent) {
 		final Composite composite = new Composite(parent, parent.getStyle());
 		final GridLayout layout = new GridLayout();
@@ -275,7 +285,7 @@ public class CreateSnippetDialog extends TrayDialog {
 		this.autoCheckin = new Button(composite, SWT.CHECK);
 		this.autoCheckin.setText("Auto Check in Changes?");
 		final VersionControlPreferences versionControlPreferences = VersionControlPreferences.getInstance();
-		if (versionControlPreferences.isEnable()) {
+		if (versionControlPreferences.isEnable() && this.createSnippetData.getJavaProject() != null) {
 			boolean prjShared = false;
 			boolean prjConfigured = false;
 			try {
@@ -298,10 +308,12 @@ public class CreateSnippetDialog extends TrayDialog {
 		}
 		this.autoCheckin.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				CreateSnippetDialog.this.createSnippetData.setDoAutoCheckin(CreateSnippetDialog.this.autoCheckin.getSelection());
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 			}
 		});
@@ -341,6 +353,7 @@ public class CreateSnippetDialog extends TrayDialog {
 		adapter.setProposalAcceptanceStyle(ContentProposalAdapter.PROPOSAL_REPLACE);
 		this.databaseNameCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent event) {
 				final String selectedDbName = CreateSnippetDialog.this.databaseNameCombo.getText();
 				if (databaseConnectionSettings.getConnMap().keySet().contains(selectedDbName)) {
@@ -356,7 +369,8 @@ public class CreateSnippetDialog extends TrayDialog {
 						try {
 							connection = connectToDatabase.getNewConnection(selectedDbName);
 							getSchemaFromDb(connection, databaseConnection.getDatabaseType());
-							CreateSnippetDialog.this.createSnippetData.setSchemasInDB(databaseCache.getDbSchemaListMap().get(databaseConnection.getDatabaseType()));
+							CreateSnippetDialog.this.createSnippetData.setSchemasInDB(databaseCache.getDbSchemaListMap().get(
+									databaseConnection.getDatabaseType()));
 							populateSchemaCombo();
 							poulateTableCombo(connectToDatabase);
 							CreateSnippetDialog.this.createSnippetData.setSelectedDatabaseName(selectedDbName);
@@ -368,44 +382,14 @@ public class CreateSnippetDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				// TODO Auto-generated method stub
 
 			}
 
 		});
-		/*this.databaseNameCombo.addSelectionListener(new SelectionListener() {
 
-			public void widgetSelected(SelectionEvent event) {
-				String selectedDbName = databaseNameCombo.getText();
-				if (!selectedDbName.equalsIgnoreCase(DatabaseConnectionSettings.getInstance().getNameofDabase())
-						|| !createSnippetData.getSelectedDatabaseName().equals(selectedDbName)) {
-					//updatePreferenceStore(selectedDbName);
-					//DatabaseConnectionSettings.setReload(true);
-					ConnectToDatabase connectToDatabase = ConnectToDatabase.getInstance();
-					connectToDatabase.closeConnection(ConnectToDatabase.getCon());
-					DatabaseCache databaseCache = DatabaseCache.getInstance();
-					DatabaseDetails databaseConnection = databaseConnectionSettings.getConnMap().get(selectedDbName);
-					Connection connection = null;
-					try {
-						connection = connectToDatabase.getConnection(selectedDbName);
-						getSchemaFromDb(connection, databaseConnection.getDatabaseType());
-						createSnippetData.setSchemasInDB(databaseCache.getDbSchemaListMap().get(databaseConnection.getDatabaseType()));
-						populateSchemaCombo();
-						poulateTableCombo(connectToDatabase);
-						createSnippetData.setSelectedDatabaseName(selectedDbName);
-					} catch (Exception ex) {
-						ex.printStackTrace();
-					}
-
-				}
-			}
-
-			public void widgetDefaultSelected(SelectionEvent arg0) {
-				// TODO Auto-generated method stub
-
-			}
-		});*/
 	}
 
 	/**
@@ -449,7 +433,7 @@ public class CreateSnippetDialog extends TrayDialog {
 		this.projectLabel = new Label(composite, SWT.NONE);
 		this.projectLabel.setText("Select Project:              ");
 		this.projectLabel.setLayoutData(gridDataLabel);
-		this.projectLabel.setVisible(false);
+		//this.projectLabel.setVisible(false);
 
 		final GridData gridDataText = new GridData();
 		gridDataText.grabExcessHorizontalSpace = true;
@@ -458,8 +442,8 @@ public class CreateSnippetDialog extends TrayDialog {
 		this.projectCombo.setSize(200, 20);
 		this.projectCombo.setLayoutData(gridDataText);
 		gridDataText.minimumWidth = 500;
-		this.projectCombo.setEnabled(false);
-		this.projectCombo.setVisible(false);
+		//this.projectCombo.setEnabled(false);
+		//this.projectCombo.setVisible(false);
 
 		final IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 		for (final IProject prj : projects) {
@@ -478,21 +462,52 @@ public class CreateSnippetDialog extends TrayDialog {
 
 		this.projectCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final String projectName = CreateSnippetDialog.this.projectCombo.getText();
 				if (!isEmpty(projectName)) {
 					CreateSnippetDialog.this.createSnippetData.setSelectedProject(new FastCodeProject(CreateSnippetDialog.this.prjMap
 							.get(projectName)));
-					setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+					clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
+					isPrjInSync(CreateSnippetDialog.this.prjMap.get(projectName));
 				} else {
 					setErrorMessage("Please select a project");
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
 		});
+
+		/*this.projectCombo.addModifyListener(new ModifyListener() {
+
+			@Override
+			public void modifyText(final ModifyEvent arg0) {
+				final String projectName = CreateSnippetDialog.this.projectCombo.getText();
+				if (!isEmpty(projectName)) {
+					isPrjInSync(CreateSnippetDialog.this.prjMap.get(projectName));
+				}
+
+			}
+		});*/
+	}
+
+	/**
+	 * @param project
+	 *
+	 */
+	private boolean isPrjInSync(final IProject project) {
+		if (project != null && !project.isSynchronized(IResource.DEPTH_INFINITE)) {
+			this.snippetCombo.setEnabled(false);
+			setErrorMessage("Project " + project.getName() + " is not synchronised. Please synchronise and try again.");
+			return false;
+		} else {
+			this.snippetCombo.setEnabled(true);
+			clearErrorMessage(this.defaultMessage);
+			return true;
+		}
 	}
 
 	/**
@@ -523,6 +538,7 @@ public class CreateSnippetDialog extends TrayDialog {
 
 		this.selectTypeCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 
 				switch (CreateSnippetDialog.this.templateSettings.getFirstTemplateItem()) {
@@ -567,7 +583,7 @@ public class CreateSnippetDialog extends TrayDialog {
 										CreateSnippetDialog.this.createSnippetData.getFastCodeFiles().add(new FastCodeFile(file));//new FastCodeFile(file.getName(), file.getProjectRelativePath().toString()));
 									}
 									CreateSnippetDialog.this.createSnippetData.setResourceFile(file);
-									CreateSnippetDialog.this.setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+									CreateSnippetDialog.this.clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 								}
 							}
 						}
@@ -582,7 +598,7 @@ public class CreateSnippetDialog extends TrayDialog {
 								}
 								CreateSnippetDialog.this.createSnippetData
 										.setResourceFile((IFile) CreateSnippetDialog.this.browsedFirstTemplateMap.get(selectedFileName));
-								CreateSnippetDialog.this.setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+								CreateSnippetDialog.this.clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 							}
 						} else {
 							if (!CreateSnippetDialog.this.createSnippetData.getFastCodeFiles().contains(
@@ -606,7 +622,7 @@ public class CreateSnippetDialog extends TrayDialog {
 							for (final IFolder folder : fastCodeCache.getFolderSet()) {
 								if (folder.getFullPath().toString().equals(selectedFolderPath)) {
 									CreateSnippetDialog.this.createSnippetData.setFolder(folder);
-									CreateSnippetDialog.this.setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+									CreateSnippetDialog.this.clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 								}
 							}
 						}
@@ -614,7 +630,7 @@ public class CreateSnippetDialog extends TrayDialog {
 							if (CreateSnippetDialog.this.browsedFirstTemplateMap.containsKey(selectedFolderPath)) {
 								CreateSnippetDialog.this.createSnippetData
 										.setFolder((IFolder) CreateSnippetDialog.this.browsedFirstTemplateMap.get(selectedFolderPath));
-								CreateSnippetDialog.this.setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+								CreateSnippetDialog.this.clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 							}
 						}
 					} catch (final Exception ex) {
@@ -631,7 +647,7 @@ public class CreateSnippetDialog extends TrayDialog {
 							for (final IPackageFragment pkg : fastCodeCache.getPackageSet()) {
 								if (getAlteredPackageName(pkg).equals(selectedPkgName)) {
 									CreateSnippetDialog.this.createSnippetData.setPackageFragment(pkg);
-									CreateSnippetDialog.this.setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+									CreateSnippetDialog.this.clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 								}
 							}
 						}
@@ -640,7 +656,7 @@ public class CreateSnippetDialog extends TrayDialog {
 								CreateSnippetDialog.this.createSnippetData
 										.setPackageFragment((IPackageFragment) CreateSnippetDialog.this.browsedFirstTemplateMap
 												.get(selectedPkgName));
-								CreateSnippetDialog.this.setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+								CreateSnippetDialog.this.clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 							}
 						}
 					} catch (final Exception ex) {
@@ -654,7 +670,7 @@ public class CreateSnippetDialog extends TrayDialog {
 							for (final IType type : fastCodeCache.getTypeSet()) {
 								if (type.getFullyQualifiedName().equals(selectedEnumName)) {
 									CreateSnippetDialog.this.createSnippetData.setEnumType(type);
-									CreateSnippetDialog.this.setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+									CreateSnippetDialog.this.clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 								}
 							}
 						}
@@ -674,49 +690,16 @@ public class CreateSnippetDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
 			}
 		});
 
-		/*this.selectTypeCombo.addModifyListener(new ModifyListener() {
-
-			public void modifyText(final ModifyEvent event) {
-
-				if (CreateSnippetDialog.this.createSnippetData.isRequiresClass()) {
-
-					if (isEmpty(CreateSnippetDialog.this.selectTypeCombo.getText())) {
-						setErrorMessage("Please choose a Class");
-					} else {
-						if (!isValidVariableName(CreateSnippetDialog.this.selectTypeCombo.getText())) {
-							setErrorMessage("Special charecters can not be used");
-						} else {
-							setErrorMessage(CreateSnippetDialog.this.defaultMessage);
-						}
-						// setErrorMessage(CreateSnippetDialog.this.defaultMessage);
-					}
-
-				} else if (CreateSnippetDialog.this.createSnippetData.isRequiresFile()) {
-
-					if (isEmpty(CreateSnippetDialog.this.selectTypeCombo.getText())) {
-						setErrorMessage("Please choose a file");
-					} else {
-						/*
-						 * if (!isValidVariableName(CreateSnippetDialog.this.
-						 * fileNameCombo .getText())) {
-						 * setErrorMessage("Special charecters can not be used"
-						 * ); } else {
-						 * setErrorMessage(CreateSnippetDialog.this.defaultMessage
-						 * ); }
-
-						setErrorMessage(CreateSnippetDialog.this.defaultMessage);
-					}
-				}
-			}
-		});*/
 		this.selectTypeCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent event) {
 
 				switch (CreateSnippetDialog.this.templateSettings.getFirstTemplateItem()) {
@@ -745,12 +728,7 @@ public class CreateSnippetDialog extends TrayDialog {
 									CreateSnippetDialog.this.browsedFirstTemplateMap.put(inputClassType.getFullyQualifiedName(),
 											inputClassType);
 								}
-								/*if (CreateSnippetDialog.this.selectTypeCombo.getText().equals(CURRENT_CLASS)) {
-									CreateSnippetDialog.this.fromClassInstCombo.setText(CURRENT_CLASS + " Instance");
-								}*/
-								/*if (!fastCodeCache.getTypeSet().contains(inputClassType)) {
-									fastCodeCache.getTypeSet().add(inputClassType);
-								}*/
+
 							} else {
 								setErrorMessage("Class does not exist,Please enter an existing class name ");
 							}
@@ -791,18 +769,15 @@ public class CreateSnippetDialog extends TrayDialog {
 									if (!CreateSnippetDialog.this.browsedFirstTemplateMap.containsKey(inputFile.getFullPath().toString())) {
 										CreateSnippetDialog.this.browsedFirstTemplateMap.put(inputFile.getFullPath().toString(), inputFile);
 									}
-									/*if (!fastCodeCache.getFileSet().contains(inputFile)) {
-										fastCodeCache.getFileSet().add(inputFile);
 
-									}*/
-									CreateSnippetDialog.this.setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+									CreateSnippetDialog.this.clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 								} else {
 									CreateSnippetDialog.this.setErrorMessage("File does not exist,Please enter an existing file name");
 								}
 							} catch (final Exception ex) {
 								ex.printStackTrace();
 							}
-							CreateSnippetDialog.this.setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+							CreateSnippetDialog.this.clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 
 						} else {
 							CreateSnippetDialog.this
@@ -887,6 +862,7 @@ public class CreateSnippetDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -900,6 +876,7 @@ public class CreateSnippetDialog extends TrayDialog {
 		this.browseButton.setVisible(false);
 		this.browseButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 
 				switch (CreateSnippetDialog.this.templateSettings.getFirstTemplateItem()) {
@@ -1005,7 +982,7 @@ public class CreateSnippetDialog extends TrayDialog {
 							CreateSnippetDialog.this.browsedFirstTemplateMap.put(browseFile.getFullPath().toString(), browseFile);
 						}
 					}
-					CreateSnippetDialog.this.setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+					CreateSnippetDialog.this.clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 					break;
 				case Folder:
 					try {
@@ -1015,7 +992,18 @@ public class CreateSnippetDialog extends TrayDialog {
 
 						if (dialog.open() != CANCEL) {
 							path = (IPath) dialog.getResult()[0];
-							final IFolder folder = ResourcesPlugin.getWorkspace().getRoot().getFolder(path);
+							System.out.println(path.isRoot());
+							IFolder folder = null;
+							final int segmentCount = path.segmentCount();
+							if (segmentCount == 1) {
+								final IProject prjct = ResourcesPlugin.getWorkspace().getRoot().getProject(path.toString());
+								System.out.println(prjct);
+								folder = prjct.getFolder(prjct.getProjectRelativePath());
+							} else {
+								folder = ResourcesPlugin.getWorkspace().getRoot().getFolder(path);
+							}
+
+							//final IFolder folder = ResourcesPlugin.getWorkspace().getRoot().getFolder(path); //new Path(path.toString() + FORWARD_SLASH));
 							boolean addItem1 = true;
 							if (CreateSnippetDialog.this.selectTypeCombo.getItems() != null) {
 								for (final String existingFolder : CreateSnippetDialog.this.selectTypeCombo.getItems()) {
@@ -1046,7 +1034,7 @@ public class CreateSnippetDialog extends TrayDialog {
 							}
 							CreateSnippetDialog.this.createSnippetData.setFolder(folder);
 							if (!isEmpty(CreateSnippetDialog.this.selectTypeCombo.getText())) {
-								CreateSnippetDialog.this.setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+								CreateSnippetDialog.this.clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 							}
 						}
 
@@ -1056,10 +1044,11 @@ public class CreateSnippetDialog extends TrayDialog {
 					break;
 				case Package:
 					try {
-						final String srcPath = getDefaultPathFromProject(CreateSnippetDialog.this.createSnippetData.getJavaProject(),
-								"source", EMPTY_STR);
-						final IPackageFragment allPackages[] = getPackagesInProject(
-								CreateSnippetDialog.this.createSnippetData.getJavaProject(), srcPath, "source");
+						final IJavaProject javaProject = CreateSnippetDialog.this.createSnippetData.getSelectedProject() != null ? CreateSnippetDialog.this.createSnippetData
+								.getSelectedProject().getJavaProject() : CreateSnippetDialog.this.createSnippetData.getJavaProject();
+
+						final String srcPath = getDefaultPathFromProject(javaProject, "source", EMPTY_STR);
+						final IPackageFragment allPackages[] = getPackagesInProject(javaProject, srcPath, "source");
 						if (allPackages == null) {
 							return;
 						}
@@ -1123,7 +1112,7 @@ public class CreateSnippetDialog extends TrayDialog {
 						}
 
 						if (!isEmpty(CreateSnippetDialog.this.selectTypeCombo.getText())) {
-							CreateSnippetDialog.this.setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+							CreateSnippetDialog.this.clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 						}
 					} catch (final Exception ex) {
 						ex.printStackTrace();
@@ -1173,7 +1162,7 @@ public class CreateSnippetDialog extends TrayDialog {
 										browsedEnumType);
 							}
 						}
-						CreateSnippetDialog.this.setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+						CreateSnippetDialog.this.clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 					} catch (final JavaModelException ex) {
 						ex.printStackTrace();
 					}
@@ -1183,6 +1172,7 @@ public class CreateSnippetDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1203,6 +1193,7 @@ public class CreateSnippetDialog extends TrayDialog {
 		this.groupByButton.setEnabled(false);
 		this.groupByButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (((Button) event.widget).getSelection()) {
 					if (CreateSnippetDialog.this.tableCombo.getSelectionIndex() == -1) {
@@ -1228,6 +1219,7 @@ public class CreateSnippetDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -1238,6 +1230,7 @@ public class CreateSnippetDialog extends TrayDialog {
 		this.orderByButton.setEnabled(false);
 		this.orderByButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (((Button) event.widget).getSelection()) {
 					if (CreateSnippetDialog.this.tableCombo.getSelectionIndex() == -1) {
@@ -1264,310 +1257,13 @@ public class CreateSnippetDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
 		});
 
 	}
-
-	/*private void createFolderSelectionPane(final Composite parent) {
-		final Composite composite = new Composite(parent, parent.getStyle());
-		final GridLayout layout = new GridLayout();
-		layout.numColumns = 3;
-		composite.setLayout(layout);
-
-		final GridData gridDataLabel = new GridData();
-		final Label label = new Label(composite, SWT.NONE);
-		label.setText("Select Folder:               ");
-		label.setLayoutData(gridDataLabel);
-
-		final GridData gridDataText = new GridData();
-		gridDataText.grabExcessHorizontalSpace = true;
-
-		this.folderCombo = new Combo(composite, SWT.READ_ONLY | SWT.DROP_DOWN);// new
-																				// Text(composite,
-		// SWT.BORDER);
-		this.folderCombo.setSize(200, 20);
-		this.folderCombo.setLayoutData(gridDataText);
-		gridDataText.minimumWidth = 500;
-		this.folderCombo.setEnabled(false);
-
-		final FastCodeCache fcCache = FastCodeCache.getInstance();
-		if (!fcCache.getFolderSet().isEmpty()) {
-			for (final IFolder folder : fcCache.getFolderSet()) {
-				this.folderCombo.add(folder.getFullPath().toString());
-			}
-		}
-		this.folderCombo.addSelectionListener(new SelectionListener() {
-
-			public void widgetSelected(final SelectionEvent event) {
-				final String selectedFolderPath = CreateSnippetDialog.this.folderCombo.getText();
-				try {
-					for (final IFolder folder : fcCache.getFolderSet()) {
-						if (folder.getFullPath().toString().equals(selectedFolderPath)) {
-							CreateSnippetDialog.this.createSnippetData.setFolder(folder);
-						}
-					}
-				} catch (final Exception ex) {
-					ex.printStackTrace();
-				}
-			}
-
-			public void widgetDefaultSelected(final SelectionEvent arg0) {
-				// TODO Auto-generated method stub
-
-			}
-
-		});
-		this.folderCombo.addFocusListener(new FocusListener() {
-
-			public void focusLost(final FocusEvent e) {
-				final String inputFolderPath = CreateSnippetDialog.this.folderCombo.getText();
-				for (final IFolder folder : fcCache.getFolderSet()) {
-					if (folder.getFullPath().toString().equals(inputFolderPath)) {
-						return;
-					}
-				}
-
-				 * final boolean inputResult =
-				 * isFullyQualifiedName(inputFromClassName); if (inputResult) {
-
-				try { // to do
-
-					 * final IType inputClassType =
-					 * getTypeFromWorkspace(inputFromClassName); if
-					 * (inputClassType != null) {
-					 * CreateSnippetDialog.this.createSnippetData
-					 * .setiSelectPojoClassType(inputClassType); if
-					 * (!classCache.getTypeSet().contains(inputClassType)) {
-					 * classCache.getTypeSet().add(inputClassType); }
-					 *
-					 * } else { setErrorMessage(
-					 * "Class does not exist,Please enter an existing class name "
-					 * ); }
-
-				} catch (final Exception ex) {
-					ex.printStackTrace();
-				}
-
-
-				 * } else { setErrorMessage(
-				 * "Please write a fully qualified name like Package Name.Class name"
-				 * ); }
-
-			}
-
-			public void focusGained(final FocusEvent arg0) {
-				// TODO Auto-generated method stub
-
-			}
-		});
-
-		final GridData gridDataButton = new GridData();
-
-		this.folderBrowseButton = new Button(composite, SWT.PUSH);
-		this.folderBrowseButton.setText("Browse");
-		this.folderBrowseButton.setLayoutData(gridDataButton);
-		this.folderBrowseButton.setEnabled(false);
-
-		this.folderBrowseButton.addSelectionListener(new SelectionListener() {
-
-			public void widgetSelected(final SelectionEvent event) {
-				try {
-					IPath path = null;
-					final ContainerSelectionDialog dialog = new ContainerSelectionDialog(new Shell(), null, true, "Select a folder:");
-					dialog.setTitle("Select a Folder");
-					// dialog.//showClosedProjects(true);
-					if (dialog.open() != CANCEL) {
-						path = (IPath) dialog.getResult()[0];
-
-						// final String project = path.segment(0);
-						// final String srcPath =
-						// path.toString().substring(project.length() + 1);
-						// final IResource res =
-						// getResourceFromWorkspace(path.toString());
-						final IFolder folder = ResourcesPlugin.getWorkspace().getRoot().getFolder(path);
-						// final IFolder folder = res.getProject().getFolder(new
-						// Path(srcPath));
-
-						 * final IFolder folder =
-						 * CreateSnippetDialog.this.createSnippetData
-						 * .getJavaProject().getProject() .getFolder(new
-						 * Path(srcPath));
-
-						// CreateSnippetDialog.this.folderCombo.setText(folder.getFullPath().toString());
-						CreateSnippetDialog.this.folderCombo.add(folder.getFullPath().toString());
-						CreateSnippetDialog.this.folderCombo.select(CreateSnippetDialog.this.folderCombo.getItemCount() - 1);
-						if (!fcCache.getFolderSet().contains(folder)) {
-							fcCache.getFolderSet().add(folder);
-						}
-						CreateSnippetDialog.this.createSnippetData.setFolder(folder);
-					}
-
-				} catch (final Exception ex) {
-					ex.printStackTrace();
-				}
-			}
-
-			public void widgetDefaultSelected(final SelectionEvent arg0) {
-				// TODO Auto-generated method stub
-
-			}
-		});
-	}*/
-
-	/**
-	 * @param parent
-	 */
-	/*private void createPackageSelectionPane(final Composite parent) {
-		final Composite composite = new Composite(parent, parent.getStyle());
-		final GridLayout layout = new GridLayout();
-		layout.numColumns = 3;
-		composite.setLayout(layout);
-
-		final GridData gridDataLabel = new GridData();
-		final Label label = new Label(composite, SWT.NONE);
-		label.setText("Select Package:           ");
-		label.setLayoutData(gridDataLabel);
-
-		final GridData gridDataText = new GridData();
-		gridDataText.grabExcessHorizontalSpace = true;
-
-		this.packageCombo = new Combo(composite, SWT.READ_ONLY | SWT.DROP_DOWN);// new
-		// Text(composite,
-		// SWT.BORDER);
-		this.packageCombo.setSize(200, 20);
-		this.packageCombo.setLayoutData(gridDataText);
-		gridDataText.minimumWidth = 500;
-		this.packageCombo.setEnabled(false);
-
-		final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
-		if (!fastCodeCache.getPackageSet().isEmpty()) {
-			for (final IPackageFragment pkgFrgmt : fastCodeCache.getPackageSet()) {
-				this.packageCombo.add(getAlteredPackageName(pkgFrgmt));
-			}
-		}
-		this.packageCombo.addSelectionListener(new SelectionListener() {
-
-			public void widgetSelected(final SelectionEvent event) {
-				final String selectedPkgName = CreateSnippetDialog.this.packageCombo.getText();
-				try {
-					for (final IPackageFragment pkg : fastCodeCache.getPackageSet()) {
-						if (getAlteredPackageName(pkg).equals(selectedPkgName)) {
-							CreateSnippetDialog.this.createSnippetData.setPackageFragment(pkg);
-						}
-					}
-				} catch (final Exception ex) {
-					ex.printStackTrace();
-				}
-			}
-
-			public void widgetDefaultSelected(final SelectionEvent arg0) {
-				// TODO Auto-generated method stub
-
-			}
-
-		});
-		this.packageCombo.addFocusListener(new FocusListener() {
-
-			public void focusLost(final FocusEvent e) {
-				final String inputPkgName = CreateSnippetDialog.this.packageCombo.getText();
-				for (final IPackageFragment pkg : fastCodeCache.getPackageSet()) {
-					if (pkg.getElementName().equals(inputPkgName)) {
-						return;
-					}
-				}
-
-				 * final boolean inputResult =
-				 * isFullyQualifiedName(inputFromClassName); if (inputResult) {
-
-				try { // to do
-
-					 * final IType inputClassType =
-					 * getTypeFromWorkspace(inputFromClassName); if
-					 * (inputClassType != null) {
-					 * CreateSnippetDialog.this.createSnippetData
-					 * .setiSelectPojoClassType(inputClassType); if
-					 * (!classCache.getTypeSet().contains(inputClassType)) {
-					 * classCache.getTypeSet().add(inputClassType); }
-					 *
-					 * } else { setErrorMessage(
-					 * "Class does not exist,Please enter an existing class name "
-					 * ); }
-
-				} catch (final Exception ex) {
-					ex.printStackTrace();
-				}
-
-
-				 * } else { setErrorMessage(
-				 * "Please write a fully qualified name like Package Name.Class name"
-				 * ); }
-
-			}
-
-			public void focusGained(final FocusEvent arg0) {
-				// TODO Auto-generated method stub
-
-			}
-		});
-
-		final GridData gridDataButton = new GridData();
-
-		this.packageBrowseButton = new Button(composite, SWT.PUSH);
-		this.packageBrowseButton.setText("Browse");
-		this.packageBrowseButton.setLayoutData(gridDataButton);
-		this.packageBrowseButton.setEnabled(false);
-
-		this.packageBrowseButton.addSelectionListener(new SelectionListener() {
-
-			public void widgetSelected(final SelectionEvent event) {
-				try {
-					final IPackageFragment allPackages[] = getPackagesInProject(CreateSnippetDialog.this.createSnippetData.getJavaProject());
-					final java.util.List<IPackageFragment> nonEmptyPackages = new ArrayList<IPackageFragment>();
-					for (final IPackageFragment packageFragment : allPackages) {
-						final ICompilationUnit[] compilationUnits = packageFragment.getCompilationUnits();
-						if (compilationUnits != null && compilationUnits.length > 0) {
-							nonEmptyPackages.add(packageFragment);
-						}
-					}
-
-					PackageSelectionDialog selectionDialog = null;
-
-					if (CreateSnippetDialog.this.createSnippetData.getTemplateType().equals(TEMPLATE_CREATE_IMPL)
-							|| CreateSnippetDialog.this.createSnippetData.getTemplateType().equals(TEMPLATE_SPRING_BEAN_FILE)
-							|| CreateSnippetDialog.this.createSnippetData.getTemplateType().equals(TEMPLATE_INSTANCE_OF_CLASSES)
-							|| CreateSnippetDialog.this.createSnippetData.getTemplateType().equals(TEMPLATE_COPY_CLASSES)
-							|| CreateSnippetDialog.this.createSnippetData.getTemplateType().equals(TEMPLATE_INSTANCE_OF_GENERIC_DAO)) {
-						selectionDialog = new PackageSelectionDialog(new Shell(), "Package ", "Choose a package from below",
-								nonEmptyPackages.toArray(new IPackageFragment[0]));
-					} else {
-						selectionDialog = new PackageSelectionDialog(new Shell(), "Package ", "Choose a package from below", allPackages);
-					}
-					IPackageFragment packageFragment = null;
-					if (selectionDialog.open() != CANCEL) {
-						packageFragment = (IPackageFragment) selectionDialog.getFirstResult();
-						// CreateSnippetDialog.this.packageCombo.setText(getAlteredPackageName(packageFragment));
-						CreateSnippetDialog.this.packageCombo.add(getAlteredPackageName(packageFragment));
-						CreateSnippetDialog.this.packageCombo.select(CreateSnippetDialog.this.packageCombo.getItemCount() - 1);
-						if (!fastCodeCache.getPackageSet().contains(packageFragment)) {
-							fastCodeCache.getPackageSet().add(packageFragment);
-						}
-						CreateSnippetDialog.this.createSnippetData.setPackageFragment(packageFragment);
-					}
-
-				} catch (final Exception ex) {
-					ex.printStackTrace();
-				}
-			}
-
-			public void widgetDefaultSelected(final SelectionEvent arg0) {
-				// TODO Auto-generated method stub
-
-			}
-		});
-	}*/
 
 	/**
 	 * @param parent
@@ -1586,7 +1282,7 @@ public class CreateSnippetDialog extends TrayDialog {
 		final GridData gridDataText = new GridData();
 		gridDataText.grabExcessHorizontalSpace = true;
 
-		this.pojoClassCombo = new Combo(composite, SWT.NONE);
+		this.pojoClassCombo = new Combo(composite, SWT.READ_ONLY);
 		this.pojoClassCombo.setSize(200, 20);
 		this.pojoClassCombo.setLayoutData(gridDataText);
 		gridDataText.minimumWidth = 500;
@@ -1600,6 +1296,7 @@ public class CreateSnippetDialog extends TrayDialog {
 		}
 		this.pojoClassCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final String selectedPojoClassName = CreateSnippetDialog.this.pojoClassCombo.getText();
 				try {
@@ -1623,6 +1320,7 @@ public class CreateSnippetDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1631,6 +1329,7 @@ public class CreateSnippetDialog extends TrayDialog {
 		});
 		this.pojoClassCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 				final String inputPojoClassName = CreateSnippetDialog.this.pojoClassCombo.getText();
 				if (!isEmpty(inputPojoClassName)) {
@@ -1654,7 +1353,7 @@ public class CreateSnippetDialog extends TrayDialog {
 							/*if (!fastCodeCache.getTypeSet().contains(inputClassType)) {
 								fastCodeCache.getTypeSet().add(inputClassType);
 							}*/
-							setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+							clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 						} else {
 							setErrorMessage("Class does not exist,Please enter an existing class name ");
 						}
@@ -1664,6 +1363,7 @@ public class CreateSnippetDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1672,13 +1372,14 @@ public class CreateSnippetDialog extends TrayDialog {
 
 		this.pojoClassCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 
 				if (isEmpty(CreateSnippetDialog.this.pojoClassCombo.getText())) {
 					setErrorMessage("Please choose a Class");
 
 				} else {
-					setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+					clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 				}
 			}
 
@@ -1693,6 +1394,7 @@ public class CreateSnippetDialog extends TrayDialog {
 
 		this.pojoClassBrowseButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final SelectionDialog selectionDialog;
 				try {
@@ -1743,6 +1445,7 @@ public class CreateSnippetDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1794,7 +1497,7 @@ public class CreateSnippetDialog extends TrayDialog {
 
 		this.errorMessageText.setForeground(FastCodeColor.getErrorMsgColor());
 		this.errorMessageText.setLayoutData(errText);
-		setErrorMessage(this.defaultMessage);
+		setMessage(this.defaultMessage);
 
 	}
 
@@ -1817,7 +1520,7 @@ public class CreateSnippetDialog extends TrayDialog {
 		final GridData gridDataText = new GridData();
 		gridDataText.grabExcessHorizontalSpace = true;
 
-		this.toClassInstCombo = new Combo(composite, SWT.NONE);
+		this.toClassInstCombo = new Combo(composite, SWT.READ_ONLY);
 		this.toClassInstCombo.setSize(200, 20);
 		this.toClassInstCombo.setLayoutData(gridDataText);
 		gridDataText.minimumWidth = 400;
@@ -1826,12 +1529,13 @@ public class CreateSnippetDialog extends TrayDialog {
 
 		this.toClassInstCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 				final String toInstance = CreateSnippetDialog.this.toClassInstCombo.getText();
 				if (isEmpty(toInstance)) {
 					setErrorMessage("Instance name cannot be empty");
 				} else {
-					setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+					clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 				}
 				/*if (toInstance.equals(CURRENT_CLASS + " Instance")) {
 					toInstance = createDefaultInstance(CreateSnippetDialog.this.currentType);
@@ -1861,7 +1565,7 @@ public class CreateSnippetDialog extends TrayDialog {
 		final GridData gridDataText = new GridData();
 		gridDataText.grabExcessHorizontalSpace = true;
 
-		this.fromClassInstCombo = new Combo(composite, SWT.NONE);
+		this.fromClassInstCombo = new Combo(composite, SWT.READ_ONLY);
 		this.fromClassInstCombo.setSize(200, 20);
 		this.fromClassInstCombo.setLayoutData(gridDataText);
 		gridDataText.minimumWidth = 400;
@@ -1870,12 +1574,13 @@ public class CreateSnippetDialog extends TrayDialog {
 
 		this.fromClassInstCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 				final String fromInstance = CreateSnippetDialog.this.fromClassInstCombo.getText();
 				if (isEmpty(fromInstance)) {
 					setErrorMessage("Instance name cannot be empty");
 				} else {
-					setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+					clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 				}
 				/*if (fromInstance.equals(CURRENT_CLASS + " Instance")) {
 					fromInstance = createDefaultInstance(CreateSnippetDialog.this.currentType);
@@ -1907,17 +1612,18 @@ public class CreateSnippetDialog extends TrayDialog {
 		poulateTableCombo(connectToDatabase);
 		this.tableCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				CreateSnippetDialog.this.createSnippetData.setTableSelected(CreateSnippetDialog.this.tableCombo
 						.getItem(CreateSnippetDialog.this.tableCombo.getSelectionIndex()));
 				try {
 					if (CreateSnippetDialog.this.tableCombo.getSelectionIndex() >= 0) {
-						setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+						clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 						if (CreateSnippetDialog.this.createSnippetData.getTemplateType().equals(DATABASE_TEMPLATE_POJO_CLASS)
 								|| CreateSnippetDialog.this.createSnippetData.getTemplateType().equals(
 										DATABASE_TEMPLATE_POJO_CLASS_WITHOUT_ANNOTATION)) {
 							if (pojoClassForTableExist(CreateSnippetDialog.this.createSnippetData.getTableSelected())) {
-								setErrorMessage("Pojo Class for the selected table already exist. Use \"Add Fields to POJO Class\" to add fields.");
+								setErrorMessage("Pojo Class for the selected table already exist in the project which had set in Windows->Preferences->Database->Pojo class preference page. Use \"Add Fields to POJO Class\" to add fields.");
 							}
 						}
 					} else {
@@ -1929,17 +1635,19 @@ public class CreateSnippetDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 
 			}
 		});
 
 		this.tableCombo.addModifyListener(new ModifyListener() {
+			@Override
 			public void modifyText(final ModifyEvent e) {
 				CreateSnippetDialog.this.createSnippetData.setTableSelected(CreateSnippetDialog.this.tableCombo.getText());
 
 				if (!isEmpty(CreateSnippetDialog.this.createSnippetData.getTableSelected())) {
-					setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+					clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 					if (!CreateSnippetDialog.this.createSnippetData.getTablesInDB().contains(
 							CreateSnippetDialog.this.createSnippetData.getTableSelected())) {
 						setErrorMessage("This table is not there in the DB.");
@@ -1963,11 +1671,13 @@ public class CreateSnippetDialog extends TrayDialog {
 		});
 		this.tableCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent arg0) {
-				setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+				clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				if (CreateSnippetDialog.this.schemaCombo.getText().equals(EMPTY_STR)) {
 					setErrorMessage("Please select a schema first");
@@ -2026,317 +1736,6 @@ public class CreateSnippetDialog extends TrayDialog {
 	/**
 	 * @param parent
 	 */
-	/*
-	private void createFileSelectionPane(final Composite parent) {
-	final Composite composite = new Composite(parent, parent.getStyle());
-	final GridLayout layout = new GridLayout();
-	layout.numColumns = 3;
-	composite.setLayout(layout);
-
-	final GridData gridDataLabel = new GridData();
-	final Label label = new Label(composite, SWT.NONE);
-	label.setText("Select File:                    ");
-	label.setLayoutData(gridDataLabel);
-
-	final GridData gridDataText = new GridData();
-	gridDataText.grabExcessHorizontalSpace = true;
-
-	this.fileNameCombo = new Combo(composite, SWT.NONE);// new
-														// Text(composite,SWT.BORDER|SWT.MULTI);
-	this.fileNameCombo.setSize(200, 20);
-	this.fileNameCombo.setLayoutData(gridDataText);
-	gridDataText.minimumWidth = 500;
-	this.fileNameCombo.setEnabled(false);
-
-	final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
-	if (!fastCodeCache.getFileSet().isEmpty()) {
-		for (final IFile file : fastCodeCache.getFileSet()) {
-			// this.fileNameCombo.add(iFile.getName());
-			this.fileNameCombo.add(file.getProjectRelativePath().toOSString()); // +
-																				// "/"
-																				// +
-																				// iFile.getName());
-			// System.out.println( iFile.getName());
-		}
-	}
-	this.fileNameCombo.addSelectionListener(new SelectionListener() {
-
-		public void widgetSelected(final SelectionEvent event) {
-			final String selectedFileName = CreateSnippetDialog.this.fileNameCombo.getText();
-			try {
-				for (final IFile file : fastCodeCache.getFileSet()) {
-					if (file.getName().equals(selectedFileName.substring(selectedFileName.lastIndexOf('\\') + 1))) {
-						CreateSnippetDialog.this.createSnippetData.getFastCodeFiles().add(
-								new FastCodeFile(file.getName(), file.getProjectRelativePath().toString()));
-						CreateSnippetDialog.this.createSnippetData.setResourceFile(file);
-
-					}
-				}
-
-			} catch (final Exception ex) {
-				ex.printStackTrace();
-			}
-
-		}
-
-		public void widgetDefaultSelected(final SelectionEvent arg0) {
-			// TODO Auto-generated method stub
-
-		}
-	});
-	this.fileNameCombo.addModifyListener(new ModifyListener() {
-
-		public void modifyText(final ModifyEvent e) {
-
-			if (isEmpty(CreateSnippetDialog.this.fileNameCombo.getText())) {
-				setErrorMessage("Please choose a file");
-			} else {
-
-				 * if
-				 * (!isValidVariableName(CreateSnippetDialog.this.fileNameCombo
-				 * .getText())) {
-				 * setErrorMessage("Special charecters can not be used"); }
-				 * else {
-				 * setErrorMessage(CreateSnippetDialog.this.defaultMessage);
-				 * }
-
-				setErrorMessage(CreateSnippetDialog.this.defaultMessage);
-			}
-		}
-	});
-	this.fileNameCombo.addFocusListener(new FocusListener() {
-
-		public void focusLost(final FocusEvent e) {
-			final String inputFileName = CreateSnippetDialog.this.fileNameCombo.getText();
-			for (final IFile file : fastCodeCache.getFileSet()) {
-				if (file.getName().equals(inputFileName.substring(inputFileName.lastIndexOf('\\') + 1))) {
-
-					return;
-				}
-			}
-
-			final boolean inputResult = isFullNameOfFile(inputFileName);
-			if (inputResult) {
-				try {
-					final Path inputPath = new Path(inputFileName);
-					final IPath iInputPath = inputPath.makeAbsolute();
-					final IFile inputFile = ResourcesPlugin.getWorkspace().getRoot().getFile(iInputPath);
-					if (inputFile != null && inputFile.exists()) {
-						final FastCodeFile inputFastCodeFile = new FastCodeFile(inputFile.getName(), inputFile.getProjectRelativePath()
-								.toString());
-						CreateSnippetDialog.this.createSnippetData.getFastCodeFiles().add(inputFastCodeFile);
-						CreateSnippetDialog.this.createSnippetData.setResourceFile(inputFile);
-						if (!fastCodeCache.getFileSet().contains(inputFile)) {
-							fastCodeCache.getFileSet().add(inputFile);
-						}
-					} else {
-						CreateSnippetDialog.this.setErrorMessage("File does not exist,Please enter an existing file name");
-					}
-				} catch (final Exception ex) {
-					ex.printStackTrace();
-				}
-
-			} else {
-				CreateSnippetDialog.this.setErrorMessage("Please enter file name with full path like /Project Name/....../file name ");
-			}
-		}
-
-		public void focusGained(final FocusEvent arg0) {
-
-		}
-	});
-	final GridData gridDataButton = new GridData();
-
-	this.browseFile = new Button(composite, SWT.PUSH);
-	this.browseFile.setText("Browse");
-	this.browseFile.setLayoutData(gridDataButton);
-	this.browseFile.setEnabled(false);
-	this.browseFile.addSelectionListener(new SelectionListener() {
-
-		public void widgetDefaultSelected(final SelectionEvent e) {
-		}
-
-		public void widgetSelected(final SelectionEvent e) {
-			final OpenResourceDialog resourceDialog;
-			resourceDialog = new OpenResourceDialog(parent.getShell(), ResourcesPlugin.getWorkspace().getRoot(), IResource.FILE);
-			resourceDialog.setTitle("Select File ");
-			resourceDialog.setMessage("Select the File to get fields from");
-
-			if (resourceDialog.open() == CANCEL) {
-				return;
-			}
-			final IFile browseFile = (IFile) resourceDialog.getResult()[0];
-			final String browsePath = browseFile.getProjectRelativePath().toString();
-			final FastCodeFile browseFastCodeFile = new FastCodeFile(browseFile.getName(), browsePath);
-			CreateSnippetDialog.this.createSnippetData.getFastCodeFiles().add(browseFastCodeFile);
-			CreateSnippetDialog.this.fileNameCombo.setText(browsePath); // browseFastCodeFile.getFullName());
-			CreateSnippetDialog.this.createSnippetData.setResourceFile(browseFile);
-			if (!fastCodeCache.getFileSet().contains(browseFile)) {
-				fastCodeCache.getFileSet().add(browseFile);
-			}
-		}
-
-	});
-
-	}
-	*/
-	/**
-	 * @param fileName
-	 * @return
-	 */
-
-	/**
-	 * @param parent
-	 */
-	/*
-	private void createFromClassSelectionPane(final Composite parent) {
-	final Composite composite = new Composite(parent, parent.getStyle());
-	final GridLayout layout = new GridLayout();
-	layout.numColumns = 3;
-	composite.setLayout(layout);
-
-	final GridData gridDataLabel = new GridData();
-	this.fromClassLabel = new Label(composite, SWT.NONE);
-
-	this.fromClassLabel.setText("Select Class:                 ");
-	this.fromClassLabel.setLayoutData(gridDataLabel);
-
-	final GridData gridDataText = new GridData();
-	gridDataText.grabExcessHorizontalSpace = true;
-
-	this.fromClassNameCombo = new Combo(composite, SWT.NONE);// new
-																// Text(composite,
-																// SWT.BORDER);
-	this.fromClassNameCombo.setSize(200, 20);
-	this.fromClassNameCombo.setLayoutData(gridDataText);
-	gridDataText.minimumWidth = 500;
-	this.fromClassNameCombo.setEnabled(false);
-
-	final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
-
-	if (!fastCodeCache.getTypeSet().isEmpty()) {
-		for (final IType type : fastCodeCache.getTypeSet()) {
-			this.fromClassNameCombo.add(type.getFullyQualifiedName());
-		}
-	}
-
-	this.fromClassNameCombo.addSelectionListener(new SelectionListener() {
-
-		public void widgetSelected(final SelectionEvent event) {
-			final String selectedFromClassName = CreateSnippetDialog.this.fromClassNameCombo.getText();
-			try {
-				for (final IType type : fastCodeCache.getTypeSet()) {
-					if (type.getFullyQualifiedName().equals(selectedFromClassName)) {
-						CreateSnippetDialog.this.createSnippetData.setFromClass(type);
-					}
-				}
-			} catch (final Exception ex) {
-				ex.printStackTrace();
-			}
-
-			setInstanceNameCombo(selectedFromClassName);
-		}
-
-		public void widgetDefaultSelected(final SelectionEvent arg0) {
-			// TODO Auto-generated method stub
-
-		}
-	});
-	this.fromClassNameCombo.addFocusListener(new FocusListener() {
-
-		public void focusLost(final FocusEvent e) {
-			final String inputFromClassName = CreateSnippetDialog.this.fromClassNameCombo.getText();
-			for (final IType type : fastCodeCache.getTypeSet()) {
-				if (type.getFullyQualifiedName().equals(inputFromClassName)) {
-					return;
-				}
-			}
-			try {
-				if (!isEmpty(inputFromClassName)) {
-					final IType inputClassType = getTypeFromWorkspace(inputFromClassName);
-					if (inputClassType != null) {
-						CreateSnippetDialog.this.createSnippetData.setFromClass(inputClassType);
-						setInstanceNameCombo(inputFromClassName);
-						if (!fastCodeCache.getTypeSet().contains(inputClassType)) {
-							fastCodeCache.getTypeSet().add(inputClassType);
-						}
-					} else {
-						setErrorMessage("Class does not exist,Please enter an existing class name ");
-					}
-				}
-			} catch (final Exception ex) {
-				ex.printStackTrace();
-			}
-		}
-
-		public void focusGained(final FocusEvent arg0) {
-			// TODO Auto-generated method stub
-
-		}
-	});
-	this.fromClassNameCombo.addModifyListener(new ModifyListener() {
-
-		public void modifyText(final ModifyEvent e) {
-
-			if (isEmpty(CreateSnippetDialog.this.fromClassNameCombo.getText())) {
-				setErrorMessage("Please choose a Class");
-			} else {
-				if (!isValidVariableName(CreateSnippetDialog.this.fromClassNameCombo.getText())) {
-					setErrorMessage("Special charecters can not be used");
-				} else {
-					setErrorMessage(CreateSnippetDialog.this.defaultMessage);
-				}
-				// setErrorMessage(CreateSnippetDialog.this.defaultMessage);
-			}
-		}
-
-	});
-	final GridData gridDataButton = new GridData();
-
-	this.browseFromClass = new Button(composite, SWT.PUSH);
-	this.browseFromClass.setText("Browse");
-	this.browseFromClass.setLayoutData(gridDataButton);
-	this.browseFromClass.setEnabled(false);
-
-	this.browseFromClass.addSelectionListener(new SelectionListener() {
-
-		public void widgetDefaultSelected(final SelectionEvent e) {
-		}
-
-		public void widgetSelected(final SelectionEvent e) {
-			final SelectionDialog selectionDialog;
-			try {
-				selectionDialog = JavaUI.createTypeDialog(parent.getShell() == null ? new Shell() : parent.getShell(), null,
-						SearchEngine.createWorkspaceScope(), IJavaElementSearchConstants.CONSIDER_ALL_TYPES, false, "");
-				selectionDialog.setTitle("Select From Class ");
-				selectionDialog.setMessage("Select the From Class to get fields from");
-
-				if (selectionDialog.open() == CANCEL) {
-					return;
-				}
-				CreateSnippetDialog.this.createSnippetData.setFromClass((IType) selectionDialog.getResult()[0]);
-				CreateSnippetDialog.this.fromClassNameCombo.setText(((IType) selectionDialog.getResult()[0]).getFullyQualifiedName());
-				setInstanceNameCombo(((IType) selectionDialog.getResult()[0]).getFullyQualifiedName());
-				// FastCodeType browseFastCodeType = new
-				// FastCodeType(((IType)
-				// selectionDialog.getResult()[0]).getFullyQualifiedName());
-				if (!fastCodeCache.getTypeSet().contains(selectionDialog.getResult()[0])) {
-					fastCodeCache.getTypeSet().add((IType) selectionDialog.getResult()[0]);
-				}
-
-			} catch (final JavaModelException ex) {
-				ex.printStackTrace();
-			}
-
-		}
-
-	});
-
-	}*/
-
-	/**
-	 * @param parent
-	 */
 	private void createToClassSelectionPane(final Composite parent) {
 		final Composite composite = new Composite(parent, parent.getStyle());
 		final GridLayout layout = new GridLayout();
@@ -2384,13 +1783,10 @@ public class CreateSnippetDialog extends TrayDialog {
 				}
 			}
 		}
-		/*if (!fastCodeCache.getTypeSet().isEmpty()) {
-			for (final IType type : fastCodeCache.getTypeSet()) {
-				this.toClassNameCombo.add(type.getFullyQualifiedName());
-			}
-		}*/
+
 		this.toClassNameCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				String selectedToClassName = CreateSnippetDialog.this.toClassNameCombo.getText();
 				if (selectedToClassName.contains(ENCLOSING_CLASS_STR)) {
@@ -2405,15 +1801,12 @@ public class CreateSnippetDialog extends TrayDialog {
 				} catch (final Exception ex) {
 					ex.printStackTrace();
 				}
-				/*if (CreateSnippetDialog.this.toClassNameCombo.getText().equals(CURRENT_CLASS)) {
-					CreateSnippetDialog.this.toClassInstCombo.setText(CURRENT_CLASS + " Instance");
-				} else {*/
+
 				CreateSnippetDialog.this.toClassInstCombo.setText(createDefaultInstance(selectedToClassName));
-				//}
-				/*	CreateSnippetDialog.this.toClassInstCombo.add(createDefaultInstance(selectedToClassName));
-					CreateSnippetDialog.this.toClassInstCombo.select(CreateSnippetDialog.this.toClassInstCombo.getItemCount() - 1);*/
+
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -2421,6 +1814,7 @@ public class CreateSnippetDialog extends TrayDialog {
 		});
 		this.toClassNameCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 				if (isEmpty(CreateSnippetDialog.this.toClassNameCombo.getText())) {
 					setErrorMessage("Please select To Class");
@@ -2428,7 +1822,7 @@ public class CreateSnippetDialog extends TrayDialog {
 					if (!isValidVariableName(CreateSnippetDialog.this.toClassNameCombo.getText())) {
 						setErrorMessage("Special charecters can not be used");
 					} else {
-						setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+						clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 					}
 					// setErrorMessage(CreateSnippetDialog.this.defaultMessage);
 				}
@@ -2436,6 +1830,7 @@ public class CreateSnippetDialog extends TrayDialog {
 		});
 		this.toClassNameCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 				String inputToClassName = CreateSnippetDialog.this.toClassNameCombo.getText();
 				if (inputToClassName.contains(ENCLOSING_CLASS_STR)) {
@@ -2453,8 +1848,7 @@ public class CreateSnippetDialog extends TrayDialog {
 						CreateSnippetDialog.this.createSnippetData.setToClass(inputClassType);
 
 						CreateSnippetDialog.this.toClassInstCombo.setText(createDefaultInstance(inputToClassName));
-						//CreateSnippetDialog.this.toClassInstCombo.add(createDefaultInstance(inputToClassName));
-						//CreateSnippetDialog.this.toClassInstCombo.select(CreateSnippetDialog.this.toClassInstCombo.getItemCount() - 1);
+
 						if (!fastCodeCache.getTypeSet().contains(inputClassType)) {
 							fastCodeCache.getTypeSet().add(inputClassType);
 						}
@@ -2468,6 +1862,7 @@ public class CreateSnippetDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -2482,9 +1877,11 @@ public class CreateSnippetDialog extends TrayDialog {
 		this.browseToClass.setVisible(false);
 		this.browseToClass.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 			}
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				final SelectionDialog selectionDialog;
 				try {
@@ -2542,15 +1939,17 @@ public class CreateSnippetDialog extends TrayDialog {
 		this.templateVariationCombo.setVisible(false);
 		this.templateVariationCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				CreateSnippetDialog.this.createSnippetData
 						.setVariationsSelected(new String[] { CreateSnippetDialog.this.templateVariationCombo
 								.getItem(CreateSnippetDialog.this.templateVariationCombo.getSelectionIndex()) });
 				if (CreateSnippetDialog.this.templateVariationCombo.getSelectionIndex() >= 0) {
-					setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+					clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 
 			}
@@ -2565,14 +1964,16 @@ public class CreateSnippetDialog extends TrayDialog {
 		this.templateVariationList.setVisible(false);
 		this.templateVariationList.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				CreateSnippetDialog.this.createSnippetData.setVariationsSelected(CreateSnippetDialog.this.templateVariationList
 						.getSelection());
 				if (CreateSnippetDialog.this.templateVariationList.getSelectionIndex() >= 0) {
-					setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+					clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 
 			}
@@ -2611,30 +2012,31 @@ public class CreateSnippetDialog extends TrayDialog {
 
 		this.snippetCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				final String templateName = CreateSnippetDialog.this.snippetCombo.getItem(CreateSnippetDialog.this.snippetCombo
 						.getSelectionIndex());
 				CreateSnippetDialog.this.createSnippetData.setTemplateSettings(null);
 				processTemplateType(templateName);
 				if (CreateSnippetDialog.this.snippetCombo.getSelectionIndex() >= 0) {
-					setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+					clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 				}
-				/*if (CreateSnippetDialog.this.fromClassInstCombo != null && !isEmpty(CreateSnippetDialog.this.fromClassInstCombo.getText())) {
-					CreateSnippetDialog.this.setInstanceNameCombo(CreateSnippetDialog.this.selectTypeCombo.getText());
-				}*/
+
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 
 			}
 		});
 		this.snippetCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent event) {
 				final String templateName = CreateSnippetDialog.this.snippetCombo.getText();
 
 				if (!isEmpty(templateName)) {
-					setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+					clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 					boolean found = false;
 					int selectionIndex = 0;
 					int k = 0;
@@ -2655,7 +2057,7 @@ public class CreateSnippetDialog extends TrayDialog {
 					if (!found) {
 						setErrorMessage("This template is not there in the config file/preference page.");
 					} else {
-						setErrorMessage(CreateSnippetDialog.this.defaultMessage);
+						clearErrorMessage(CreateSnippetDialog.this.defaultMessage);
 						CreateSnippetDialog.this.createSnippetData.setTemplateSettings(null);
 						CreateSnippetDialog.this.snippetCombo.select(selectionIndex);
 						//CreateSnippetDialog.this.snippetCombo.setText(templateName);
@@ -2730,16 +2132,11 @@ public class CreateSnippetDialog extends TrayDialog {
 			this.templateVariationList.removeAll();
 		}
 
-		/*this.createSnippetData.setRequiresClass(this.templateSettings.getFirstTemplateItem() == FIRST_TEMPLATE.Class);
-		this.createSnippetData.setRequiresFile(this.templateSettings.getFirstTemplateItem() == FIRST_TEMPLATE.File);
-		this.createSnippetData.setRequirePackage(this.templateSettings.getFirstTemplateItem() == FIRST_TEMPLATE.Package);
-		this.createSnippetData.setRequireFolder(this.templateSettings.getFirstTemplateItem() == FIRST_TEMPLATE.Folder);*/
-
 		populateSelectTypeCombo();
 		if (templatePrefix.equals(TEMPLATE)) {
-			this.projectLabel.setVisible(true);
+			/*this.projectLabel.setVisible(true);
 			this.projectCombo.setEnabled(true);
-			this.projectCombo.setVisible(true);
+			this.projectCombo.setVisible(true);*/
 			switch (this.templateSettings.getFirstTemplateItem()) {
 
 			case Class:
@@ -2908,12 +2305,14 @@ public class CreateSnippetDialog extends TrayDialog {
 		this.andButton.setEnabled(false);
 		this.andButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (((Button) event.widget).getSelection()) {
 					CreateSnippetDialog.this.createSnippetData.setWhereClauseSeparator(WHERE_CLAUSE_SEPARATOR.AND);
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -2923,12 +2322,14 @@ public class CreateSnippetDialog extends TrayDialog {
 		this.orButton.setEnabled(false);
 		this.orButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (((Button) event.widget).getSelection()) {
 					CreateSnippetDialog.this.createSnippetData.setWhereClauseSeparator(WHERE_CLAUSE_SEPARATOR.OR);
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -2939,6 +2340,12 @@ public class CreateSnippetDialog extends TrayDialog {
 	protected void okPressed() {
 		if (this.createSnippetData == null) {
 			this.createSnippetData = new CreateSnippetData();
+		}
+
+		if (this.projectCombo != null && this.projectCombo.getText() != null) {
+			if (!isPrjInSync(this.prjMap.get(this.projectCombo.getText()))) {
+				return;
+			}
 		}
 
 		if (this.snippetCombo != null && this.snippetCombo.isEnabled() && this.snippetCombo.getSelectionIndex() == -1) {
@@ -2979,7 +2386,7 @@ public class CreateSnippetDialog extends TrayDialog {
 			}
 			return;
 		} else if (this.selectTypeCombo != null && this.selectTypeCombo.isEnabled() && !isEmpty(this.selectTypeCombo.getText())) {
-			setErrorMessage(this.defaultMessage);
+			clearErrorMessage(this.defaultMessage);
 			setFastCodeCacheWithSelectedType();
 		}
 		final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
@@ -3048,6 +2455,15 @@ public class CreateSnippetDialog extends TrayDialog {
 				this.createSnippetData.setSelectedProject(new FastCodeProject(this.prjMap.get(this.projectCombo.getText())));
 			}
 		}
+
+		if (CreateSnippetDialog.this.createSnippetData.getTemplateType().equals(DATABASE_TEMPLATE_POJO_CLASS)
+				|| CreateSnippetDialog.this.createSnippetData.getTemplateType().equals(DATABASE_TEMPLATE_POJO_CLASS_WITHOUT_ANNOTATION)) {
+			final IJavaProject workingJavaProject = getJavaProject(this.preferenceStore.getString(P_WORKING_JAVA_PROJECT));
+			if (!this.createSnippetData.getSelectedProject().getJavaProject().equals(workingJavaProject)) {
+				setErrorMessage("The project selected in this dialog and the project set in preference page  are not same.Either change in Windows->preferences->FastCode->Database->Pojo Class or select the same as preference page in this dialog. ");
+				return;
+			}
+		}
 		/*if (connection != null) {
 			try {
 				connection.close();
@@ -3066,7 +2482,7 @@ public class CreateSnippetDialog extends TrayDialog {
 	 *
 	 * @param errorMessage
 	 */
-	public void setErrorMessage(final String errorMessage) {
+	public void setMessage(final String errorMessage) {
 		this.errorMessage = errorMessage;
 		if (this.errorMessageText != null && !this.errorMessageText.isDisposed()) {
 			this.errorMessageText.setText(errorMessage == null ? " \n " : errorMessage); //$NON-NLS-1$
@@ -3085,48 +2501,6 @@ public class CreateSnippetDialog extends TrayDialog {
 		}
 	}
 
-	/*	*//**
-			* @param templateSetting
-			* @return
-			*/
-	/*
-	private boolean requireClasses(final TemplateSettings templateSetting) {
-	if (templateSetting.getFirstTemplateItem() == FIRST_TEMPLATE.Class) {
-		return true;
-	} else if (templateSetting.getFirstTemplateItem() == FIRST_TEMPLATE.File) {
-		return false;
-	}
-	return false;
-
-	}
-
-	*//**
-		* @param templateSetting
-		* @return
-		*/
-	/*
-	private boolean requireFiles(final TemplateSettings templateSetting) {
-	if (templateSetting.getFirstTemplateItem() == FIRST_TEMPLATE.Class) {
-		return false;
-	} else if (templateSetting.getFirstTemplateItem() == FIRST_TEMPLATE.File) {
-		return true;
-	}
-	return false;
-
-	}
-
-	*//**
-		* @param property
-		* @param defaultValue
-		* @return
-		*/
-	/*
-	private boolean getBooleanPropertyValue(final String property, final String defaultValue) {
-	final GlobalSettings globalSettings = GlobalSettings.getInstance();
-	final String value = globalSettings.getPropertyValue(property, defaultValue);
-	return value.equals("true");
-	}*/
-
 	/**
 	 * @param parent
 	 */
@@ -3140,6 +2514,7 @@ public class CreateSnippetDialog extends TrayDialog {
 		this.showLocalVariable.setEnabled(true);
 		this.showLocalVariable.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				if (CreateSnippetDialog.this.showLocalVariable.getSelection()) {
 					CreateSnippetDialog.this.createSnippetData.setShowLocalVriable(true);
@@ -3148,6 +2523,35 @@ public class CreateSnippetDialog extends TrayDialog {
 				}
 			}
 
+			@Override
+			public void widgetDefaultSelected(final SelectionEvent e) {
+			}
+		});
+	}
+
+	/**
+	 * @param parent
+	 */
+	private void createSurroundWithButton(final Composite parent) {
+		final Composite composite = new Composite(parent, parent.getStyle());
+		final GridLayout layout = new GridLayout();
+		layout.numColumns = 4;
+		composite.setLayout(layout);
+		this.replaceSelectedText = new Button(composite, SWT.CHECK);
+		this.replaceSelectedText.setText("Replace Selected Text");
+		this.replaceSelectedText.setEnabled(true);
+		this.replaceSelectedText.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(final SelectionEvent e) {
+				if (CreateSnippetDialog.this.replaceSelectedText.getSelection()) {
+					CreateSnippetDialog.this.createSnippetData.setReplaceSelectedText(true);
+				} else {
+					CreateSnippetDialog.this.createSnippetData.setReplaceSelectedText(false);
+				}
+			}
+
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 			}
 		});
@@ -3207,7 +2611,7 @@ public class CreateSnippetDialog extends TrayDialog {
 						this.fromClassInstCombo.removeAll();
 					}
 					//this.selectTypeCombo.select(0);
-					setInstanceNameCombo(this.currentType);
+					//setInstanceNameCombo(this.currentType);
 				}
 			}
 			if (!fastCodeCache.getTypeSet().isEmpty()) {
@@ -3421,34 +2825,18 @@ public class CreateSnippetDialog extends TrayDialog {
 		this.schemaCombo = new Combo(cmposite, SWT.DROP_DOWN);
 
 		this.schemaCombo.setLayoutData(new GridData(150, 100));
-		/*int schemaIndex = 0;
-		int k = 0;
-		final DatabaseConnectionSettings databaseConnectionSettings = DatabaseConnectionSettings.getInstance();
-		String defaultSchema = databaseConnectionSettings.getTypesofDabases().equalsIgnoreCase(ORACLE) ? databaseConnectionSettings
-				.getUserName() : databaseConnectionSettings.getNameofDabase();
 
-		for (final String schemaName : this.createSnippetData.getSchemasInDB().toArray(new String[0])) {
-			if (schemaName.equalsIgnoreCase(defaultSchema)) {
-				schemaIndex = k;
-			}
-			this.schemaCombo.add(schemaName);
-			k++;
-		}
-		this.schemaCombo.select(schemaIndex);
-		final FastCodeContentProposalProvider provider = new FastCodeContentProposalProvider(this.schemaCombo.getItems());
-		final ComboContentAdapter comboAdapter = new ComboContentAdapter();
-		final ContentProposalAdapter adapter = new ContentProposalAdapter(this.schemaCombo, comboAdapter, provider, null, null);
-		adapter.setPropagateKeys(true);
-		adapter.setProposalAcceptanceStyle(ContentProposalAdapter.PROPOSAL_REPLACE);*/
 		populateSchemaCombo();
 		final ConnectToDatabase connectToDatabase = ConnectToDatabase.getInstance();
 
 		this.schemaCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent arg0) {
 				poulateTableCombo(connectToDatabase);
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -3505,11 +2893,13 @@ public class CreateSnippetDialog extends TrayDialog {
 
 		this.useAliasNameButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				CreateSnippetDialog.this.createSnippetData.setUseAliasName(CreateSnippetDialog.this.useAliasNameButton.getSelection());
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 				// TODO Auto-generated method stub
 
@@ -3575,6 +2965,21 @@ public class CreateSnippetDialog extends TrayDialog {
 			}
 			break;
 		}
+
+	}
+
+	/**
+	 * @param errorMessage
+	 */
+	public void setErrorMessage(final String errorMessage) {
+		setMessage(errorMessage);
+	}
+
+	/**
+	 * @param errorMessage
+	 */
+	public void clearErrorMessage(final String errorMessage) {
+		setMessage(errorMessage);
 	}
 
 	/**

@@ -31,8 +31,6 @@ public interface FastCodeTemplatePartitions {
 	public static final String	FC_PROPERTY		= "<fc:property";//$NON-NLS-1$
 	public static final String	FC_INFO			= "<fc:info";    //$NON-NLS-1$
 	public static final String	FC_SNIPPET		= "<fc:snippet"; //$NON-NLS-1$
-	public static final String	SINGLE_LINE_JAVA_COMMENT		= "singleline_java_comment";
-	public static final String	MULTI_LINE_JAVA_COMMENT		= "multiline_java_comment";
 
 	/**
 	 * Identifier of the Velocity template multi line comment partition.

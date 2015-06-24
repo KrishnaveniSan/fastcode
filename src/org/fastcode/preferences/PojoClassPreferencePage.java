@@ -54,6 +54,7 @@ public class PojoClassPreferencePage extends FieldEditorPreferencePage implement
 		setDescription("POJO Class Preferences");
 	}
 
+	@Override
 	public void init(final IWorkbench arg0) {
 		// TODO Auto-generated method stub
 

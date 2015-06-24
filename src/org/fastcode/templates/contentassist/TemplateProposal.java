@@ -46,6 +46,7 @@ public class TemplateProposal implements ICompletionProposal {
 	/*
 	 * @see org.eclipse.jface.text.contentassist.ICompletionProposal#apply(org.eclipse.jface.text.IDocument)
 	 */
+	@Override
 	public void apply(final IDocument document) {
 
 		try {
@@ -67,6 +68,7 @@ public class TemplateProposal implements ICompletionProposal {
 	/*
 	 * @see org.eclipse.jface.text.contentassist.ICompletionProposal#getDisplayString()
 	 */
+	@Override
 	public String getDisplayString() {
 		return this.displayString;
 	}
@@ -77,6 +79,7 @@ public class TemplateProposal implements ICompletionProposal {
 	/*
 	 * @see org.eclipse.jface.text.contentassist.ICompletionProposal#getSelection(org.eclipse.jface.text.IDocument)
 	 */
+	@Override
 	public Point getSelection(final IDocument document) {
 		return this.selection;
 	}
@@ -87,6 +90,7 @@ public class TemplateProposal implements ICompletionProposal {
 	/*
 	 * @see org.eclipse.jface.text.contentassist.ICompletionProposal#getAdditionalProposalInfo()
 	 */
+	@Override
 	public String getAdditionalProposalInfo() {
 		return null;
 	}
@@ -97,6 +101,7 @@ public class TemplateProposal implements ICompletionProposal {
 	/*
 	 * @see org.eclipse.jface.text.contentassist.ICompletionProposal#getImage()
 	 */
+	@Override
 	public Image getImage() {
 		return null;
 	}
@@ -107,6 +112,7 @@ public class TemplateProposal implements ICompletionProposal {
 	/*
 	 * @see org.eclipse.jface.text.contentassist.ICompletionProposal#getContextInformation()
 	 */
+	@Override
 	public IContextInformation getContextInformation() {
 		return null;
 	}

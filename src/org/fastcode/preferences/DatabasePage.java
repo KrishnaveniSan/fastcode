@@ -38,6 +38,7 @@ public class DatabasePage extends FieldEditorPreferencePage implements IWorkbenc
 	 * @see
 	 * org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
 	 */
+	@Override
 	public void init(final IWorkbench arg0) {
 		// TODO Auto-generated method stub
 

@@ -1,7 +1,11 @@
 package org.fastcode.templates.velocity.contentassist;
 
+import static org.fastcode.common.FastCodeConstants.DOT;
 import static org.fastcode.common.FastCodeConstants.EMPTY_STR;
 import static org.fastcode.common.FastCodeConstants.FAST_CODE_PLUGIN_ID;
+import static org.fastcode.common.FastCodeConstants.FC_LOCAL_VAL_LIST;
+import static org.fastcode.common.FastCodeConstants.HYPHEN;
+import static org.fastcode.common.FastCodeConstants.SPACE;
 import static org.fastcode.preferences.PreferenceConstants.P_FILE_TEMPLATE_PLACHOLDER_NAME;
 
 import java.util.ArrayList;
@@ -22,6 +26,9 @@ import org.fastcode.templates.contentassist.ElementProposal;
 import org.fastcode.templates.contentassist.FunctionProposal;
 import org.fastcode.templates.contentassist.TemplateProposal;
 import org.fastcode.templates.util.ContentAssistUtil;
+import org.fastcode.templates.util.FastCodeLocalVariables;
+import org.fastcode.templates.util.ForLoopVariable;
+import org.fastcode.templates.util.SetVariable;
 import org.fastcode.templates.util.VariablesUtil;
 import org.fastcode.util.VelocityUtil;
 
@@ -51,12 +58,15 @@ public class TemplateManager {
 	 *            the properties
 	 * @param propertiesOnly
 	 *            true, if properties only should be suggested
+	 * @param templateBody
+	 * @param currentLine
+	 * @param atEOF
 	 *
 	 * @return the list of proposals
 	 */
 	public static List<ICompletionProposal> getCompletionProposals(String element, final int offset, final int length,
 			final Map<FIRST_TEMPLATE, SECOND_TEMPLATE> templateItemsMap, final boolean propertiesOnly,
-			final FIRST_TEMPLATE firstTemplateItem) { //, final String textUptoOffset
+			final FIRST_TEMPLATE firstTemplateItem, final String templateBody, final int currentLine, final boolean atEOF) { //, final String textUptoOffset
 		final List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
 
 		boolean silent = false;
@@ -78,7 +88,8 @@ public class TemplateManager {
 
 		if (element.indexOf('.') == -1) {
 			if (firstTemplateItem != null) {
-				return getElementProposals(element, offset, length, silent, templateItemsMap, propertiesOnly, firstTemplateItem); //, textUptoOffset
+				return getElementProposals(element, offset, length, silent, templateItemsMap, propertiesOnly, firstTemplateItem,
+						templateBody, currentLine, atEOF); //, textUptoOffset
 			} else {
 				return getElementProposals(element, offset, length, silent, templateItemsMap, propertiesOnly);
 			}
@@ -125,12 +136,16 @@ public class TemplateManager {
 	 *            true for silent references ($!)
 	 * @param propertiesOnly
 	 *            true, if properties only should be suggested
+	 * @param templateBody
+	 * @param currentLine
+	 *            line number of the current cursor position
+	 * @param atEOF
 	 *
 	 * @return list of element proposals
 	 */
 	private static List<ICompletionProposal> getElementProposals(final String element, final int offset, final int length,
 			final boolean silent, final Map<FIRST_TEMPLATE, SECOND_TEMPLATE> templateItemsMap, final boolean propertiesOnly,
-			final FIRST_TEMPLATE firstTemplateItem) { //, final String textUptoOffset
+			final FIRST_TEMPLATE firstTemplateItem, final String templateBody, final int currentLine, final boolean atEOF) { //, final String textUptoOffset
 		final List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
 
 		/*final VelocityUtil veloUtil = VelocityUtil.getInstance();
@@ -147,13 +162,13 @@ public class TemplateManager {
 			ex.printStackTrace();
 		}*/
 		//System.out.println(setVarlist);
+		final SECOND_TEMPLATE secondTempalteItem = templateItemsMap.get(firstTemplateItem);
 		if (!firstTemplateItem.equals(FIRST_TEMPLATE.None)) {
 			if (!firstTemplateItem.equals(FIRST_TEMPLATE.Enumeration)) {
 				REFERENCE_PROPOSALS.addAll(REFERENCE_PROPOSALS_MAP.get(firstTemplateItem.getValue()));
 			}
 
-			final SECOND_TEMPLATE secondTempalteItem = templateItemsMap.get(firstTemplateItem);
-			final ArrayList<ElementProposal> elementProposals = REFERENCE_PROPOSALS_MAP.get(secondTempalteItem.getValue());
+			final ArrayList<ElementProposal> elementProposals = REFERENCE_PROPOSALS_MAP.get(secondTempalteItem.getValue() + "s");
 			if (elementProposals != null) {
 				REFERENCE_PROPOSALS.addAll(elementProposals);
 			} else {
@@ -169,7 +184,11 @@ public class TemplateManager {
 				if (secondTempalteItem.equals(SECOND_TEMPLATE.property)) {
 					REFERENCE_PROPOSALS.addAll(REFERENCE_PROPOSALS_MAP.get(SECOND_TEMPLATE.property));
 				}
+				if (secondTempalteItem.equals(SECOND_TEMPLATE.json)) {
+					REFERENCE_PROPOSALS.addAll(REFERENCE_PROPOSALS_MAP.get(SECOND_TEMPLATE.field.getValue() + "s"));
+				}
 			}
+
 		}
 
 		Iterator<ElementProposal> iter = REFERENCE_PROPOSALS.iterator();
@@ -208,7 +227,50 @@ public class TemplateManager {
 
 		}
 
+		final IPreferenceStore preferenceStore = new ScopedPreferenceStore(new InstanceScope(), FAST_CODE_PLUGIN_ID);
+		//final boolean validateVariables = false;
+		final VelocityUtil velocityUtil = VelocityUtil.getInstance();
+		final boolean showErrorMessage = true;
+		final Map<String, Object> allVariablesMap = velocityUtil.getVariablesFromTemplateBody(templateBody, firstTemplateItem.getValue(),
+				secondTempalteItem.getValue(), vutil.getAdditnlParamList(), EMPTY_STR, EMPTY_STR, EMPTY_STR, preferenceStore, false, atEOF, null, showErrorMessage);
+		/*final List<String> validVariables = (List<String>) allVariablesMap.get(VALID_VARIABLES);
+		final List<String> localVariables = (List<String>) allVariablesMap.get(LOCAL_VARIABLES);
+		final List<String> setVariables = (List<String>) allVariablesMap.get(SET_VARIABLES);*/
+		/*System.out.println(offset);
+		System.out.println(length);*/
+		boolean forLoopVarInScope = false;
+		boolean setVarInScope = false;
+		String forLoopLocalVar = EMPTY_STR;
+		final List<FastCodeLocalVariables> fastCodeAllLocalVariables = (List<FastCodeLocalVariables>) allVariablesMap.get(FC_LOCAL_VAL_LIST);
+		for (final FastCodeLocalVariables fastCodeLocalVariables : fastCodeAllLocalVariables) {
+			if (fastCodeLocalVariables instanceof ForLoopVariable) {
+				if (currentLine >= fastCodeLocalVariables.getScopeStartLine() && currentLine <= fastCodeLocalVariables.getScopeEndLine()) {
+					forLoopVarInScope = true;
+					forLoopLocalVar = fastCodeLocalVariables.getVarName();
+					//add proposal for this for loop variable
+					ArrayList<String> functions = functions = ContentAssistUtil.getTypefunctionmap(secondTempalteItem.getValue());
+					ElementProposal proposal;
+					if (functions != null) {
+						for (final String function : functions) {
+							proposal = new ElementProposal(forLoopLocalVar + DOT + function, forLoopLocalVar, SPACE
+									+ HYPHEN
+									+ SPACE
+									+ (function.contains(DOT) ? function.substring(0, function.indexOf(DOT)) + SPACE
+											+ function.substring(function.indexOf(DOT) + 1, function.length()) : function));
+							proposals.add(createTemplateProposal(proposal, offset, length, silent));
+						}
+					}
+				}
+			} else if (fastCodeLocalVariables instanceof SetVariable) {
+				if (currentLine >= fastCodeLocalVariables.getScopeStartLine()) {
+					setVarInScope = true;
+					final ElementProposal proposal = new ElementProposal(fastCodeLocalVariables.getVarName(), /*fastCodeLocalVariables.getVarName()*/ "", fastCodeLocalVariables.getVarName());
+					proposals.add(createTemplateProposal(proposal, offset, length, silent));
+				}
+			}
+		}
 		REFERENCE_PROPOSALS.clear();
+		forLoopLocalVar = EMPTY_STR;
 		return proposals;
 	}
 

@@ -138,15 +138,18 @@ public class FastCodeRuleProcessorAction implements IEditorActionDelegate, IActi
 	protected Set<FastCodeMethod>		fastCodeMethodSet				= new HashSet<FastCodeMethod>();
 	protected Set<FastCodeField>		fastCodeFieldSet				= new HashSet<FastCodeField>();
 
+	@Override
 	public void dispose() {
 		// TODO Auto-generated method stub
 
 	}
 
+	@Override
 	public void init(final IWorkbenchWindow window) {
 		this.window = window;
 	}
 
+	@Override
 	public void run(final IAction arg0) {
 		try {
 			if (this.window != null) {
@@ -1046,11 +1049,13 @@ public class FastCodeRuleProcessorAction implements IEditorActionDelegate, IActi
 		return type;
 	}
 
+	@Override
 	public void selectionChanged(final IAction arg0, final ISelection arg1) {
 		// TODO Auto-generated method stub
 
 	}
 
+	@Override
 	public void setActiveEditor(final IAction arg0, final IEditorPart arg1) {
 		// TODO Auto-generated method stub
 

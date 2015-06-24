@@ -113,6 +113,7 @@ public class CreateVariablePreferencePage extends FieldEditorPreferencePage impl
 
 		this.importButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				try {
 					//processXML("CreateVariablePreferences.xml", EMPTY_STR, VARIABLE_FOLDER);
@@ -130,6 +131,7 @@ public class CreateVariablePreferencePage extends FieldEditorPreferencePage impl
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -140,6 +142,7 @@ public class CreateVariablePreferencePage extends FieldEditorPreferencePage impl
 
 		this.exportButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				try {
 					//processXML("CreateVariablePreferences.xml", EMPTY_STR, VARIABLE_FOLDER);
@@ -155,6 +158,7 @@ public class CreateVariablePreferencePage extends FieldEditorPreferencePage impl
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -169,6 +173,7 @@ public class CreateVariablePreferencePage extends FieldEditorPreferencePage impl
 		return status;
 	}
 
+	@Override
 	public void init(final IWorkbench arg0) {
 
 	}

@@ -7,10 +7,10 @@ import java.util.Map;
 
 public class CreateTableData {
 	private List<String>		schemasInDB							= new ArrayList<String>();
-	private List<String>		stringColumnTypesList				= new ArrayList<String>();
+	/*private List<String>		stringColumnTypesList				= new ArrayList<String>();
 	private List<String>		numericColumnTypesList				= new ArrayList<String>();
 	private List<String>		dateTimeColumnTypesList				= new ArrayList<String>();
-	private List<String>		othersColumnTypesList				= new ArrayList<String>();
+	private List<String>		othersColumnTypesList				= new ArrayList<String>();*/
 	private boolean				createTableWithColumns;
 	private boolean				addColumnsToExistingTable;
 	private String				schemaSelected;
@@ -33,83 +33,91 @@ public class CreateTableData {
 	 * @return the schemasInDB
 	 */
 	public List<String> getSchemasInDB() {
-		return this.schemasInDB;
+		return schemasInDB;
 	}
 
 	/**
 	 * @param schemasInDB the schemasInDB to set
 	 */
-	public void setSchemasInDB(final List<String> schemasInDB) {
+	public void setSchemasInDB(List<String> schemasInDB) {
 		this.schemasInDB = schemasInDB;
 	}
 
 	/**
 	 * @return the stringColumnTypesList
 	 */
+	/*
 	public List<String> getStringColumnTypesList() {
-		return this.stringColumnTypesList;
+	return stringColumnTypesList;
 	}
 
-	/**
-	 * @param stringColumnTypesList the stringColumnTypesList to set
-	 */
-	public void setStringColumnTypesList(final List<String> stringColumnTypesList) {
-		this.stringColumnTypesList = stringColumnTypesList;
+	*//**
+		* @param stringColumnTypesList the stringColumnTypesList to set
+		*/
+	/*
+	public void setStringColumnTypesList(List<String> stringColumnTypesList) {
+	this.stringColumnTypesList = stringColumnTypesList;
 	}
 
-	/**
-	 * @return the numericColumnTypesList
-	 */
+	*//**
+		* @return the numericColumnTypesList
+		*/
+	/*
 	public List<String> getNumericColumnTypesList() {
-		return this.numericColumnTypesList;
+	return numericColumnTypesList;
 	}
 
-	/**
-	 * @param numericColumnTypesList the numericColumnTypesList to set
-	 */
-	public void setNumericColumnTypesList(final List<String> numericColumnTypesList) {
-		this.numericColumnTypesList = numericColumnTypesList;
+	*//**
+		* @param numericColumnTypesList the numericColumnTypesList to set
+		*/
+	/*
+	public void setNumericColumnTypesList(List<String> numericColumnTypesList) {
+	this.numericColumnTypesList = numericColumnTypesList;
 	}
 
-	/**
-	 * @return the dateTimeColumnTypesList
-	 */
+	*//**
+		* @return the dateTimeColumnTypesList
+		*/
+	/*
 	public List<String> getDateTimeColumnTypesList() {
-		return this.dateTimeColumnTypesList;
+	return dateTimeColumnTypesList;
 	}
 
-	/**
-	 * @param dateTimeColumnTypesList the dateTimeColumnTypesList to set
-	 */
-	public void setDateTimeColumnTypesList(final List<String> dateTimeColumnTypesList) {
-		this.dateTimeColumnTypesList = dateTimeColumnTypesList;
+	*//**
+		* @param dateTimeColumnTypesList the dateTimeColumnTypesList to set
+		*/
+	/*
+	public void setDateTimeColumnTypesList(List<String> dateTimeColumnTypesList) {
+	this.dateTimeColumnTypesList = dateTimeColumnTypesList;
 	}
 
-	/**
-	 * @return the othersColumnTypesList
-	 */
+	*//**
+		* @return the othersColumnTypesList
+		*/
+	/*
 	public List<String> getOthersColumnTypesList() {
-		return this.othersColumnTypesList;
+	return othersColumnTypesList;
 	}
 
-	/**
-	 * @param othersColumnTypesList the othersColumnTypesList to set
-	 */
-	public void setOthersColumnTypesList(final List<String> othersColumnTypesList) {
-		this.othersColumnTypesList = othersColumnTypesList;
-	}
+	*//**
+		* @param othersColumnTypesList the othersColumnTypesList to set
+		*/
+	/*
+	public void setOthersColumnTypesList(List<String> othersColumnTypesList) {
+	this.othersColumnTypesList = othersColumnTypesList;
+	}*/
 
 	/**
 	 * @return the createTableWithColumns
 	 */
 	public boolean isCreateTableWithColumns() {
-		return this.createTableWithColumns;
+		return createTableWithColumns;
 	}
 
 	/**
 	 * @param createTableWithColumns the createTableWithColumns to set
 	 */
-	public void setCreateTableWithColumns(final boolean createTableWithColumns) {
+	public void setCreateTableWithColumns(boolean createTableWithColumns) {
 		this.createTableWithColumns = createTableWithColumns;
 	}
 
@@ -117,13 +125,13 @@ public class CreateTableData {
 	 * @return the addColumnsToExistingTable
 	 */
 	public boolean isAddColumnsToExistingTable() {
-		return this.addColumnsToExistingTable;
+		return addColumnsToExistingTable;
 	}
 
 	/**
 	 * @param addColumnsToExistingTable the addColumnsToExistingTable to set
 	 */
-	public void setAddColumnsToExistingTable(final boolean addColumnsToExistingTable) {
+	public void setAddColumnsToExistingTable(boolean addColumnsToExistingTable) {
 		this.addColumnsToExistingTable = addColumnsToExistingTable;
 	}
 
@@ -131,13 +139,13 @@ public class CreateTableData {
 	 * @return the schemaSelected
 	 */
 	public String getSchemaSelected() {
-		return this.schemaSelected;
+		return schemaSelected;
 	}
 
 	/**
 	 * @param schemaSelected the schemaSelected to set
 	 */
-	public void setSchemaSelected(final String schemaSelected) {
+	public void setSchemaSelected(String schemaSelected) {
 		this.schemaSelected = schemaSelected;
 	}
 
@@ -145,13 +153,13 @@ public class CreateTableData {
 	 * @return the tableName
 	 */
 	public String getTableName() {
-		return this.tableName;
+		return tableName;
 	}
 
 	/**
 	 * @param tableName the tableName to set
 	 */
-	public void setTableName(final String tableName) {
+	public void setTableName(String tableName) {
 		this.tableName = tableName;
 	}
 
@@ -159,13 +167,13 @@ public class CreateTableData {
 	 * @return the columnTypeSelected
 	 */
 	public String getColumnTypeSelected() {
-		return this.columnTypeSelected;
+		return columnTypeSelected;
 	}
 
 	/**
 	 * @param columnTypeSelected the columnTypeSelected to set
 	 */
-	public void setColumnTypeSelected(final String columnTypeSelected) {
+	public void setColumnTypeSelected(String columnTypeSelected) {
 		this.columnTypeSelected = columnTypeSelected;
 	}
 
@@ -173,13 +181,13 @@ public class CreateTableData {
 	 * @return the columnNames
 	 */
 	public String[] getColumnNames() {
-		return this.columnNames;
+		return columnNames;
 	}
 
 	/**
 	 * @param columnNames the columnNames to set
 	 */
-	public void setColumnNames(final String[] columnNames) {
+	public void setColumnNames(String[] columnNames) {
 		this.columnNames = columnNames;
 	}
 
@@ -187,13 +195,13 @@ public class CreateTableData {
 	 * @return the tablesInDB
 	 */
 	public List<String> getTablesInDB() {
-		return this.tablesInDB;
+		return tablesInDB;
 	}
 
 	/**
 	 * @param tablesInDB the tablesInDB to set
 	 */
-	public void setTablesInDB(final List<String> tablesInDB) {
+	public void setTablesInDB(List<String> tablesInDB) {
 		this.tablesInDB = tablesInDB;
 	}
 
@@ -201,13 +209,13 @@ public class CreateTableData {
 	 * @return the columnTypeSize
 	 */
 	public int getColumnTypeSize() {
-		return this.columnTypeSize;
+		return columnTypeSize;
 	}
 
 	/**
 	 * @param columnTypeSize the columnTypeSize to set
 	 */
-	public void setColumnTypeSize(final int columnTypeSize) {
+	public void setColumnTypeSize(int columnTypeSize) {
 		this.columnTypeSize = columnTypeSize;
 	}
 
@@ -215,13 +223,13 @@ public class CreateTableData {
 	 * @return the columnTypePrecisionAndScale
 	 */
 	public String getColumnTypePrecisionAndScale() {
-		return this.columnTypePrecisionAndScale;
+		return columnTypePrecisionAndScale;
 	}
 
 	/**
 	 * @param columnTypePrecisionAndScale the columnTypePrecisionAndScale to set
 	 */
-	public void setColumnTypePrecisionAndScale(final String columnTypePrecisionAndScale) {
+	public void setColumnTypePrecisionAndScale(String columnTypePrecisionAndScale) {
 		this.columnTypePrecisionAndScale = columnTypePrecisionAndScale;
 	}
 
@@ -229,13 +237,13 @@ public class CreateTableData {
 	 * @return the dbTypeTableWithColumnsQueryMap
 	 */
 	public Map<String, String> getDbTypeTableWithColumnsQueryMap() {
-		return this.dbTypeTableWithColumnsQueryMap;
+		return dbTypeTableWithColumnsQueryMap;
 	}
 
 	/**
 	 * @param dbTypeTableWithColumnsQueryMap the dbTypeTableWithColumnsQueryMap to set
 	 */
-	public void setDbTypeTableWithColumnsQueryMap(final Map<String, String> dbTypeTableWithColumnsQueryMap) {
+	public void setDbTypeTableWithColumnsQueryMap(Map<String, String> dbTypeTableWithColumnsQueryMap) {
 		this.dbTypeTableWithColumnsQueryMap = dbTypeTableWithColumnsQueryMap;
 	}
 
@@ -243,13 +251,13 @@ public class CreateTableData {
 	 * @return the dbTypeAddColumnsToExistingTableMap
 	 */
 	public Map<String, String> getDbTypeAddColumnsToExistingTableMap() {
-		return this.dbTypeAddColumnsToExistingTableMap;
+		return dbTypeAddColumnsToExistingTableMap;
 	}
 
 	/**
 	 * @param dbTypeAddColumnsToExistingTableMap the dbTypeAddColumnsToExistingTableMap to set
 	 */
-	public void setDbTypeAddColumnsToExistingTableMap(final Map<String, String> dbTypeAddColumnsToExistingTableMap) {
+	public void setDbTypeAddColumnsToExistingTableMap(Map<String, String> dbTypeAddColumnsToExistingTableMap) {
 		this.dbTypeAddColumnsToExistingTableMap = dbTypeAddColumnsToExistingTableMap;
 	}
 
@@ -257,13 +265,13 @@ public class CreateTableData {
 	 * @return the selectedDatabaseName
 	 */
 	public String getSelectedDatabaseName() {
-		return this.selectedDatabaseName;
+		return selectedDatabaseName;
 	}
 
 	/**
 	 * @param selectedDatabaseName the selectedDatabaseName to set
 	 */
-	public void setSelectedDatabaseName(final String selectedDatabaseName) {
+	public void setSelectedDatabaseName(String selectedDatabaseName) {
 		this.selectedDatabaseName = selectedDatabaseName;
 	}
 

@@ -6,7 +6,6 @@ import static org.fastcode.preferences.PreferenceConstants.TEMPLATE;
 
 import java.util.Map;
 
-import org.eclipse.jface.text.DefaultIndentLineAutoEditStrategy;
 import org.eclipse.jface.text.IAutoEditStrategy;
 import org.eclipse.jface.text.ITextHover;
 import org.fastcode.common.FastCodeConstants.FIRST_TEMPLATE;
@@ -14,8 +13,8 @@ import org.fastcode.common.FastCodeConstants.SECOND_TEMPLATE;
 import org.fastcode.templates.contentassist.AutoCloseStrategy;
 import org.fastcode.templates.contentassist.FCTagContentAssist;
 import org.fastcode.templates.contentassist.ITemplateContentAssistant;
+import org.fastcode.templates.velocity.contentassist.AutoIndentStrategy;
 import org.fastcode.templates.velocity.contentassist.DBTemplatePreferenceContentAssistant;
-/*import org.fastcode.templates.velocity.contentassist.DirectiveAndCommentStartStrategy;*/
 import org.fastcode.templates.velocity.contentassist.DirectiveContentAssistant;
 import org.fastcode.templates.velocity.contentassist.FileTemplateContentAssist;
 import org.fastcode.templates.velocity.contentassist.TemplateContentAssistant;
@@ -33,7 +32,7 @@ public class FastCodeRulesContext {
 
 	public IRulesStrategy[] getFCTagRuleStrategies() {
 		final IRulesStrategy[] ruleStrategies = { new TemplateVariableRulesStrategie(), new DirectiveRulesStrategie(),
-				new TemplateRulesStrategie(), new FastCodeKeywordRulesStrategie() , new FastCodeJavaKeywordRulesStrategie(), new FastCodeJavaCommentRulesStrategie() };
+				new TemplateRulesStrategie(), new FastCodeKeywordRulesStrategie() , new FastCodeJavaKeywordRulesStrategie() , new FastCodeJavaCommentRulesStrategie()};
 		return ruleStrategies;
 	}
 
@@ -58,7 +57,7 @@ public class FastCodeRulesContext {
 	}
 
 	public IAutoEditStrategy[] getTemplateAutoEditStrategies() {
-		final IAutoEditStrategy[] autoEditStrategies = { new DefaultIndentLineAutoEditStrategy(), /*new DirectiveAndCommentStartStrategy(),*/
+		final IAutoEditStrategy[] autoEditStrategies = { new AutoIndentStrategy() , /*new DefaultIndentLineAutoEditStrategy(),*/ /*new DirectiveAndCommentStartStrategy(),*/
 		new AutoCloseStrategy() };
 		return autoEditStrategies;
 	}

@@ -2,7 +2,6 @@ package org.fastcode;
 
 import static org.fastcode.common.FastCodeConstants.COMMA;
 import static org.fastcode.util.FastCodeUtil.closeInputStream;
-import static org.fastcode.util.StringUtil.isEmpty;
 
 import java.io.InputStream;
 import java.util.Enumeration;
@@ -17,13 +16,12 @@ import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.rules.IToken;
 import org.eclipse.jface.text.rules.Token;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.RGB;
 
 /**
  * Class for managing resources.
  */
-@SuppressWarnings("restriction")
+
 public final class FastCodeColorManager {
 
 	private static JavaColorManager				colorManager;

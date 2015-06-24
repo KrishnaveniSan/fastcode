@@ -2,12 +2,17 @@ package org.fastcode.popup.actions.snippet;
 
 import static org.fastcode.common.FastCodeConstants.DATABASE_NAME;
 import static org.fastcode.common.FastCodeConstants.EXIT_KEY;
+import static org.fastcode.common.FastCodeConstants.PLACEHOLDER_PROJECT;
 import static org.fastcode.preferences.PreferenceConstants.DATABASE_TEMPLATE_SELECT_WITH_JOIN;
 import static org.fastcode.preferences.PreferenceConstants.P_DATABASE_TEMPLATE_PREFIX;
 import static org.fastcode.util.DatabaseUtil.getSchemaFromDb;
 
 import java.util.Map;
 
+import org.eclipse.core.resources.IFile;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionDelegate;
@@ -38,7 +43,15 @@ public class CreateNewDatabaseSelectWithJoinAction extends AbstractCreateNewData
 	protected CreateJoinData getCreateJoinData() throws Exception {
 		final DatabaseConnectionSettings databaseConnectionSettings = DatabaseConnectionSettings.getInstance();
 		final CreateJoinData createJoinData = new CreateJoinData();
-
+		IJavaProject project;
+		final ICompilationUnit compUnit = getCompilationUnitFromEditor();
+		if (compUnit == null) {
+			final IFile file = (IFile) this.editorPart.getEditorInput().getAdapter(IFile.class);
+			project = JavaCore.create(file.getProject());
+		} else {
+			project = compUnit.getJavaProject();
+		}
+		createJoinData.setJavaProject(project);
 		/* getTableFromDb(this.con);
 		createJoinData.setFirstTablesInDB(this.databaseCache.getDbTableListMap().get(databaseConnectionSettings.getTypesofDabases()));
 		 createJoinData.setSecondTablesInDB(this.databaseCache.getDbTableListMap().get(databaseConnectionSettings.getTypesofDabases()));
@@ -119,6 +132,7 @@ public class CreateNewDatabaseSelectWithJoinAction extends AbstractCreateNewData
 		if (createJoinData.getiSelectPojoClassType() != null) {
 			placeHolders.put("class", new FastCodeType(createJoinData.getiSelectPojoClassType()));
 		}
+		placeHolders.put(PLACEHOLDER_PROJECT, createJoinData.getSelectedProject());
 
 		super.initializePlaceHolders(templateSettings, placeHolders);
 	}

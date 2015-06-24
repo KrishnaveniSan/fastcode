@@ -31,19 +31,19 @@ import org.eclipse.jdt.core.IMemberValuePair;
  */
 public class FastCodeField extends AbstractFastCodeField {
 
-	final private String							fullName;
-	final private String							getter;
-	final private String							setter;
-	final private IField							field;
-	private final FastCodeField						parentField;
+	private String									fullName;
+	private String									getter;
+	private String									setter;
+	private IField									field;
+	private FastCodeField							parentField;
 	private final Map<String, Map<String, String>>	annotations		= new HashMap<String, Map<String, String>>();
 	public static final Map<String, String>			defaultValues	= new HashMap<String, String>();
 	private boolean									array;
-	final private String							fullTypeName;
+	private String									fullTypeName;
 	private int										arrayDimension;
 	private final List<FastCodeField>				childFields		= new ArrayList<FastCodeField>();
-	private final boolean							typeNative;
-	private final FastCodeType						type;
+	private boolean									typeNative;
+	private FastCodeType							type;
 	private String									gettersetter;
 	private boolean									builderPattern;
 
@@ -69,6 +69,27 @@ public class FastCodeField extends AbstractFastCodeField {
 	 */
 	public FastCodeField(final IField field) throws Exception {
 		this(field, field.getElementName());
+	}
+
+	/**
+	 * @param name
+	 * @param value
+	 * @throws Exception
+	 */
+	public FastCodeField(final String name, final String value) throws Exception {
+		super(name, value);
+
+	}
+
+	/**
+	 * @param name
+	 * @param value
+	 * @param parentField
+	 * @throws Exception
+	 */
+	public FastCodeField(final String name, final String value, final FastCodeField parentField) throws Exception {
+		super(name, value);
+		this.parentField = parentField;
 	}
 
 	/**

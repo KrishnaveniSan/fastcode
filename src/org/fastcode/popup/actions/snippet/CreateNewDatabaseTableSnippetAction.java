@@ -1,13 +1,12 @@
 package org.fastcode.popup.actions.snippet;
 
-import static org.fastcode.common.FastCodeConstants.COMMA;
 import static org.fastcode.common.FastCodeConstants.DATETIME;
 import static org.fastcode.common.FastCodeConstants.EMPTY_STR;
 import static org.fastcode.common.FastCodeConstants.NUMBER;
 import static org.fastcode.common.FastCodeConstants.SINGLE_QUOTATION_MARK;
 import static org.fastcode.util.DatabaseUtil.getSchemaFromDb;
+import static org.fastcode.util.DatabaseUtil.parseSQLDatatypes;
 import static org.fastcode.util.FastCodeUtil.closeInputStream;
-import static org.fastcode.util.FileUtil.retrievePropertiesFromFile;
 import static org.fastcode.util.StringUtil.evaluateByVelocity;
 import static org.fastcode.util.StringUtil.isEmpty;
 import static org.fastcode.util.StringUtil.replaceSpecialChars;
@@ -20,8 +19,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -136,10 +133,9 @@ public class CreateNewDatabaseTableSnippetAction extends AbstractActionSupport i
 			final String snppt = evaluateByVelocity(query, tablePlaceHolders);
 			if (isEmpty(snppt)) {
 				throw new Exception("Blank snippet, please provide correct values in Table Dialog.");
+
 			}
-			System.out.println(snppt);
 			final String snippet = replaceSpecialChars(snppt);
-			System.out.println(snippet);
 			preparedStatement = this.con.prepareStatement(snippet);
 			preparedStatement.executeUpdate();
 			String message = EMPTY_STR;
@@ -179,7 +175,28 @@ public class CreateNewDatabaseTableSnippetAction extends AbstractActionSupport i
 		}
 		getSchemaFromDb(this.con, databaseConnectionSettings.getTypesofDabases());
 		this.createTableData.setSchemasInDB(this.databaseCache.getDbSchemaListMap().get(databaseConnectionSettings.getTypesofDabases()));
-		final Properties properties = retrievePropertiesFromFile("resources/datatypeconversion.properties");
+
+		//final DataBaseTypeInfo dataBaseTypeInfo = DataBaseTypeInfo.getInstance();
+		//final SQLDatatypesMapping sqldatatypesMapping = SQLDatatypesMapping.getInstance();
+		parseSQLDatatypes();
+
+		/*Map<String, ArrayList<SQLDatatypes>> groupBaseTypeMap = sqldatatypesMapping.getDatabaseDataTypeMap().get(
+				dataBaseTypeInfo.getDatabaseType());
+
+		for (final SQLDatatypes columnType : groupBaseTypeMap.get("String")) {
+			this.createTableData.getStringColumnTypesList().add(columnType.getType().toString());
+		}
+		for (final SQLDatatypes columnType : groupBaseTypeMap.get("Numeric")) {
+			this.createTableData.getNumericColumnTypesList().add(columnType.getType().toString());
+		}
+		for (final SQLDatatypes columnType : groupBaseTypeMap.get("Datetime")) {
+			this.createTableData.getDateTimeColumnTypesList().add(columnType.getType().toString());
+		}
+		for (final SQLDatatypes columnType : groupBaseTypeMap.get("Others")) {
+			this.createTableData.getOthersColumnTypesList().add(columnType.getType().toString());
+		}*/
+
+		/*final Properties properties = retrievePropertiesFromFile("resources/datatypeconversion.properties");
 
 		for (final Entry<Object, Object> entry : properties.entrySet()) {
 			final String key = (String) entry.getKey();
@@ -205,11 +222,13 @@ public class CreateNewDatabaseTableSnippetAction extends AbstractActionSupport i
 				}
 			}
 		}
+		 */
 		final InputStream databaseTableInputStream = FileLocator.openStream(Activator.getDefault().getBundle(), new Path(
 				"resources/database-table.xml"), false);
 		parseDatabaseTableFile(databaseTableInputStream);
 		final CreateTableDialogCallback createTableDialogCallback = new CreateTableDialogCallback() {
 
+			@Override
 			public void submitPressed(final CreateTableData createTableData) throws Exception {
 				// handle data
 				CreateNewDatabaseTableSnippetAction.this.createTableData = createTableData;
@@ -272,6 +291,94 @@ public class CreateNewDatabaseTableSnippetAction extends AbstractActionSupport i
 		}
 	}
 
+	/*	private void parseSqlDataTypes() {
+			final List<SQLDatatypes> datatypesList = new ArrayList<SQLDatatypes>();
+			final List<String> databases = new ArrayList<String>();
+			final Map<String, ArrayList<SQLDatatypes>> funcInfo = new HashMap<String, ArrayList<SQLDatatypes>>();
+			final Map<String, ArrayList<String>> databaseInfo = new HashMap<String, ArrayList<String>>();
+
+			final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
+			InputStream inputStream = null;
+
+			try {
+				final DocumentBuilder docBuilder = factory.newDocumentBuilder();
+				inputStream = FileLocator.openStream(Activator.getDefault().getBundle(), new Path("resources/sql-datatypes.xml"), false);
+				final Document document = docBuilder.parse(inputStream);
+				final NodeList databaseList = document.getElementsByTagName("database");
+
+				final int size = databaseList.getLength();
+				for (int i = 0; i < size; i++) {
+					final Node databaseNode = databaseList.item(i);
+					final NamedNodeMap dbattributes = databaseNode.getAttributes();
+					final Node dbAttrNode = dbattributes.getNamedItem("name");
+					final String name = dbAttrNode.getNodeValue();
+					databases.add(name);
+					final List<String> dataTypes = new ArrayList<String>();
+
+					Node dataTypeNode = databaseNode.getFirstChild();
+					while (dataTypeNode != null) {
+
+						if (dataTypeNode.getNodeType() == Node.ELEMENT_NODE) {
+							final NamedNodeMap dataTypeAttr = dataTypeNode.getAttributes();
+							final Node typeAttr = dataTypeAttr.getNamedItem("type");
+							final String dtype = typeAttr.getNodeValue();
+							final ArrayList<String> datatypes = new ArrayList<String>();
+							for (final String s : dtype.split("\\s+")) {
+								datatypes.add(s);
+							}
+							dataTypes.addAll(datatypes);
+							final List<SQLDatatypes> functions = new ArrayList<SQLDatatypes>();
+
+							Node sqlfunc = dataTypeNode.getFirstChild();
+							Node datatype = null;
+							Node defaultvalue = null;
+							Node length = null;
+							Node precision = null;
+
+							while (sqlfunc != null) {
+								if (sqlfunc.getNodeType() == Node.ELEMENT_NODE) {
+									final NamedNodeMap attributes = sqlfunc.getAttributes();
+									datatype = attributes.getNamedItem("data-type");
+									defaultvalue = attributes.getNamedItem("default-value");
+									length = attributes.getNamedItem("length");
+									precision = attributes.getNamedItem("precision");
+									functions.add(new SQLDatatypes(sqlfunc.getTextContent(), datatype.getNodeValue(), defaultvalue
+											.getNodeValue(), length.getNodeValue(), precision.getNodeValue()));
+									datatypesList.add(new SQLDatatypes(sqlfunc.getTextContent(), datatype.getNodeValue(), defaultvalue
+											.getNodeValue(), length.getNodeValue(), precision.getNodeValue()));
+								}
+								sqlfunc = sqlfunc.getNextSibling();
+							}
+							for (final String s : datatypes) {
+								funcInfo.put(s, (ArrayList<SQLDatatypes>) functions);
+							}
+
+						}
+						dataTypeNode = dataTypeNode.getNextSibling();
+
+					}
+
+					databaseInfo.put(name, (ArrayList<String>) dataTypes);
+
+				}
+
+			} catch (final Exception ex) {
+				ex.printStackTrace();
+
+			} finally {
+
+				SQLDatatypesMapping sqlFuncMapping = SQLDatatypesMapping.getInstance();
+				sqlFuncMapping.setDatatypesList((ArrayList<SQLDatatypes>) datatypesList);
+				//sqlFuncMapping.setdataTypeFunctionsMap(funcInfo);
+				sqlFuncMapping.setDbDataTypeMap(databaseInfo);
+				sqlFuncMapping.setDatabases((ArrayList<String>) databases);
+				FastCodeUtil.closeInputStream(inputStream);
+			}
+
+		}*/
+
+	@Override
 	public void dispose() {
 	}
 
@@ -302,4 +409,5 @@ public class CreateNewDatabaseTableSnippetAction extends AbstractActionSupport i
 	public interface CreateTableDialogCallback {
 		void submitPressed(CreateTableData createTableData) throws Exception;
 	}
+
 }

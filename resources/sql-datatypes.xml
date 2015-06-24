@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+
+	<database name="mysql">
+	
+		<baseType group="String">
+		
+  		<datatype type="char"  default-value="" length ="" precision=""></datatype>
+		<datatype type="nchar" default-value="" length ="" precision=""></datatype>
+		<datatype type="varchar" default-value="" length ="" precision=""></datatype>
+		<datatype type="nvarchar" default-value="" length ="" precision=""></datatype>
+		<datatype type="text" default-value="" length ="" precision=""></datatype>	
+		<datatype type="tinytext" default-value="" length ="" precision=""></datatype>
+		<datatype type="mediumtext" default-value="" length ="" precision=""></datatype>
+		<datatype type="longtext" default-value="" length ="" precision=""></datatype>
+		
+		</baseType>
+			
+		<baseType group="Numeric">			
+		
+	  	<datatype type="bit"  default-value="0,1,NULL" length ="" precision=""></datatype>
+		<datatype type="boolean" default-value="0,1,True, false" length ="" precision=""></datatype>
+		<datatype type="tinyint" default-value="0" length ="" precision=""></datatype>
+		<datatype type="smallint" default-value="0" length ="" precision=""></datatype>
+		<datatype type="mediumint" default-value="0" length ="" precision=""></datatype>	
+		<datatype type="int" default-value="0" length ="" precision=""></datatype>
+		<datatype type="integer" default-value="0" length ="" precision=""></datatype>
+		<datatype type="bigint" default-value="0" length ="" precision=""></datatype>
+		<datatype type="decimal" default-value="0" length ="" precision="true"></datatype>
+		<datatype type="numeric" default-value="0" length ="" precision="true"></datatype>
+		<datatype type="double" default-value="0" length ="" precision="true"></datatype>
+		<datatype type="float" default-value="0" length ="" precision="true"></datatype>
+		<datatype type="double precision" default-value="0" length ="" precision="true"></datatype>
+		<datatype type="binary" default-value="0" length ="" precision=""></datatype>
+		<datatype type="varbinary" default-value="0" length ="" precision=""></datatype>	
+		<datatype type="real" default-value="0" length ="" precision=""></datatype>			
+		
+		</baseType>
+			
+		<baseType group="Datetime">
+			
+		<datatype type="date"  default-value="1001-00-00" length ="" precision=""></datatype>
+		<datatype type="time" default-value="00:00:00" length ="" precision=""></datatype>
+		<datatype type="timestamp" default-value="CURRENT_TIMESTAMP" length ="" precision=""></datatype>
+		<datatype type="datetime" default-value="1000-01-01 00:00:00" length ="" precision=""></datatype>
+		<datatype type="year" default-value="0000" length ="" precision=""></datatype>	
+		
+		</baseType>
+			
+		<baseType group="Others">
+			
+		<datatype type="long" default-value="" length ="" precision=""></datatype>
+		<datatype type="blob" default-value="" length ="" precision=""></datatype>
+		<datatype type="mediumblob" default-value="" length ="" precision=""></datatype>
+		<datatype type="longblob" default-value="" length ="" precision=""></datatype>
+	
+		</baseType>
+
+	</database>
+
+	<database name="oracle">
+	
+		<baseType group="String">
+		
+  		<datatype type="varchar2"  default-value="" length ="" precision=""></datatype>
+		<datatype type="nvarchar2" default-value="" length ="" precision=""></datatype>
+		<datatype type="char" default-value="" length ="" precision=""></datatype>
+		<datatype type="nchar" default-value="" length ="" precision=""></datatype>
+		<datatype type="character" default-value="" length ="" precision=""></datatype>	
+		<datatype type="character varying" default-value="" length ="" precision=""></datatype>
+		<datatype type="char varying" default-value="" length ="" precision=""></datatype>
+		<datatype type="national character" default-value="" length ="" precision=""></datatype>
+		<datatype type="national char" default-value="" length ="" precision=""></datatype>
+		<datatype type="national character varying" default-value="" length ="" precision=""></datatype>			
+		<datatype type="national char varying" default-value="" length ="" precision=""></datatype>
+		<datatype type="nchar varying" default-value="" length ="" precision=""></datatype>
+		<datatype type="varchar" default-value="" length ="" precision=""></datatype>
+		<datatype type="long varchar" default-value="" length ="" precision=""></datatype>			
+		
+		</baseType>
+		
+		<baseType group="Numeric">
+						
+	  	<datatype type="number"  default-value="0" length ="" precision=""></datatype>
+		<datatype type="long" default-value="0" length ="" precision=""></datatype>
+		<datatype type="binary_float" default-value="0" length ="" precision="true"></datatype>
+		<datatype type="binary_double" default-value="0" length ="" precision="true"></datatype>
+		<datatype type="numeric" default-value="0" length ="" precision="true"></datatype>	
+		<datatype type="decimal" default-value="0" length ="" precision="true"></datatype>
+		<datatype type="integer" default-value="0" length ="" precision=""></datatype>
+		<datatype type="int" default-value="0" length ="" precision=""></datatype>
+		<datatype type="smallint" default-value="0" length ="" precision=""></datatype>
+		<datatype type="float" default-value="0" length ="" precision="true"></datatype>
+		<datatype type="double precision" default-value="0" length ="" precision="true"></datatype>
+		<datatype type="real" default-value="0" length ="" precision=""></datatype>
+		
+		</baseType>
+		
+		<baseType group="Datetime">	
+		
+		<datatype type="date"  default-value="1001-00-00" length ="" precision=""></datatype>
+		<datatype type="timestamp" default-value="1000-01-01 00:00:00" length ="" precision=""></datatype>
+		<datatype type="interval year" default-value="0000" length ="" precision=""></datatype>
+		<datatype type="interval day" default-value="00" length ="" precision=""></datatype>
+		
+		</baseType>
+		
+		<baseType group="Others">
+					
+		<datatype type="raw" default-value="" length ="" precision=""></datatype>
+		<datatype type="long raw" default-value="" length ="" precision=""></datatype>
+		<datatype type="rowid" default-value="" length ="" precision=""></datatype>
+		<datatype type="urowid" default-value="" length ="" precision=""></datatype>
+		<datatype type="clob" default-value="" length ="" precision=""></datatype>
+		<datatype type="nclob" default-value="" length ="" precision=""></datatype>
+		<datatype type="blob" default-value="" length ="" precision=""></datatype>	
+		<datatype type="bfile" default-value="" length ="" precision=""></datatype>					
+		
+		</baseType>
+		
+	</database>
+
+
+	<database name="postgresql">
+
+  		<baseType group="String">
+  		
+  		<datatype type="char"  default-value="" length ="" precision=""></datatype>
+		<datatype type="character" default-value="" length ="" precision=""></datatype>	
+		<datatype type="varchar" default-value="" length ="" precision=""></datatype>
+		<datatype type="character varying" default-value="" length ="" precision=""></datatype>
+		<datatype type="text" default-value="" length ="" precision=""></datatype>
+		
+		</baseType>
+		
+		<baseType group="Numeric">
+		
+	  	<datatype type="bit"  default-value="0" length ="" precision=""></datatype>
+		<datatype type="bit varying" default-value="0" length ="" precision=""></datatype>
+		<datatype type="smallint" default-value="0" length ="" precision=""></datatype>
+		<datatype type="integer" default-value="0" length ="" precision=""></datatype>
+		<datatype type="bigint" default-value="0" length ="" precision=""></datatype>	
+		<datatype type="decimal" default-value="0" length ="" precision="true"></datatype>
+		<datatype type="numeric" default-value="0" length ="" precision="true"></datatype>
+		<datatype type="real" default-value="0" length ="" precision=""></datatype>
+		<datatype type="double precision" default-value="0" length ="" precision=""></datatype>
+		<datatype type="serial" default-value="0" length ="" precision=""></datatype>
+		<datatype type="bigserial" default-value="0" length ="" precision="true"></datatype>
+		
+		</baseType>
+		
+		<baseType group="Datetime">
+		
+		<datatype type="date"  default-value="1001-00-00" length ="" precision=""></datatype>
+		<datatype type="time" default-value="00:00:00" length ="" precision=""></datatype>
+		<datatype type="timestamp" default-value="1000-01-01 00:00:00" length ="" precision=""></datatype>
+		<datatype type="interval" default-value="0000" length ="" precision=""></datatype>	
+		
+		</baseType>		
+
+		<baseType group="Others">
+		
+		<datatype type="boolean" default-value="true,false" length ="" precision=""></datatype>
+		
+		</baseType>	
+		
+	</database>
+</root>

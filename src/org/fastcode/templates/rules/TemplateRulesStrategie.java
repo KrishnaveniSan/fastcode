@@ -22,6 +22,7 @@ public class TemplateRulesStrategie implements IRulesStrategy {
 	 * @see org.fastcode.templates.rules.IRulesStrategy#createRules()
 	 */
 
+	@Override
 	public List<IRule> createRules() {
 		final List<IRule> rules = new ArrayList<IRule>();
 
@@ -197,6 +198,7 @@ public class TemplateRulesStrategie implements IRulesStrategy {
 		 * .rules.ICharacterScanner)
 		 */
 
+		@Override
 		public IToken evaluate(final ICharacterScanner scanner) {
 			int character = scanner.read();
 			if (isOperator((char) character)) {
@@ -249,6 +251,7 @@ public class TemplateRulesStrategie implements IRulesStrategy {
 		 * .rules.ICharacterScanner)
 		*/
 
+		@Override
 		public IToken evaluate(final ICharacterScanner scanner) {
 			final int character = scanner.read();
 
@@ -295,6 +298,7 @@ public class TemplateRulesStrategie implements IRulesStrategy {
 		 * .rules.ICharacterScanner)
 		 */
 
+		@Override
 		public IToken evaluate(final ICharacterScanner scanner) {
 			int character = scanner.read();
 			if (Character.isDigit((char) character)) {

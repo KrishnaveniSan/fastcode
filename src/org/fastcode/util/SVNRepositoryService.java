@@ -1,7 +1,6 @@
 package org.fastcode.util;
 
 import static org.fastcode.common.FastCodeConstants.COMMA;
-import static org.fastcode.common.FastCodeConstants.COMPLETED;
 import static org.fastcode.common.FastCodeConstants.CREATE_CLASS;
 import static org.fastcode.common.FastCodeConstants.CREATE_FIELDS;
 import static org.fastcode.common.FastCodeConstants.CREATE_FILE;
@@ -28,17 +27,17 @@ import static org.fastcode.common.FastCodeConstants.PLACEHOLDER_MODIFY_FIELD;
 import static org.fastcode.common.FastCodeConstants.PLACEHOLDER_PACKAGE;
 import static org.fastcode.common.FastCodeConstants.PLACEHOLDER_STUBMETHODS;
 import static org.fastcode.common.FastCodeConstants.PLACEHOLDER_TESTMETHODS;
-import static org.fastcode.common.FastCodeConstants.SEMICOLON;
 import static org.fastcode.common.FastCodeConstants.SPACE;
 import static org.fastcode.util.SourceUtil.checkForErrors;
-import static org.fastcode.util.SourceUtil.getIFileFromFile;
 import static org.fastcode.util.SourceUtil.loadComments;
 import static org.fastcode.util.SourceUtil.refreshProject;
 import static org.fastcode.util.StringUtil.evaluateByVelocity;
 import static org.fastcode.util.StringUtil.getGlobalSettings;
 import static org.fastcode.util.StringUtil.isEmpty;
+import static org.fastcode.util.VersionControlUtil.addFileToCache;
 import static org.fastcode.util.VersionControlUtil.checkInNow;
 import static org.fastcode.util.VersionControlUtil.getPrjFromFile;
+import static org.fastcode.util.VersionControlUtil.isPrjConfigured;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -59,11 +58,9 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
@@ -72,7 +69,6 @@ import org.eclipse.ui.PlatformUI;
 import org.fastcode.common.FastCodeCheckinCommentsData;
 import org.fastcode.common.FastCodeEntityHolder;
 import org.fastcode.common.RepositoryFolder;
-import org.fastcode.dialog.FastCodeCheckinCommentsDialog;
 import org.fastcode.exception.FastCodeRepositoryException;
 import org.fastcode.preferences.VersionControlPreferences;
 import org.fastcode.util.VersionControlUtil.UserQuestion;
@@ -90,14 +86,11 @@ import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 import org.tmatesoft.svn.core.wc.ISVNEventHandler;
 import org.tmatesoft.svn.core.wc.ISVNOptions;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
-import org.tmatesoft.svn.core.wc.SVNCopySource;
 import org.tmatesoft.svn.core.wc.SVNLogClient;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNStatus;
 import org.tmatesoft.svn.core.wc.SVNStatusType;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
-import static org.fastcode.util.VersionControlUtil.isPrjConfigured;
-import static org.fastcode.util.VersionControlUtil.addFileToCache;
 
 public class SVNRepositoryService implements RepositoryService { //extends AbstractRepositoryService
 	private SVNClientManager				ourClientManager;
@@ -153,6 +146,7 @@ public class SVNRepositoryService implements RepositoryService { //extends Abstr
 		}
 	}
 
+	@Override
 	public List<RepositoryFolder> getSharedProjects(final String url, final String userId, final String passwd) throws FastCodeRepositoryException {
 		final List<String> projects = new ArrayList<String>();
 		SVNRepository svnRepository;
@@ -259,6 +253,7 @@ public class SVNRepositoryService implements RepositoryService { //extends Abstr
 	/* (non-Javadoc)
 	 * @see org.fastcode.util.RepositoryService#checkInFile(java.io.File, java.lang.String, boolean, org.eclipse.core.resources.IProject)
 	 */
+	@Override
 	public void checkInFile(final File file, String comment, final IProject prj)/*, final String url)*/
 	throws FastCodeRepositoryException {
 
@@ -503,6 +498,7 @@ public class SVNRepositoryService implements RepositoryService { //extends Abstr
 	/* (non-Javadoc)
 	 * @see org.fastcode.util.RepositoryService#getChangesInWorkspace(org.eclipse.core.resources.IWorkspace)
 	 */
+	@Override
 	public void getChangesInWorkspace(final IWorkspace workspace) throws Exception {
 		final FastCodeCheckinCache checkinCache = FastCodeCheckinCache.getInstance();
 		final IProject projects[] = workspace.getRoot().getProjects();
@@ -545,6 +541,7 @@ public class SVNRepositoryService implements RepositoryService { //extends Abstr
 	/* (non-Javadoc)
 	 * @see org.fastcode.util.RepositoryService#getAllMembers(org.eclipse.core.resources.IResource[], java.util.List)
 	 */
+	@Override
 	public void getAllMembers(final IResource[] resources, final List<IResource> resList) throws Exception {
 		for (final IResource res : resources) {
 			resList.add(res);
@@ -557,6 +554,7 @@ public class SVNRepositoryService implements RepositoryService { //extends Abstr
 	/* (non-Javadoc)
 	 * @see org.fastcode.util.RepositoryService#commitToRepository(java.util.Map, boolean)
 	 */
+	@Override
 	public void commitToRepository(final Map<Object, List<FastCodeEntityHolder>> placeHoldersForFile, final boolean addToCache)
 			throws FastCodeRepositoryException, Exception {
 		final FastCodeCheckinCache checkinCache = FastCodeCheckinCache.getInstance();
@@ -653,6 +651,7 @@ public class SVNRepositoryService implements RepositoryService { //extends Abstr
 			final String foot = footer;*/
 			final boolean chkInNw = checkinNow;
 			final IRunnableWithProgress op = new IRunnableWithProgress() {
+				@Override
 				public void run(final IProgressMonitor monitor) {
 					try {
 						for (final Entry<File, String> fileComnt : fileMap.entrySet()) {
@@ -713,6 +712,7 @@ public class SVNRepositoryService implements RepositoryService { //extends Abstr
 	/* (non-Javadoc)
 	 * @see org.fastcode.util.RepositoryService#isFileInRepository(java.io.File)
 	 */
+	@Override
 	public boolean isFileInRepository(final File file) throws FastCodeRepositoryException {
 		SVNStatus info;
 		if (this.ourClientManager == null) {
@@ -741,6 +741,7 @@ public class SVNRepositoryService implements RepositoryService { //extends Abstr
 
 
 
+	@Override
 	public List<String> getPreviousComments(final String project) throws FastCodeRepositoryException {
 		final long startRevision = 0;
 		final long endRevision = -1; //HEAD (the latest) revision
@@ -800,6 +801,7 @@ public class SVNRepositoryService implements RepositoryService { //extends Abstr
 		return comment;
 	}*/
 
+	@Override
 	public boolean doesFileHaveChanges(final File file) throws FastCodeRepositoryException {
 		SVNStatus info = null;
 		if (this.ourClientManager == null) {

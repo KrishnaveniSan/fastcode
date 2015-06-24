@@ -87,6 +87,7 @@ public class DatabaseDetails implements Comparable<DatabaseDetails> {
 		this.isDefaultConn = isDefault;
 	}
 
+	@Override
 	public int compareTo(final DatabaseDetails databaseDetails) {
 		return this.databaseName.compareToIgnoreCase(databaseDetails.databaseName);
 	}

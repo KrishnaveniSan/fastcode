@@ -29,6 +29,7 @@ public class DeleteClassFromCacheAction implements IEditorActionDelegate, IActio
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
 	 */
+	@Override
 	public void run(final IAction action) {
 		this.errorMessage = null;
 		final IWorkingCopyManager manager = JavaUI.getWorkingCopyManager();
@@ -69,21 +70,25 @@ public class DeleteClassFromCacheAction implements IEditorActionDelegate, IActio
 
 	}
 
+	@Override
 	public void setActiveEditor(final IAction action, final IEditorPart targetEditor) {
 		// TODO Auto-generated method stub
 
 	}
 
+	@Override
 	public void selectionChanged(final IAction action, final ISelection selection) {
 		// TODO Auto-generated method stub
 
 	}
 
+	@Override
 	public void dispose() {
 		// TODO Auto-generated method stub
 
 	}
 
+	@Override
 	public void init(final IWorkbenchWindow window) {
 		this.window = window;
 

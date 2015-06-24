@@ -36,6 +36,7 @@ public class FCTagAssistProcessor implements IContentAssistProcessor {
 	}
 
 
+	@Override
 	public ICompletionProposal[] computeCompletionProposals(final ITextViewer viewer, final int documentOffset) {
 		List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
 		final IDocument document = viewer.getDocument();
@@ -62,16 +63,19 @@ public class FCTagAssistProcessor implements IContentAssistProcessor {
 			final String startLineStr = document.get(region.getOffset(), documentOffset - region.getOffset());
 			proposals = currentAssistant.getCompletionProposals(document, startPosition, length, startLineStr.substring(0, startLineStr.length() - length));
 		} catch (final Exception e) {/* ignore */
+			System.out.println(e.getMessage());
 		}
 
 		return proposals.toArray(new ICompletionProposal[proposals.size()]);
 	}
 
+	@Override
 	public IContextInformation[] computeContextInformation(final ITextViewer arg0, final int arg1) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
+	@Override
 	public char[] getCompletionProposalAutoActivationCharacters() {
 		int length = 0;
 		for (int i = 0; this.assistants != null && i < this.assistants.length; ++i) {
@@ -90,16 +94,19 @@ public class FCTagAssistProcessor implements IContentAssistProcessor {
 		return activationCharacters;
 	}
 
+	@Override
 	public char[] getContextInformationAutoActivationCharacters() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
+	@Override
 	public IContextInformationValidator getContextInformationValidator() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
+	@Override
 	public String getErrorMessage() {
 		// TODO Auto-generated method stub
 		return null;

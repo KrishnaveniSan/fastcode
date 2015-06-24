@@ -55,6 +55,7 @@ public class SimilarCompUnitBuilder implements CompUnitBuilder {
 	 * org.fastcode.util.CreateSimilarDescriptorClass, java.lang.String,
 	 * org.fastcode.util.FastCodeConsole)
 	 */
+	@Override
 	public ICompilationUnit buildCompUnit(final IPackageFragment packageFragment, final FastCodeContext fastCodeContext,
 			final CreateSimilarDescriptorClass createSimilarDescriptorClass, final String className, final FastCodeConsole fastCodeConsole)
 			throws Exception {

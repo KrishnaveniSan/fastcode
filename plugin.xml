@@ -414,7 +414,7 @@
             visible="true">
          <menu
                id="fastcode.actionset.menu1"
-               label="Fast Code">
+               label="Fast C&amp;ode">
             <groupMarker
                   name="fastcode.groupCreatesimilar">
             </groupMarker>
@@ -1393,8 +1393,7 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="Ctrl+Alt+Shift+Z">
       </key>
-
-	</extension>
+   </extension>
 
    <extension
          point="org.eclipse.ui.commands">
@@ -1403,8 +1402,7 @@
             name="FastCode.category"
             description="FastCode.category"
             id="FastCode.category"/>
-
-      <command
+ 	 <command
             categoryId="FastCode.category"
             id="FastCode.copymember.command"
             name="CopyMember">
@@ -1688,7 +1686,7 @@
             objectClass="org.eclipse.jdt.core.IPackageFragment">
          <menu
                id="FastCode.menu1"
-               label="FastCode"
+               label="Fast Code"
                path="additions">
             <separator name="group1" />
        </menu>

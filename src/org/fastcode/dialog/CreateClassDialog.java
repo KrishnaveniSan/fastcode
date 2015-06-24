@@ -149,6 +149,7 @@ public class CreateClassDialog extends CreateVariableDialog {
 		}
 		this.packageCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final String selectedPkgName = CreateClassDialog.this.packageCombo.getText();
 				if (isEmpty(selectedPkgName)) {
@@ -171,6 +172,7 @@ public class CreateClassDialog extends CreateVariableDialog {
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -188,6 +190,7 @@ public class CreateClassDialog extends CreateVariableDialog {
 
 		this.packageBrowseButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				try {
 					final String srcPath = getDefaultPathFromProject(CreateClassDialog.this.createVariableData.getJavaProject(), "source",
@@ -229,6 +232,7 @@ public class CreateClassDialog extends CreateVariableDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -259,6 +263,7 @@ public class CreateClassDialog extends CreateVariableDialog {
 
 		this.classNameText.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent arg0) {
 				validateClassname(true);
 				if (!isFirstLetterUpperCase(CreateClassDialog.this.classNameText.getText().trim())) {
@@ -271,6 +276,7 @@ public class CreateClassDialog extends CreateVariableDialog {
 				}
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -278,6 +284,7 @@ public class CreateClassDialog extends CreateVariableDialog {
 		});
 		this.classNameText.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent arg0) {
 				validateClassname(false);
 
@@ -383,10 +390,12 @@ public class CreateClassDialog extends CreateVariableDialog {
 		this.defaultConstructor.setLayoutData(gridDataText);
 		this.defaultConstructor.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
 
+			@Override
 			public void widgetSelected(final SelectionEvent arg0) {
 				if (CreateClassDialog.this.defaultConstructor.getSelection()) {
 					CreateClassDialog.this.createVariableData.setDefaultConsReqd(true);
@@ -437,6 +446,7 @@ public class CreateClassDialog extends CreateVariableDialog {
 
 		this.baseClassBrowseButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final SelectionDialog selectionDialog;
 				try {
@@ -460,6 +470,7 @@ public class CreateClassDialog extends CreateVariableDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -502,6 +513,7 @@ public class CreateClassDialog extends CreateVariableDialog {
 
 		this.interfaceBrowseButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final SelectionDialog selectionDialog;
 				try {
@@ -523,6 +535,7 @@ public class CreateClassDialog extends CreateVariableDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 

@@ -151,6 +151,7 @@ public class AbstractTemplatePreferencePage extends FieldEditorPreferencePage im
 
 		this.importButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 
 				try {
@@ -186,6 +187,7 @@ public class AbstractTemplatePreferencePage extends FieldEditorPreferencePage im
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -196,6 +198,7 @@ public class AbstractTemplatePreferencePage extends FieldEditorPreferencePage im
 
 		this.exportButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				try {
 					if (getAllTemplatesPreferenceKey().equals(P_ALL_TEMPLATES)) {
@@ -226,6 +229,7 @@ public class AbstractTemplatePreferencePage extends FieldEditorPreferencePage im
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -407,6 +411,7 @@ public class AbstractTemplatePreferencePage extends FieldEditorPreferencePage im
 		return true;
 	}
 
+	@Override
 	public void init(final IWorkbench workbench) {
 		// TODO Auto-generated method stub
 

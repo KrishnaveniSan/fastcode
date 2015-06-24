@@ -18,6 +18,7 @@ import static org.fastcode.common.FastCodeConstants.NAMED_QUERY_ANNOT_1;
 import static org.fastcode.common.FastCodeConstants.NAMED_QUERY_ANNOT_2;
 import static org.fastcode.common.FastCodeConstants.NAMED_QUERY_ANNOT_3;
 import static org.fastcode.common.FastCodeConstants.NAMED_QUERY_STR;
+import static org.fastcode.common.FastCodeConstants.PLACEHOLDER_PROJECT;
 import static org.fastcode.common.FastCodeConstants.PLACEHOLDER_TARGET;
 import static org.fastcode.common.FastCodeConstants.QUERY_NAME_STR;
 import static org.fastcode.common.FastCodeConstants.SCHEMA;
@@ -49,7 +50,10 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.IAnnotation;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -154,6 +158,7 @@ public abstract class CreateSqlGenericNamedQueryViewAction extends AbstractCreat
 		placeHolders.put(SCHEMA, createQueryData.getSchemaSelected());
 		placeHolders.put(SELECTED_POJO_CLASS_ITYPE, createQueryData.getiSelectPojoClassType());
 		placeHolders.put(DATABASE_NAME, createQueryData.getSelectedDatabaseName());
+		placeHolders.put(PLACEHOLDER_PROJECT, createQueryData.getSelectedProject());
 		switch (result) {
 		case 0:
 			existingQueryName = createQueryData.getExistingNamedQueryType();
@@ -405,6 +410,7 @@ public abstract class CreateSqlGenericNamedQueryViewAction extends AbstractCreat
 		while (true) {
 			final InputDialog inputDialog = new InputDialog(shell, "Query Name", "Enter Name of the Query",
 					exstNamedQuery == null ? EMPTY_STR : exstNamedQuery, new IInputValidator() {
+						@Override
 						public String isValid(final String newText) {
 							if (newText.trim().equals(EMPTY_STR)) {
 								return "Name of the Query cannot be an empty string.";
@@ -524,6 +530,15 @@ public abstract class CreateSqlGenericNamedQueryViewAction extends AbstractCreat
 		createQueryData.setTemplatePrefix(this.templatePrefix);
 		createQueryData.setTemplateType(this.templateType);
 		createQueryData.setTemplateSettings(getTemplateSettings(this.templateType));
+		IJavaProject project;
+		final ICompilationUnit compUnit = getCompilationUnitFromEditor();
+		if (compUnit == null) {
+			final IFile file = (IFile) this.editorPart.getEditorInput().getAdapter(IFile.class);
+			project = JavaCore.create(file.getProject());
+		} else {
+			project = compUnit.getJavaProject();
+		}
+		createQueryData.setJavaProject(project);
 		final CreateQueryDialog createQueryDialog = new CreateQueryDialog(new Shell(), createQueryData);
 		if (createQueryDialog.open() == Window.CANCEL) {
 			if (this.con != null) {

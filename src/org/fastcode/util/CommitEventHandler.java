@@ -8,6 +8,7 @@ import org.tmatesoft.svn.core.wc.SVNEventAction;
 
 public class CommitEventHandler implements ISVNEventHandler {
 
+	@Override
 	public void handleEvent(final SVNEvent event, final double progress) {
 		final SVNEventAction action = event.getAction();
 		if (action == SVNEventAction.COMMIT_MODIFIED) {
@@ -37,6 +38,7 @@ public class CommitEventHandler implements ISVNEventHandler {
 
 	}
 
+	@Override
 	public void checkCancelled() throws SVNCancelException {
 	}
 

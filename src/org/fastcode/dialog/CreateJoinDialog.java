@@ -4,6 +4,7 @@ import static org.fastcode.common.FastCodeConstants.COMMA;
 import static org.fastcode.common.FastCodeConstants.DOT;
 import static org.fastcode.common.FastCodeConstants.EMPTY_STR;
 import static org.fastcode.common.FastCodeConstants.FAST_CODE_PLUGIN_ID;
+import static org.fastcode.common.FastCodeConstants.FC_PLUGIN;
 import static org.fastcode.common.FastCodeConstants.HYPHEN;
 import static org.fastcode.common.FastCodeConstants.ORACLE;
 import static org.fastcode.preferences.PreferenceConstants.DATABASE_TEMPLATE_SELECT_WITH_JOIN;
@@ -21,6 +22,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.search.SearchEngine;
@@ -33,12 +37,17 @@ import org.eclipse.jface.fieldassist.ContentProposalAdapter;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -58,6 +67,7 @@ import org.fastcode.common.FastCodeConstants.FIELDS;
 import org.fastcode.common.FastCodeConstants.JOIN_TYPES;
 import org.fastcode.common.FastCodeConstants.NUMBER_OF_JOIN_TABLES;
 import org.fastcode.common.FastCodeConstants.WHERE_CLAUSE_SEPARATOR;
+import org.fastcode.common.FastCodeProject;
 import org.fastcode.popup.actions.snippet.FastCodeCache;
 import org.fastcode.preferences.DatabaseConnectionSettings;
 import org.fastcode.templates.viewer.TemplateFieldEditor;
@@ -121,6 +131,10 @@ public class CreateJoinDialog extends TrayDialog {
 	private Button					useAliasNameButton;
 	Map<String, Object>				browsedPojoClassMap	= new HashMap<String, Object>();
 	private Combo					databaseNameCombo;
+	private Label					projectLabel;
+	private Combo					projectCombo;
+	Map<String, IProject>			prjMap				= new HashMap<String, IProject>();
+	ScrolledComposite				scrolledComposite;
 
 	/**
 	 * @param shell
@@ -147,40 +161,62 @@ public class CreateJoinDialog extends TrayDialog {
 		super.create();
 	}
 
-	@Override
+	/*@Override
 	protected void configureShell(final Shell shell) {
 		super.configureShell(shell);
 		shell.setText("Create Join Dialog");
-		//shell.setSize(900, 500);
-	}
+		//shell.setSize(1200, 650);
+	}*/
 
 	@Override
 	protected Control createDialogArea(final Composite parent) {
 		final GridLayout layout = new GridLayout();
-		layout.numColumns = 1;
+		//layout.numColumns = 1;
 		parent.setLayout(layout);
-		createMessageText(parent);
-		createErrorMessageText(parent);
-		createNumberOfJoinTables(parent);
-		createDatabaseNameSelectionPane(parent);
-		createSchemaSelectionPane(parent);
-		createTablesCombo(parent);
-		createTableInstancesText(parent);
+		this.scrolledComposite = new ScrolledComposite(parent, SWT.V_SCROLL | SWT.BORDER);
+		this.scrolledComposite.setExpandHorizontal(true);
+		this.scrolledComposite.setExpandVertical(false);
 
-		createTablesColumnsCombo(parent);
-		createJoinTypesRadio(parent);
+		final Composite composite = new Composite(this.scrolledComposite, SWT.NONE);
+		final GridLayout gridLayout = new GridLayout();
+		gridLayout.numColumns = 1;
+		composite.setLayout(gridLayout);
+		composite.setSize(400, 400);
+
+		this.scrolledComposite.setContent(composite);
+
+		this.scrolledComposite.addControlListener(new ControlAdapter() {
+			@Override
+			public void controlResized(final ControlEvent e) {
+				final Rectangle clientArea = CreateJoinDialog.this.scrolledComposite.getClientArea();
+				final Point minSize = CreateJoinDialog.this.scrolledComposite.getContent().computeSize(clientArea.width, SWT.DEFAULT);
+				CreateJoinDialog.this.scrolledComposite.getContent().setSize(minSize);
+			}
+		});
+
+		createMessageText(composite);
+		createErrorMessageText(composite);
+		createProjectSelectionPane(composite);
+		createNumberOfJoinTables(composite);
+		createDatabaseNameSelectionPane(composite);
+		createSchemaSelectionPane(composite);
+		createTablesCombo(composite);
+		createTableInstancesText(composite);
+
+		createTablesColumnsCombo(composite);
+		createJoinTypesRadio(composite);
 		if (this.preferenceStore.getBoolean(P_GLOBAL_ENABLE_TEMPLATE_BODY_IN_DIALOG_BOXES)) {
-			createTemplateBodyMultiText(parent);
+			createTemplateBodyMultiText(composite);
 		}
 		/*if (this.createJoinData.getTemplateSettings().getTemplateName().equals(DATABASE_TEMPLATE_SELECT_WITH_JOIN)) {
 			createOrderByGroupByButtons(parent);
 		}*/
-		createWhereClauseSeparatorButtons(parent);
+		createWhereClauseSeparatorButtons(composite);
 		if (this.createJoinData.getTemplateSettings().getTemplateName().equals(DATABASE_TEMPLATE_SELECT_WITH_JOIN)) {
-			createAliasnameButton(parent);
+			createAliasnameButton(composite);
 		}
 		if (this.createJoinData.getTemplateSettings().getTemplateName().equals(DATABASE_TEMPLATE_SELECT_WITH_JOIN_AND_MAPPER)) {
-			createPojoClassSelectionPane(parent);
+			createPojoClassSelectionPane(composite);
 		}
 		return parent;
 	}
@@ -190,13 +226,96 @@ public class CreateJoinDialog extends TrayDialog {
 		return super.createButtonBar(parent);
 	}
 
+	/**
+	 * @param parent
+	 */
+	private void createProjectSelectionPane(final Composite parent) {
+		final Composite composite = new Composite(parent, parent.getStyle());
+		final GridLayout layout = new GridLayout();
+		layout.numColumns = 3;
+		composite.setLayout(layout);
+
+		final GridData gridDataLabel = new GridData();
+		this.projectLabel = new Label(composite, SWT.NONE);
+		this.projectLabel.setText("Select Project:                                                   ");
+		this.projectLabel.setLayoutData(gridDataLabel);
+		//this.projectLabel.setVisible(false);
+
+		final GridData gridDataText = new GridData();
+		gridDataText.grabExcessHorizontalSpace = true;
+
+		this.projectCombo = new Combo(composite, SWT.READ_ONLY | SWT.DROP_DOWN);
+		this.projectCombo.setSize(200, 20);
+		this.projectCombo.setLayoutData(gridDataText);
+		gridDataText.minimumWidth = 500;
+		//this.projectCombo.setEnabled(false);
+		//this.projectCombo.setVisible(false);
+
+		final IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+		for (final IProject prj : projects) {
+			if (prj == null || !prj.exists() || !prj.isOpen()) {
+				continue;
+			}
+			if (prj.getName().equals(FC_PLUGIN)) {
+				continue;
+			}
+			this.projectCombo.add(prj.getName());
+			this.prjMap.put(prj.getName(), prj);
+		}
+		if (this.createJoinData.getJavaProject() != null) {
+			this.projectCombo.select(this.projectCombo.indexOf(this.createJoinData.getJavaProject().getElementName()));
+		}
+
+		this.projectCombo.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(final SelectionEvent event) {
+				final String projectName = CreateJoinDialog.this.projectCombo.getText();
+				if (!isEmpty(projectName)) {
+					CreateJoinDialog.this.createJoinData.setSelectedProject(new FastCodeProject(CreateJoinDialog.this.prjMap
+							.get(projectName)));
+					setErrorMessage(CreateJoinDialog.this.defaultMessage);
+					isPrjInSync(CreateJoinDialog.this.prjMap.get(projectName));
+				} else {
+					setErrorMessage("Please select a project");
+				}
+			}
+
+			@Override
+			public void widgetDefaultSelected(final SelectionEvent arg0) {
+
+			}
+		});
+	}
+
+	private boolean isPrjInSync(final IProject project) {
+		if (project != null && !project.isSynchronized(IResource.DEPTH_INFINITE)) {
+			//this.snippetCombo.setEnabled(false);
+			setErrorMessage("Project " + project.getName() + " is not synchronised. Please synchronise and try again.");
+			return false;
+		} else {
+			//this.snippetCombo.setEnabled(true);
+			setErrorMessage(this.defaultMessage);
+			return true;
+		}
+	}
+
 	@Override
 	protected void okPressed() {
 
 		if (this.createJoinData == null) {
 			this.createJoinData = new CreateJoinData();
 		}
-
+		if (this.projectCombo != null && this.projectCombo.getText() != null) {
+			if (!isPrjInSync(this.prjMap.get(this.projectCombo.getText()))) {
+				return;
+			}
+		}
+		if (this.createJoinData.getSelectedProject() == null) {
+			if (this.projectCombo != null && this.projectCombo.getText() != null) {
+				this.createJoinData.setSelectedProject(new FastCodeProject(this.prjMap.get(this.projectCombo.getText())));
+			}
+		}
 		this.createJoinData.setFirstSchemaSelected(CreateJoinDialog.this.firstSchemaCombo.getText());
 		this.createJoinData.setSecondSchemaSelected(CreateJoinDialog.this.secondSchemaCombo.getText());
 		this.createJoinData.setThirdSchemaSelected(CreateJoinDialog.this.thirdSchemaCombo.getText());
@@ -304,6 +423,7 @@ public class CreateJoinDialog extends TrayDialog {
 		this.createJoinData.setNumberOfJoinTables(NUMBER_OF_JOIN_TABLES.TWO);
 		this.twoTablesJoinButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				CreateJoinDialog.this.createJoinData.setNumberOfJoinTables(NUMBER_OF_JOIN_TABLES.TWO);
 				CreateJoinDialog.this.thirdTableCombo.setEnabled(false);
@@ -316,6 +436,7 @@ public class CreateJoinDialog extends TrayDialog {
 				CreateJoinDialog.this.fourthSchemaCombo.setEnabled(false);
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -326,6 +447,7 @@ public class CreateJoinDialog extends TrayDialog {
 		// this.threeTablesJoinButton.setSelection(false);
 		this.threeTablesJoinButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				CreateJoinDialog.this.createJoinData.setNumberOfJoinTables(NUMBER_OF_JOIN_TABLES.THREE);
 				//CreateJoinDialog.this.thirdTableCombo.setEnabled(true);
@@ -338,6 +460,7 @@ public class CreateJoinDialog extends TrayDialog {
 				CreateJoinDialog.this.thirdSchemaCombo.setEnabled(true);
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -410,6 +533,7 @@ public class CreateJoinDialog extends TrayDialog {
 		this.firstTableCombo.setEnabled(true);
 		this.firstTableCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (CreateJoinDialog.this.createJoinData.getNumberOfJoinTables().equals(NUMBER_OF_JOIN_TABLES.THREE)) {
 					CreateJoinDialog.this.copyOfThirdTableCombo.setEnabled(true);
@@ -445,6 +569,7 @@ public class CreateJoinDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -452,6 +577,7 @@ public class CreateJoinDialog extends TrayDialog {
 		});
 		this.firstTableCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 				CreateJoinDialog.this.createJoinData.setFirstTableName(CreateJoinDialog.this.firstTableCombo.getText());
 
@@ -468,11 +594,13 @@ public class CreateJoinDialog extends TrayDialog {
 		});
 		this.firstTableCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent arg0) {
 				setErrorMessage(CreateJoinDialog.this.defaultMessage);
 
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				if (CreateJoinDialog.this.firstSchemaCombo.getText().equals(EMPTY_STR)) {
 					setErrorMessage("Please select a schema first");
@@ -497,6 +625,7 @@ public class CreateJoinDialog extends TrayDialog {
 		poulateTableCombo(connectToDatabase, this.secondTableCombo);
 		this.secondTableCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (CreateJoinDialog.this.createJoinData.getNumberOfJoinTables().equals(NUMBER_OF_JOIN_TABLES.THREE)) {
 					CreateJoinDialog.this.copyOfThirdTableCombo.setEnabled(true);
@@ -548,6 +677,7 @@ public class CreateJoinDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -555,6 +685,7 @@ public class CreateJoinDialog extends TrayDialog {
 		});
 		this.secondTableCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 				CreateJoinDialog.this.createJoinData.setSecondTableName(CreateJoinDialog.this.secondTableCombo.getText());
 
@@ -571,11 +702,13 @@ public class CreateJoinDialog extends TrayDialog {
 		});
 		this.secondTableCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent arg0) {
 				setErrorMessage(CreateJoinDialog.this.defaultMessage);
 
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				if (CreateJoinDialog.this.secondSchemaCombo.getText().equals(EMPTY_STR)) {
 					setErrorMessage("Please select a schema first");
@@ -600,6 +733,7 @@ public class CreateJoinDialog extends TrayDialog {
 		poulateTableCombo(connectToDatabase, this.thirdTableCombo);
 		this.thirdTableCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusGained(final FocusEvent e) {
 				if (CreateJoinDialog.this.firstTableInstanceName.getText().equals(EMPTY_STR)
 						|| CreateJoinDialog.this.secondTableInstanceName.getText().equals(EMPTY_STR)) {
@@ -609,11 +743,13 @@ public class CreateJoinDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 			}
 		});
 		this.thirdTableCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				CreateJoinDialog.this.copyOfThirdTableCombo.setEnabled(true);
 				String selectedTableInstance = null;
@@ -668,6 +804,7 @@ public class CreateJoinDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -675,6 +812,7 @@ public class CreateJoinDialog extends TrayDialog {
 		});
 		this.thirdTableCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 				CreateJoinDialog.this.createJoinData.setThirdTableName(CreateJoinDialog.this.thirdTableCombo.getText());
 
@@ -692,11 +830,13 @@ public class CreateJoinDialog extends TrayDialog {
 		});
 		this.thirdTableCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent arg0) {
 				setErrorMessage(CreateJoinDialog.this.defaultMessage);
 
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				if (CreateJoinDialog.this.thirdSchemaCombo.getText().equals(EMPTY_STR)) {
 					setErrorMessage("Please select a schema first");
@@ -719,6 +859,7 @@ public class CreateJoinDialog extends TrayDialog {
 		}*/
 		poulateTableCombo(connectToDatabase, this.copyOfThirdTableCombo);
 		this.copyOfThirdTableCombo.addFocusListener(new FocusListener() {
+			@Override
 			public void focusGained(final FocusEvent e) {
 				if (CreateJoinDialog.this.firstTableInstanceName.getText().equals(EMPTY_STR)
 						|| CreateJoinDialog.this.secondTableInstanceName.getText().equals(EMPTY_STR)
@@ -729,11 +870,13 @@ public class CreateJoinDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 			}
 		});
 		this.copyOfThirdTableCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				CreateJoinDialog.this.copyOfThirdTableName = CreateJoinDialog.this.copyOfThirdTableCombo
 						.getItem(CreateJoinDialog.this.copyOfThirdTableCombo.getSelectionIndex());
@@ -760,6 +903,7 @@ public class CreateJoinDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -767,6 +911,7 @@ public class CreateJoinDialog extends TrayDialog {
 
 		this.copyOfThirdTableCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 
 				if (!isEmpty(CreateJoinDialog.this.copyOfThirdTableCombo.getText())) {
@@ -812,13 +957,13 @@ public class CreateJoinDialog extends TrayDialog {
 		final DatabaseCache databaseCache = DatabaseCache.getInstance();
 		Connection connection = null;
 		try {
-			connection = ConnectToDatabase.getCon() == null ? connectToDatabase.getNewConnection(databaseNameCombo.getText())
+			connection = ConnectToDatabase.getCon() == null ? connectToDatabase.getNewConnection(this.databaseNameCombo.getText())
 					: ConnectToDatabase.getCon();
-		} catch (Exception ex1) {
+		} catch (final Exception ex1) {
 			ex1.printStackTrace();
 		}
-		DatabaseConnectionSettings databaseConnectionSettings = DatabaseConnectionSettings.getInstance();
-		String databaseType = databaseConnectionSettings.getConnMap().get(databaseNameCombo.getText()).getDatabaseType();
+		final DatabaseConnectionSettings databaseConnectionSettings = DatabaseConnectionSettings.getInstance();
+		final String databaseType = databaseConnectionSettings.getConnMap().get(this.databaseNameCombo.getText()).getDatabaseType();
 		if (tableInstanceName.equals(this.createJoinData.getFirstTableInstanceName())) {
 
 			try {
@@ -885,6 +1030,7 @@ public class CreateJoinDialog extends TrayDialog {
 		this.firstTableInstanceName.setLayoutData(text1Grid);
 		this.firstTableInstanceName.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent arg0) {
 				if (CreateJoinDialog.this.firstTableInstanceName.getText().equals(CreateJoinDialog.this.secondTableInstanceName.getText())
 						|| CreateJoinDialog.this.firstTableInstanceName.getText().equals(
@@ -908,6 +1054,7 @@ public class CreateJoinDialog extends TrayDialog {
 		this.secondTableInstanceName.setLayoutData(text2Grid);
 		this.secondTableInstanceName.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent event) {
 				if (CreateJoinDialog.this.secondTableInstanceName.getText().equals(CreateJoinDialog.this.firstTableInstanceName.getText())
 						|| CreateJoinDialog.this.secondTableInstanceName.getText().equals(
@@ -932,6 +1079,7 @@ public class CreateJoinDialog extends TrayDialog {
 		this.thirdTableInstanceName.setEnabled(false);
 		this.thirdTableInstanceName.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent event) {
 				if (CreateJoinDialog.this.thirdTableInstanceName.getText().equals(CreateJoinDialog.this.firstTableInstanceName.getText())
 						|| CreateJoinDialog.this.thirdTableInstanceName.getText().equals(
@@ -955,6 +1103,7 @@ public class CreateJoinDialog extends TrayDialog {
 		this.copyOfThirdTableInstanceName.setEnabled(false);
 		this.copyOfThirdTableInstanceName.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 				if (CreateJoinDialog.this.copyOfThirdTableInstanceName.getText().equals(
 						CreateJoinDialog.this.firstTableInstanceName.getText())
@@ -992,6 +1141,7 @@ public class CreateJoinDialog extends TrayDialog {
 
 		this.columnsInFirstTableCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (CreateJoinDialog.this.createJoinData.getNumberOfJoinTables().equals(NUMBER_OF_JOIN_TABLES.TWO)) {
 					if (CreateJoinDialog.this.firstTableName.equals(CreateJoinDialog.this.secondTableName)) {
@@ -1036,6 +1186,7 @@ public class CreateJoinDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1053,6 +1204,7 @@ public class CreateJoinDialog extends TrayDialog {
 
 		this.columnsInSecondTableCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 
 				final String table1Column = CreateJoinDialog.this.columnsInFirstTableCombo
@@ -1077,6 +1229,7 @@ public class CreateJoinDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1096,6 +1249,7 @@ public class CreateJoinDialog extends TrayDialog {
 
 		this.columnsInThirdTableCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final String table1Column = CreateJoinDialog.this.columnsInFirstTableCombo
 						.getItem(CreateJoinDialog.this.columnsInFirstTableCombo.getSelectionIndex());
@@ -1112,6 +1266,7 @@ public class CreateJoinDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1130,6 +1285,7 @@ public class CreateJoinDialog extends TrayDialog {
 
 		this.columnsInCopyOfThirdTableCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final String table2Column = CreateJoinDialog.this.columnsInSecondTableCombo
 						.getItem(CreateJoinDialog.this.columnsInSecondTableCombo.getSelectionIndex());
@@ -1148,6 +1304,7 @@ public class CreateJoinDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1204,10 +1361,12 @@ public class CreateJoinDialog extends TrayDialog {
 		this.innerJoinButton.setSelection(true);
 		this.innerJoinButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1219,10 +1378,12 @@ public class CreateJoinDialog extends TrayDialog {
 		//this.leftJoinButton.setSelection(true);
 		this.leftJoinButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1233,10 +1394,12 @@ public class CreateJoinDialog extends TrayDialog {
 		//this.rightJoinButton.setSelection(true);
 		this.rightJoinButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1257,6 +1420,7 @@ public class CreateJoinDialog extends TrayDialog {
 		this.groupByButton.setSelection(false);
 		this.groupByButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 
 				if (((Button) event.widget).getSelection()) {
@@ -1305,6 +1469,7 @@ public class CreateJoinDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -1313,6 +1478,7 @@ public class CreateJoinDialog extends TrayDialog {
 		this.orderByButton.setText("Order By");
 		this.orderByButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (((Button) event.widget).getSelection()) {
 					if (CreateJoinDialog.this.firstTableCombo.getSelectionIndex() == -1) {
@@ -1363,6 +1529,7 @@ public class CreateJoinDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -1386,12 +1553,14 @@ public class CreateJoinDialog extends TrayDialog {
 		this.createJoinData.setWhereClauseSeparator(WHERE_CLAUSE_SEPARATOR.AND);
 		this.andButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (((Button) event.widget).getSelection()) {
 					CreateJoinDialog.this.createJoinData.setWhereClauseSeparator(WHERE_CLAUSE_SEPARATOR.AND);
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1401,12 +1570,14 @@ public class CreateJoinDialog extends TrayDialog {
 		this.orButton.setText("or");
 		this.orButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (((Button) event.widget).getSelection()) {
 					CreateJoinDialog.this.createJoinData.setWhereClauseSeparator(WHERE_CLAUSE_SEPARATOR.OR);
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1515,6 +1686,7 @@ public class CreateJoinDialog extends TrayDialog {
 		}
 		this.pojoClassCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final String selectedPojoClassName = CreateJoinDialog.this.pojoClassCombo.getText();
 				try {
@@ -1536,6 +1708,7 @@ public class CreateJoinDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1544,6 +1717,7 @@ public class CreateJoinDialog extends TrayDialog {
 		});
 		this.pojoClassCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 				final String inputPojoClassName = CreateJoinDialog.this.pojoClassCombo.getText();
 				if (!isEmpty(inputPojoClassName)) {
@@ -1575,6 +1749,7 @@ public class CreateJoinDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1583,6 +1758,7 @@ public class CreateJoinDialog extends TrayDialog {
 
 		this.pojoClassCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 
 				if (isEmpty(CreateJoinDialog.this.pojoClassCombo.getText())) {
@@ -1604,6 +1780,7 @@ public class CreateJoinDialog extends TrayDialog {
 
 		this.pojoClassBrowseButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final SelectionDialog selectionDialog;
 				try {
@@ -1653,6 +1830,7 @@ public class CreateJoinDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1678,8 +1856,8 @@ public class CreateJoinDialog extends TrayDialog {
 		schema1ComboGrid.grabExcessHorizontalSpace = true;
 		this.firstSchemaCombo = new Combo(composite, SWT.DROP_DOWN);
 		this.firstSchemaCombo.setLayoutData(schema1ComboGrid);
-		DatabaseConnectionSettings databaseConnectionSettings = DatabaseConnectionSettings.getInstance();
-		final String databaseType = databaseConnectionSettings.getConnMap().get(databaseNameCombo.getText()).getDatabaseType();
+		final DatabaseConnectionSettings databaseConnectionSettings = DatabaseConnectionSettings.getInstance();
+		final String databaseType = databaseConnectionSettings.getConnMap().get(this.databaseNameCombo.getText()).getDatabaseType();
 		/*final DatabaseConnectionSettings databaseConnectionSettings = DatabaseConnectionSettings.getInstance();
 		int schemaIndex = 0;
 		int k = 0;
@@ -1703,7 +1881,7 @@ public class CreateJoinDialog extends TrayDialog {
 		final ContentProposalAdapter adapter1 = new ContentProposalAdapter(this.firstSchemaCombo, comboAdapter1, provider1, null, null);
 		adapter1.setPropagateKeys(true);
 		adapter1.setProposalAcceptanceStyle(ContentProposalAdapter.PROPOSAL_REPLACE);*/
-		populateSchemaCombo(firstSchemaCombo);
+		populateSchemaCombo(this.firstSchemaCombo);
 		final ConnectToDatabase connectToDatabase = ConnectToDatabase.getInstance();
 
 		/*try {
@@ -1715,6 +1893,7 @@ public class CreateJoinDialog extends TrayDialog {
 
 		this.firstSchemaCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent arg0) {
 				try {
 					CreateJoinDialog.this.firstTableCombo.setEnabled(true);
@@ -1746,6 +1925,7 @@ public class CreateJoinDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1777,9 +1957,10 @@ public class CreateJoinDialog extends TrayDialog {
 		final ContentProposalAdapter adapter2 = new ContentProposalAdapter(this.secondSchemaCombo, comboAdapter2, provider2, null, null);
 		adapter2.setPropagateKeys(true);
 		adapter2.setProposalAcceptanceStyle(ContentProposalAdapter.PROPOSAL_REPLACE);*/
-		populateSchemaCombo(secondSchemaCombo);
+		populateSchemaCombo(this.secondSchemaCombo);
 		this.secondSchemaCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent arg0) {
 				try {
 					CreateJoinDialog.this.secondTableCombo.setEnabled(true);
@@ -1814,6 +1995,7 @@ public class CreateJoinDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1848,10 +2030,11 @@ public class CreateJoinDialog extends TrayDialog {
 		adapter3.setPropagateKeys(true);
 		adapter3.setProposalAcceptanceStyle(ContentProposalAdapter.PROPOSAL_REPLACE);*/
 
-		populateSchemaCombo(thirdSchemaCombo);
+		populateSchemaCombo(this.thirdSchemaCombo);
 
 		this.thirdSchemaCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent arg0) {
 				try {
 					CreateJoinDialog.this.thirdTableCombo.setEnabled(true);
@@ -1887,6 +2070,7 @@ public class CreateJoinDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1919,10 +2103,11 @@ public class CreateJoinDialog extends TrayDialog {
 		final ContentProposalAdapter adapter4 = new ContentProposalAdapter(this.fourthSchemaCombo, comboAdapter4, provider4, null, null);
 		adapter4.setPropagateKeys(true);
 		adapter4.setProposalAcceptanceStyle(ContentProposalAdapter.PROPOSAL_REPLACE);*/
-		populateSchemaCombo(fourthSchemaCombo);
+		populateSchemaCombo(this.fourthSchemaCombo);
 
 		this.fourthSchemaCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent arg0) {
 				try {
 					CreateJoinDialog.this.copyOfThirdTableCombo.setEnabled(true);
@@ -1953,6 +2138,7 @@ public class CreateJoinDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1968,19 +2154,22 @@ public class CreateJoinDialog extends TrayDialog {
 		Connection connection = null;
 		try {
 			final DatabaseConnectionSettings databaseConnectionSettings = DatabaseConnectionSettings.getInstance();
-			connection = ConnectToDatabase.getCon() == null ? connectToDatabase.getNewConnection(databaseNameCombo.getText())
+			connection = ConnectToDatabase.getCon() == null ? connectToDatabase.getNewConnection(this.databaseNameCombo.getText())
 					: ConnectToDatabase.getCon();
-			String databaseType = databaseConnectionSettings.getConnMap().get(databaseNameCombo.getText()).getDatabaseType();
-			DatabaseDetails databaseConnection = databaseConnectionSettings.getConnMap().get(databaseNameCombo.getText());
+			final String databaseType = databaseConnectionSettings.getConnMap().get(this.databaseNameCombo.getText()).getDatabaseType();
+			final DatabaseDetails databaseConnection = databaseConnectionSettings.getConnMap().get(this.databaseNameCombo.getText());
 			String schema = EMPTY_STR;
-			if (tableCombo.equals(firstTableCombo) && firstSchemaCombo.isEnabled() && !isEmpty(firstSchemaCombo.getText())) {
-				schema = firstSchemaCombo.getText();
-			} else if (tableCombo.equals(secondTableCombo) && secondSchemaCombo.isEnabled() && !isEmpty(secondSchemaCombo.getText())) {
-				schema = secondSchemaCombo.getText();
-			} else if (tableCombo.equals(thirdTableCombo) && thirdSchemaCombo.isEnabled() && !isEmpty(thirdSchemaCombo.getText())) {
-				schema = thirdSchemaCombo.getText();
-			} else if (tableCombo.equals(copyOfThirdTableCombo) && fourthSchemaCombo.isEnabled() && !isEmpty(fourthSchemaCombo.getText())) {
-				schema = fourthSchemaCombo.getText();
+			if (tableCombo.equals(this.firstTableCombo) && this.firstSchemaCombo.isEnabled() && !isEmpty(this.firstSchemaCombo.getText())) {
+				schema = this.firstSchemaCombo.getText();
+			} else if (tableCombo.equals(this.secondTableCombo) && this.secondSchemaCombo.isEnabled()
+					&& !isEmpty(this.secondSchemaCombo.getText())) {
+				schema = this.secondSchemaCombo.getText();
+			} else if (tableCombo.equals(this.thirdTableCombo) && this.thirdSchemaCombo.isEnabled()
+					&& !isEmpty(this.thirdSchemaCombo.getText())) {
+				schema = this.thirdSchemaCombo.getText();
+			} else if (tableCombo.equals(this.copyOfThirdTableCombo) && this.fourthSchemaCombo.isEnabled()
+					&& !isEmpty(this.fourthSchemaCombo.getText())) {
+				schema = this.fourthSchemaCombo.getText();
 			} else {
 				schema = databaseConnection.getDatabaseType().equalsIgnoreCase(ORACLE) ? databaseConnection.getUserName()
 						: databaseConnection.getDatabaseName();
@@ -2021,11 +2210,13 @@ public class CreateJoinDialog extends TrayDialog {
 
 		this.useAliasNameButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				CreateJoinDialog.this.createJoinData.setUseAliasName(CreateJoinDialog.this.useAliasNameButton.getSelection());
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 				// TODO Auto-generated method stub
 
@@ -2038,7 +2229,7 @@ public class CreateJoinDialog extends TrayDialog {
 	/**
 	 * @param parent
 	 */
-	private void createDatabaseNameSelectionPane(Composite parent) {
+	private void createDatabaseNameSelectionPane(final Composite parent) {
 		final Composite composite = new Composite(parent, parent.getStyle());
 
 		final GridLayout layout = new GridLayout();
@@ -2053,7 +2244,7 @@ public class CreateJoinDialog extends TrayDialog {
 		final DatabaseConnectionSettings databaseConnectionSettings = DatabaseConnectionSettings.getInstance();
 		int defaultDbNameIndex = 0;
 		int k = 0;
-		for (String dbName : databaseConnectionSettings.getConnMap().keySet()) {
+		for (final String dbName : databaseConnectionSettings.getConnMap().keySet()) {
 			if (databaseConnectionSettings.getNameofDabase().equals(dbName)) {
 				defaultDbNameIndex = k;
 			}
@@ -2061,7 +2252,7 @@ public class CreateJoinDialog extends TrayDialog {
 			k++;
 		}
 		this.databaseNameCombo.select(defaultDbNameIndex);
-		createJoinData.setSelectedDatabaseName(databaseNameCombo.getText());
+		this.createJoinData.setSelectedDatabaseName(this.databaseNameCombo.getText());
 		final FastCodeContentProposalProvider provider = new FastCodeContentProposalProvider(this.databaseNameCombo.getItems());
 		final ComboContentAdapter comboAdapter = new ComboContentAdapter();
 		final ContentProposalAdapter adapter = new ContentProposalAdapter(this.databaseNameCombo, comboAdapter, provider, null, null);
@@ -2069,8 +2260,9 @@ public class CreateJoinDialog extends TrayDialog {
 		adapter.setProposalAcceptanceStyle(ContentProposalAdapter.PROPOSAL_REPLACE);
 		this.databaseNameCombo.addFocusListener(new FocusListener() {
 
-			public void focusLost(FocusEvent event) {
-				String selectedDbName = databaseNameCombo.getText();
+			@Override
+			public void focusLost(final FocusEvent event) {
+				final String selectedDbName = databaseNameCombo.getText();
 				if (databaseConnectionSettings.getConnMap().keySet().contains(selectedDbName)) {
 					if (!selectedDbName.equalsIgnoreCase(DatabaseConnectionSettings.getInstance().getNameofDabase())
 							|| !createJoinData.getSelectedDatabaseName().equals(selectedDbName)) {
@@ -2081,7 +2273,7 @@ public class CreateJoinDialog extends TrayDialog {
 						fourthSchemaCombo.setEnabled(false);
 						//updatePreferenceStore(selectedDbName);
 						//DatabaseConnectionSettings.setReload(true);
-						ConnectToDatabase connectToDatabase = ConnectToDatabase.getInstance();
+						final ConnectToDatabase connectToDatabase = ConnectToDatabase.getInstance();
 						connectToDatabase.closeConnection(ConnectToDatabase.getCon());
 						final DatabaseCache databaseCache = DatabaseCache.getInstance();
 						final DatabaseDetails databaseConnection = databaseConnectionSettings.getConnMap().get(selectedDbName);
@@ -2111,7 +2303,7 @@ public class CreateJoinDialog extends TrayDialog {
 							}
 							createJoinData.setSelectedDatabaseName(selectedDbName);
 							setMessage(defaultMessage);
-						} catch (Exception ex) {
+						} catch (final Exception ex) {
 							ex.printStackTrace();
 						}
 
@@ -2119,7 +2311,8 @@ public class CreateJoinDialog extends TrayDialog {
 				}
 			}
 
-			public void focusGained(FocusEvent arg0) {
+			@Override
+			public void focusGained(final FocusEvent arg0) {
 				// TODO Auto-generated method stub
 
 			}
@@ -2185,12 +2378,12 @@ public class CreateJoinDialog extends TrayDialog {
 	/**
 	 * @param schemaCombo
 	 */
-	private void populateSchemaCombo(Combo schemaCombo) {
+	private void populateSchemaCombo(final Combo schemaCombo) {
 		int schemaIndex = 0;
 		int k = 0;
 		final DatabaseConnectionSettings databaseConnectionSettings = DatabaseConnectionSettings.getInstance();
-		DatabaseDetails databaseConnection = databaseConnectionSettings.getConnMap().get(databaseNameCombo.getText());
-		String defaultSchema = databaseConnection.getDatabaseType().equalsIgnoreCase(ORACLE) ? databaseConnection.getUserName()
+		final DatabaseDetails databaseConnection = databaseConnectionSettings.getConnMap().get(this.databaseNameCombo.getText());
+		final String defaultSchema = databaseConnection.getDatabaseType().equalsIgnoreCase(ORACLE) ? databaseConnection.getUserName()
 				: databaseConnection.getDatabaseName();
 		if (schemaCombo != null) {
 			schemaCombo.removeAll();

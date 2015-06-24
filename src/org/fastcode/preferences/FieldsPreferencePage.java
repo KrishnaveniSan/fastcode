@@ -23,6 +23,7 @@ public class FieldsPreferencePage extends StatusDialog implements IPropertyChang
 	private IPreferenceStore	store;
 	private FieldEditor			invalidFieldEditor	= null;
 
+	@Override
 	public void propertyChange(final PropertyChangeEvent event) {
 		if (event.getProperty().equals(FieldEditor.IS_VALID)) {
 			final boolean newValue = ((Boolean) event.getNewValue()).booleanValue();

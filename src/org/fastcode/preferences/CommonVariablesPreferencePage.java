@@ -23,7 +23,7 @@ public class CommonVariablesPreferencePage extends FieldEditorPreferencePage imp
     private StringFieldEditor		dateFormat;
 	private MultiStringFieldEditor	commonvariables;
 
-	private boolean					errorShown	= false;
+	private final boolean					errorShown	= false;
 	private final String			defaultcommonvariables;
 	TableViewer						variablesViewer;
 	private Table					table;
@@ -70,7 +70,8 @@ public class CommonVariablesPreferencePage extends FieldEditorPreferencePage imp
 		return status;
 	}
 
+	@Override
 	public void init(final IWorkbench workbench) {
 	}
-	
+
 }

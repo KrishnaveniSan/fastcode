@@ -28,7 +28,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.window.Window;
@@ -188,6 +192,15 @@ public class CreateNewDatabaseSnippetAction extends AbstractCreateNewDatabaseSni
 		// getTableFromDb(this.con);
 		// createSnippetData.setTablesInDB(this.databaseCache.getDbTableListMap().get(databaseConnectionSettings.getTypesofDabases()));
 		// createSnippetData.setTemplateSettings(this.templateSettings);
+		IJavaProject project;
+		final ICompilationUnit compUnit = getCompilationUnitFromEditor();
+		if (compUnit == null) {
+			final IFile file = (IFile) this.editorPart.getEditorInput().getAdapter(IFile.class);
+			project = JavaCore.create(file.getProject());
+		} else {
+			project = compUnit.getJavaProject();
+		}
+		createSnippetData.setJavaProject(project);
 		getSchemaFromDb(this.con, databaseConnectionSettings.getTypesofDabases());
 		createSnippetData.setSchemasInDB(this.databaseCache.getDbSchemaListMap().get(databaseConnectionSettings.getTypesofDabases()));
 		final CreateSnippetDialog createSnippetDialog = new CreateSnippetDialog(new Shell(), createSnippetData);

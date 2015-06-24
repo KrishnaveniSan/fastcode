@@ -128,6 +128,7 @@ public class FastCodeListEditor extends ListEditor {
 			final InputDialog inputDialog = new InputDialog(new Shell(), "Package to include/exclude", "Enter package name", "",
 					new IInputValidator() {
 
+						@Override
 						public String isValid(final String arg0) {
 							if (!isValidPackageName(arg0)) {
 								return "Please enter valid package name";
@@ -231,6 +232,7 @@ public class FastCodeListEditor extends ListEditor {
 		message += this.type == CONSIDER_ANNOTATION_TYPES ? "Annotations" : "Class";
 
 		final InputDialog dialog = new InputDialog(new Shell(), title, message, userInput, new IInputValidator() {
+			@Override
 			public String isValid(final String newText) {
 				if (FastCodeListEditor.this.type == CONSIDER_ANNOTATION_TYPES) {
 					if (newText.trim().length() < 2 || !newText.startsWith("@")) {

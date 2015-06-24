@@ -149,6 +149,7 @@ public class AbstractTableTemplatePreferencePage extends PreferencePage implemen
 
 	}
 
+	@Override
 	public void init(final IWorkbench workbench) {
 		// TODO Auto-generated method stub
 
@@ -269,6 +270,7 @@ public class AbstractTableTemplatePreferencePage extends PreferencePage implemen
 
 		this.table.addListener(SWT.Selection, new Listener() {
 
+			@Override
 			public void handleEvent(final Event event) {
 				if (event.detail == SWT.CHECK) {
 					final Template template = (Template) event.item.getData();
@@ -290,13 +292,16 @@ public class AbstractTableTemplatePreferencePage extends PreferencePage implemen
 
 		this.table.addMouseListener(new MouseListener() {
 
+			@Override
 			public void mouseDoubleClick(final MouseEvent e) {
 				editTemplate();
 			}
 
+			@Override
 			public void mouseDown(final MouseEvent e) {
 			}
 
+			@Override
 			public void mouseUp(final MouseEvent e) {
 			}
 		});
@@ -311,6 +316,7 @@ public class AbstractTableTemplatePreferencePage extends PreferencePage implemen
 		this.fAddButton.setText("New");
 		this.fAddButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		this.fAddButton.addListener(SWT.Selection, new Listener() {
+			@Override
 			public void handleEvent(final Event e) {
 				add();
 				refreshInput();
@@ -325,6 +331,7 @@ public class AbstractTableTemplatePreferencePage extends PreferencePage implemen
 		this.fEditButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		this.fEditButton.setEnabled(false);
 		this.fEditButton.addListener(SWT.Selection, new Listener() {
+			@Override
 			public void handleEvent(final Event e) {
 
 				editTemplate();
@@ -339,6 +346,7 @@ public class AbstractTableTemplatePreferencePage extends PreferencePage implemen
 		this.fRemoveButton.setEnabled(false);
 
 		this.fRemoveButton.addListener(SWT.Selection, new Listener() {
+			@Override
 			public void handleEvent(final Event e) {
 				final int index = AbstractTableTemplatePreferencePage.this.table.getSelectionIndex();
 				if (index > -1) {
@@ -358,6 +366,7 @@ public class AbstractTableTemplatePreferencePage extends PreferencePage implemen
 		this.fRestoreButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		// this.fRestoreButton.setEnabled(false);
 		this.fRestoreButton.addListener(SWT.Selection, new Listener() {
+			@Override
 			public void handleEvent(final Event e) {
 				restoreDeleted();
 				enableTemplates();
@@ -370,6 +379,7 @@ public class AbstractTableTemplatePreferencePage extends PreferencePage implemen
 		this.fRevertButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		this.fRevertButton.setEnabled(false);
 		this.fRevertButton.addListener(SWT.Selection, new Listener() {
+			@Override
 			public void handleEvent(final Event e) {
 				// revert();
 			}
@@ -381,6 +391,7 @@ public class AbstractTableTemplatePreferencePage extends PreferencePage implemen
 		this.fImportButton.setText("Import");
 		this.fImportButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		this.fImportButton.addListener(SWT.Selection, new Listener() {
+			@Override
 			public void handleEvent(final Event e) {
 				import_();
 				loadTemplates(AbstractTableTemplatePreferencePage.this.store, AbstractTableTemplatePreferencePage.this.templatePrefix,
@@ -397,6 +408,7 @@ public class AbstractTableTemplatePreferencePage extends PreferencePage implemen
 		this.fExportButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		// this.fExportButton.setEnabled(false);
 		this.fExportButton.addListener(SWT.Selection, new Listener() {
+			@Override
 			public void handleEvent(final Event e) {
 				export();
 				enableTemplates();
@@ -422,6 +434,7 @@ public class AbstractTableTemplatePreferencePage extends PreferencePage implemen
 		enableTemplates();
 		getControl().addListener(SWT.Traverse, new Listener() {
 
+			@Override
 			public void handleEvent(final Event event) {
 				if (event.detail == SWT.TRAVERSE_ESCAPE) {
 					if (!AbstractTableTemplatePreferencePage.this.exported) {
@@ -759,6 +772,7 @@ public class AbstractTableTemplatePreferencePage extends PreferencePage implemen
 				//processXML("file-templates-config.xml", TEMPLATE_PREFERENCE_NAME.ALL_FILE_TEMPLATES.name(), FILE_TEMPLATES_FOLDER);
 				importXML("file-templates-config.xml", TEMPLATE_PREFERENCE_NAME.ALL_FILE_TEMPLATES.name(), FILE_TEMPLATES_FOLDER);
 				}*/
+			this.allTemplates = this.store.getString(this.allTemplatesPreferenceKey);
 		} catch (final Exception ex) {
 			try {
 				throw new Exception("There was some error in Import templates : " + ex.getMessage());
@@ -820,7 +834,7 @@ public class AbstractTableTemplatePreferencePage extends PreferencePage implemen
 		final GridData gridDataText = new GridData(SWT.FILL, SWT.FILL, true, false);
 		gridDataText.heightHint = 250;
 
-		this.templateBodyMultiText = new TemplateFieldEditor("snippet", EMPTY_STR, parent, "TEMPLATE", FIELDS.TEMPLATE_BODY, SWT.MULTI);
+		this.templateBodyMultiText = new TemplateFieldEditor("preview", EMPTY_STR, parent, "TEMPLATE", FIELDS.TEMPLATE_BODY, SWT.MULTI);
 		this.templateBodyMultiText.setLayout(gridDataText);
 		this.templateBodyMultiText.setText(EMPTY_STR);
 		this.templateBodyMultiText.setEditable(false);
@@ -931,6 +945,7 @@ class TemplateLabelProvider extends LabelProvider implements ITableLabelProvider
 	 * org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang
 	 * .Object, int)
 	 */
+	@Override
 	public Image getColumnImage(final Object element, final int columnIndex) {
 		return null;
 	}
@@ -940,6 +955,7 @@ class TemplateLabelProvider extends LabelProvider implements ITableLabelProvider
 	 * org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang
 	 * .Object, int)
 	 */
+	@Override
 	public String getColumnText(final Object element, final int columnIndex) {
 		final Template data = (Template) element;
 
@@ -953,7 +969,7 @@ class TemplateLabelProvider extends LabelProvider implements ITableLabelProvider
 			return data.getAllowedFileNames();
 
 		default:
-			return EMPTY_STR; //$NON-NLS-1$
+			return EMPTY_STR;
 		}
 	}
 }
@@ -963,6 +979,7 @@ class TemplateContentProvider implements IStructuredContentProvider {
 	/*
 	 * @see IStructuredContentProvider#getElements(Object)
 	 */
+	@Override
 	public Object[] getElements(final Object input) {
 		return ((List<Template>) input).toArray();
 	}
@@ -970,6 +987,7 @@ class TemplateContentProvider implements IStructuredContentProvider {
 	/*
 	 * @see IContentProvider#inputChanged(Viewer, Object, Object)
 	 */
+	@Override
 	public void inputChanged(final Viewer viewer, final Object oldInput, final Object newInput) {
 
 	}
@@ -977,6 +995,7 @@ class TemplateContentProvider implements IStructuredContentProvider {
 	/*
 	 * @see IContentProvider#dispose()
 	 */
+	@Override
 	public void dispose() {
 
 	}

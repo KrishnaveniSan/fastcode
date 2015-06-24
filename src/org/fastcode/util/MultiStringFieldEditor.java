@@ -138,6 +138,7 @@ public class MultiStringFieldEditor extends StringFieldEditor {
 				Assert.isTrue(false, "Unknown validate strategy");//$NON-NLS-1$
 			}
 			this.textField.addDisposeListener(new DisposeListener() {
+				@Override
 				public void widgetDisposed(final DisposeEvent event) {
 					MultiStringFieldEditor.this.textField = null;
 				}

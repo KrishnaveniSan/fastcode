@@ -44,11 +44,13 @@ import static org.fastcode.common.FastCodeConstants.JAVA_TABLE_NAME;
 import static org.fastcode.common.FastCodeConstants.KEYWORD_FROM_FULL_CLASS;
 import static org.fastcode.common.FastCodeConstants.KEYWORD_TO_FULL_CLASS;
 import static org.fastcode.common.FastCodeConstants.NAMED_QUERY_ANNOTATION_STR;
+import static org.fastcode.common.FastCodeConstants.NAMED_QUERY_STR;
 import static org.fastcode.common.FastCodeConstants.NEWLINE;
 import static org.fastcode.common.FastCodeConstants.PACKAGE_NAME_STR;
 import static org.fastcode.common.FastCodeConstants.PLACEHOLDER_ENUM;
 import static org.fastcode.common.FastCodeConstants.PLACEHOLDER_PACKAGE;
 import static org.fastcode.common.FastCodeConstants.PLACEHOLDER_PROJECT;
+import static org.fastcode.common.FastCodeConstants.REPLACE_SELECTED_TEXT;
 import static org.fastcode.common.FastCodeConstants.SCHEMA;
 import static org.fastcode.common.FastCodeConstants.SELECTED_TEXT;
 import static org.fastcode.common.FastCodeConstants.SPACE;
@@ -61,6 +63,7 @@ import static org.fastcode.common.FastCodeConstants.UNDERSCORE;
 import static org.fastcode.common.FastCodeConstants.UNDER_SCORE;
 import static org.fastcode.common.FastCodeConstants._KEYWORD_FROM_TYPE;
 import static org.fastcode.common.FastCodeConstants._KEYWORD_TO_TYPE;
+import static org.fastcode.popup.actions.snippet.TemplateTagsProcessor.actionList;
 import static org.fastcode.preferences.PreferenceConstants.DATABASE_TEMPLATE_SELECT_WITH_JOIN;
 import static org.fastcode.preferences.PreferenceConstants.DATABASE_TEMPLATE_SELECT_WITH_JOIN_AND_MAPPER;
 import static org.fastcode.preferences.PreferenceConstants.P_DATABASE_TEMPLATE_PREFIX;
@@ -107,11 +110,9 @@ import java.util.Map.Entry;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.preferences.InstanceScope;
@@ -147,7 +148,6 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.CheckedTreeSelectionDialog;
@@ -175,6 +175,7 @@ import org.fastcode.common.FastCodeReturn;
 import org.fastcode.common.FastCodeSelectionDialog;
 import org.fastcode.common.FastCodeType;
 import org.fastcode.common.FastCodeTypeSelectionDialog;
+import org.fastcode.common.FastcodeSelectedText;
 import org.fastcode.common.ReturnValuesData;
 import org.fastcode.common.SnippetType;
 import org.fastcode.common.VariableSelectionDialog;
@@ -188,6 +189,10 @@ import org.fastcode.util.FileUtil;
 import org.fastcode.util.MessageUtil;
 import org.fastcode.util.SourceUtil;
 import org.fastcode.util.StringUtil;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 /**
  * @author Gautam
@@ -216,6 +221,7 @@ public abstract class AbstractCreateNewSnippetAction {
 	CreateSnippetData							createSnippetData;
 	protected boolean							fromTemplateSetting	= false;
 	protected boolean							snippetSelection	= false;
+	private final List<FastCodeField>			jsonFieldList		= new ArrayList<FastCodeField>();
 
 	static {
 		final List<String> vals = new ArrayList<String>();
@@ -236,6 +242,7 @@ public abstract class AbstractCreateNewSnippetAction {
 		this.errorMessage = null;
 		final IRunnableWithProgress op = new IRunnableWithProgress() {
 
+			@Override
 			public void run(final IProgressMonitor monitor) {
 				try {
 					monitor.beginTask(action.getDescription(), 1);
@@ -289,7 +296,9 @@ public abstract class AbstractCreateNewSnippetAction {
 
 		this.templateType = this.createSnippetData.getTemplateType();
 
-		this.description = this.templateType == null ? EMPTY_STR : makeWord(this.templateType.startsWith(this.templatePrefix + UNDERSCORE) ? this.templateType.substring(this.templatePrefix.length() + 1) : this.templateType);
+		this.description = this.templateType == null ? EMPTY_STR
+				: makeWord(this.templateType.startsWith(this.templatePrefix + UNDERSCORE) ? this.templateType.substring(this.templatePrefix
+						.length() + 1) : this.templateType);
 
 		final TemplateCache templateCache = TemplateCache.getInstance();
 		ICompilationUnit compilationUnit = null;
@@ -315,9 +324,9 @@ public abstract class AbstractCreateNewSnippetAction {
 			}
 
 			final String[] allowedNames = this.templateSettings.getAllowedFileNames();
-//			compilationUnit = isJavaInArray(JAVA_EXTENSION, allowedNames) ? getCompilationUnitFromEditor() : null;
+			//			compilationUnit = isJavaInArray(JAVA_EXTENSION, allowedNames) ? getCompilationUnitFromEditor() : null;
 			compilationUnit = getCompilationUnitFromEditor();
-			if (compilationUnit == null && isJavaInArray(JAVA_EXTENSION, allowedNames) ) {
+			if (compilationUnit == null && isJavaInArray(JAVA_EXTENSION, allowedNames)) {
 				throw new Exception("Fatal error : not a valid class.");
 			}
 			if (compilationUnit != null) {
@@ -341,9 +350,11 @@ public abstract class AbstractCreateNewSnippetAction {
 
 			final String projectRelativePath = editorFile.getProjectRelativePath().toString();
 			final int segmentCount = editorFile.getProjectRelativePath().segmentCount();
-			final String srcPath = segmentCount == 1 ? EMPTY_STR : projectRelativePath .substring(0, projectRelativePath.indexOf(editorFile.getProjectRelativePath().lastSegment()) - 1);
+			final String srcPath = segmentCount == 1 ? EMPTY_STR : projectRelativePath.substring(0,
+					projectRelativePath.indexOf(editorFile.getProjectRelativePath().lastSegment()) - 1);
 
-			final IFolder folder = isEmpty(srcPath) ? editorFile.getProject().getFolder(editorFile.getProject().getFullPath()) : editorFile.getProject().getFolder(srcPath);
+			final IFolder folder = isEmpty(srcPath) ? editorFile.getProject().getFolder(editorFile.getProject().getFullPath()) : editorFile
+					.getProject().getFolder(srcPath);
 
 			placeHolders.put(ENCLOSING_FOLDER_STR, new FastCodeFolder(folder));
 			placeHolders.put(ENCLOSING_PROJECT_STR, new FastCodeFile(editorFile).getProject());
@@ -368,7 +379,8 @@ public abstract class AbstractCreateNewSnippetAction {
 			}
 			if (!isEmpty(this.createSnippetData.getSelectedText())) {
 				//if (!isEmpty(this.createSnippetData.getSelectedText()) && !this.templateType.equals(TEMPLATE_CREATE_FILE_WITH_SELECTED_CONTENT)) {
-				placeHolders.put(SELECTED_TEXT, this.createSnippetData.getSelectedText().trim());
+				//placeHolders.put(SELECTED_TEXT, this.createSnippetData.getSelectedText().trim());
+				placeHolders.put(SELECTED_TEXT, new FastcodeSelectedText(this.createSnippetData.getSelectedText().trim()));
 			}
 			String tableName = null;
 
@@ -468,6 +480,9 @@ public abstract class AbstractCreateNewSnippetAction {
 						final CreateNewFileSnippetAction createNewFileSnippetAction = new CreateNewFileSnippetAction(
 								this.createSnippetData, placeHolders);
 						createNewFileSnippetAction.runAction();
+					}
+					if (this.templateSettings.getSecondTemplateItem() == SECOND_TEMPLATE.json) {
+						getJsonFileElements(this.templateSettings, placeHolders, this.createSnippetData.getResourceFile());
 					}
 					// loadItemsFromFile(placeHolders, this.templateSettings,
 					// this.createSnippetData.getFastCodeFiles().get(0));
@@ -584,8 +599,16 @@ public abstract class AbstractCreateNewSnippetAction {
 					final String key = entry.getKey();
 					placeHolders.put(key, entry.getValue());
 				}
-			}
 
+			}
+			if (this.templatePrefix.equals(P_DATABASE_TEMPLATE_PREFIX) && this.createSnippetData.getSelectedProject() == null) {
+				this.createSnippetData.setSelectedProject((FastCodeProject) placeHolders.get(PLACEHOLDER_PROJECT));
+			}
+			if (this.templatePrefix.equals(TEMPLATE) && this.createSnippetData.getSelectedProject() == null) {
+				if (this.templateType.endsWith(NAMED_QUERY_STR) || this.templateType.endsWith(NAMED_QUERY_ANNOTATION_STR)) {
+					this.createSnippetData.setSelectedProject((FastCodeProject) placeHolders.get(PLACEHOLDER_PROJECT));
+				}
+			}
 			List<FastCodeMethod> fastCodeMethods = new ArrayList<FastCodeMethod>();
 			if (this.templatePrefix.equals(TEMPLATE) && requireClasses(placeHolders, this.templateSettings)
 					&& requireMethods(placeHolders, this.templateSettings)) {
@@ -695,26 +718,32 @@ public abstract class AbstractCreateNewSnippetAction {
 
 					final ITextSelection highlightSelection = new ITextSelection() {
 
+						@Override
 						public boolean isEmpty() {
 							return false;
 						}
 
+						@Override
 						public String getText() {
 							return null;
 						}
 
+						@Override
 						public int getStartLine() {
 							return selections.getStartLine();
 						}
 
+						@Override
 						public int getOffset() {
 							return selections.getOffset();
 						}
 
+						@Override
 						public int getLength() {
 							return finalSnippet.length();
 						}
 
+						@Override
 						public int getEndLine() {
 							return selections.getEndLine() + finalSnippet.split(NEWLINE).length;
 						}
@@ -723,8 +752,53 @@ public abstract class AbstractCreateNewSnippetAction {
 				}
 			}
 
+			if (!isEmpty(this.createSnippetData.getSelectedText()) && this.createSnippetData.isReplaceSelectedText()) {
+				//placeHolders.put(SELECTED_TEXT, this.createSnippetData.getSelectedText());
+				placeHolders.put(REPLACE_SELECTED_TEXT, this.createSnippetData.isReplaceSelectedText());
+			} else {
+				placeHolders.put(REPLACE_SELECTED_TEXT, false);
+			}
+
 			placeHolders.put(TEMPLATE_TYPE, this.templateType);
 			createSnippet(placeHolders, memberSelection, spacesBeforeCursor);
+
+			if (!isEmpty(this.createSnippetData.getSelectedText()) && this.createSnippetData.isReplaceSelectedText()) {
+				final ITextSelection selections = (ITextSelection) this.editorPart.getEditorSite().getSelectionProvider().getSelection();
+				final ITextEditor editor = (ITextEditor) this.editorPart.getAdapter(ITextEditor.class);
+				final IDocumentProvider documentProvider = editor.getDocumentProvider();
+				final IDocument document = documentProvider.getDocument(editor.getEditorInput());
+
+				/*final String insert_new_line = (String) placeHolders.get(INSERT_NEW_LINE);
+				final String insert_char_at_end = (String) placeHolders.get(INSERT_CHAR_AT_END);*/
+
+				final StringBuffer sb = new StringBuffer();
+				sb.append(this.createSnippetData.getSelectedText());
+
+				/*if (!isEmpty(insert_new_line)) {
+					sb.append(System.getProperty("line.separator"));
+					StringBuffer sb1 = sb.append(insert_new_line.toString());
+					document.replace(selections.getOffset(),
+							selections.getLength(), sb1.toString().trim());
+				}
+
+				if (!isEmpty(insert_char_at_end)) {
+					final StringBuffer sb3 = new StringBuffer();
+					final String[] stringArray = sb.toString().split("\n");
+					for (int x = 0; x < stringArray.length; x++) {
+						String sb1 = stringArray[x];
+						final StringBuffer sb2 = new StringBuffer();
+						sb1 = sb2.append(sb1 + insert_char_at_end.toString())
+								.toString();
+						sb3.append(sb1.toString());
+						sb3.append(System.getProperty("line.separator"));
+					}
+					document.replace(selections.getOffset(),
+							selections.getLength(), sb3.toString().trim());
+				}*/
+			}
+
+
+
 
 			if (!this.useLast) {
 				templateCache.templateType = this.templateType;
@@ -736,6 +810,9 @@ public abstract class AbstractCreateNewSnippetAction {
 			}
 		} catch (final Exception ex) {
 			ex.printStackTrace();
+			if (actionList != null) {
+				actionList.clear();
+			}
 			throw new Exception("There was some problem - " + ex.getMessage());
 		} finally {
 			if (compilationUnit != null) {
@@ -744,9 +821,9 @@ public abstract class AbstractCreateNewSnippetAction {
 			}
 			ResourcesPlugin.getWorkspace().addResourceChangeListener(FastCodeResourceChangeListener.getInstance());
 		}
-		final IProject project = this.createSnippetData.getSelectedProject().getProject();
-		if (project != null) {
-			refreshProject(project.getName());
+		//final IProject project = this.createSnippetData.getSelectedProject().getProject();
+		if (this.createSnippetData.getSelectedProject() != null) {
+			refreshProject(this.createSnippetData.getSelectedProject().getName());
 		}
 	}
 
@@ -894,17 +971,19 @@ public abstract class AbstractCreateNewSnippetAction {
 			fcAdditnlParamList.add(additionalParams);
 		}*/
 		ReturnValuesData returnValuesData = new ReturnValuesData();
-		IJavaProject project;
+		final IJavaProject project;
 		returnValuesData.setEditorPart(this.editorPart);
 		final ICompilationUnit compUnit = getCompilationUnitFromEditor();
-		if (compUnit == null) {
+		/*if (compUnit == null) {
 			final IFile file = (IFile) this.editorPart.getEditorInput().getAdapter(IFile.class);
 			project = JavaCore.create(file.getProject());
 		} else {
 			project = compUnit.getJavaProject();
-		}
+		}*/
 		returnValuesData.setCompUnit(compUnit);
-		returnValuesData.setJavaProject(project);
+		/*project = this.createSnippetData.getSelectedProject() != null ? this.createSnippetData.getSelectedProject().getJavaProject()
+				: getJavaProject(((FastCodeProject) placeHolders.get(ENCLOSING_PROJECT_STR)).getProject());*/
+		returnValuesData.setJavaProject(this.createSnippetData.getSelectedProject().getJavaProject());
 		returnValuesData.setFastCodeAdditionalParams(fcAdditnlParamList.toArray(new FastCodeAdditionalParams[0]));
 
 		if (getLocalVar) {
@@ -1409,6 +1488,7 @@ public abstract class AbstractCreateNewSnippetAction {
 		}
 
 		if (fastCodeFileElements == null) {
+			MessageDialog.openWarning(shell, "Warning", "The file selected is empty . Exiting....");
 			placeHolders.put("_exit", true);
 			return;
 		}
@@ -1831,6 +1911,7 @@ public abstract class AbstractCreateNewSnippetAction {
 		 * .Object)
 		 */
 
+		@Override
 		public Object[] getChildren(final Object input) {
 			return getChildrenForInput(input);
 		}
@@ -1843,6 +1924,7 @@ public abstract class AbstractCreateNewSnippetAction {
 		 * .Object)
 		 */
 
+		@Override
 		public Object getParent(final Object input) {
 			return input instanceof IType ? null : ((FastCodeField) input).getParentField();
 		}
@@ -1855,6 +1937,7 @@ public abstract class AbstractCreateNewSnippetAction {
 		 * .Object)
 		 */
 
+		@Override
 		public boolean hasChildren(final Object input) {
 			return inputHasChildren(input);
 		}
@@ -1900,6 +1983,7 @@ public abstract class AbstractCreateNewSnippetAction {
 		 * java.lang.Object)
 		 */
 
+		@Override
 		public Object[] getElements(final Object input) {
 			return getChildren(input);
 			/*
@@ -1916,6 +2000,7 @@ public abstract class AbstractCreateNewSnippetAction {
 		 * @see org.eclipse.jface.viewers.IContentProvider#dispose()
 		 */
 
+		@Override
 		public void dispose() {
 
 		}
@@ -1928,6 +2013,7 @@ public abstract class AbstractCreateNewSnippetAction {
 		 * .jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 		 */
 
+		@Override
 		public void inputChanged(final Viewer arg0, final Object arg1, final Object arg2) {
 
 		}
@@ -1943,6 +2029,7 @@ public abstract class AbstractCreateNewSnippetAction {
 
 		private Image	image;
 
+		@Override
 		public Image getImage(final Object element) {
 			try {
 				if (element instanceof IType) {
@@ -1956,6 +2043,7 @@ public abstract class AbstractCreateNewSnippetAction {
 			return null;
 		}
 
+		@Override
 		public String getText(final Object input) {
 			if (input instanceof IType) {
 				return ((IType) input).getElementName();
@@ -2066,19 +2154,23 @@ public abstract class AbstractCreateNewSnippetAction {
 			return this.image;
 		}
 
+		@Override
 		public void addListener(final ILabelProviderListener arg0) {
 		}
 
+		@Override
 		public void dispose() {
 			/*if (this.image != null && !this.image.isDisposed()) {
 				this.image.dispose();
 			}*/
 		}
 
+		@Override
 		public boolean isLabelProperty(final Object arg0, final String arg1) {
 			return false;
 		}
 
+		@Override
 		public void removeListener(final ILabelProviderListener arg0) {
 
 		}
@@ -2401,5 +2493,234 @@ public abstract class AbstractCreateNewSnippetAction {
 	private boolean highlightSnippet() {
 		final GlobalSettings globalSettings = GlobalSettings.getInstance();
 		return globalSettings.getPropertyValue("TEMPLATE_HIGHLIGHT_SNIPPET", "true").equalsIgnoreCase("true");
+	}
+
+	/**
+	 * @param templateSettings
+	 * @param placeHolders
+	 * @param resourceFile
+	 * @throws Exception
+	 */
+	private void getJsonFileElements(final TemplateSettings templateSettings, final Map<String, Object> placeHolders,
+			final IFile resourceFile) throws Exception {
+		final JSONParser jsonParser = new JSONParser();
+		final Object object = jsonParser.parse(SourceUtil.getFileContents(resourceFile));
+		//final org.json.simple.JSONObject jsonObject = (org.json.simple.JSONObject) object;
+		parseJson(object, null);
+		final CheckedTreeSelectionDialog checkedTreeSelectionDialog = new CheckedTreeSelectionDialog(new Shell(), new JsonLevelProvider(),
+				new JsonContentProvider());
+
+		checkedTreeSelectionDialog.setTitle("Field Selection");
+		checkedTreeSelectionDialog.setMessage("Select Json fields");
+
+		checkedTreeSelectionDialog.setInput(filterJsonList(this.jsonFieldList));
+		if (checkedTreeSelectionDialog.open() == Window.CANCEL) {
+			this.jsonFieldList.clear();
+			placeHolders.put("_exit", true);
+			return;
+		}
+		placeHolders.put("fields", checkedTreeSelectionDialog.getResult());
+		this.jsonFieldList.clear();
+	}
+
+	/**
+	 * @param jsonFieldList
+	 * @return
+	 */
+	private List<FastCodeField> filterJsonList(final List<FastCodeField> jsonFieldList) {
+		final List<FastCodeField> initialList = new ArrayList<FastCodeField>();
+		for (final FastCodeField fastCodeField : jsonFieldList) {
+			if (fastCodeField.getParentField() == null) {
+				initialList.add(fastCodeField);
+			}
+		}
+		return initialList;
+	}
+
+	/**
+	 * @param jsonObject
+	 * @param parentField
+	 * @throws ParseException
+	 */
+
+	private void parseJson(final Object object, final FastCodeField parentField) throws ParseException {
+		final JSONObject jsonObject = (JSONObject) object;
+		FastCodeField jsonField = null;
+		System.out.println(jsonObject);
+
+		for (final Object objct : jsonObject.keySet()) {
+			try {
+				if (parentField != null) {
+					jsonField = new FastCodeField(objct.toString(), jsonObject.get(objct).toString(), parentField);
+				} else {
+					jsonField = new FastCodeField(objct.toString(), jsonObject.get(objct).toString());
+				}
+				if (this.jsonFieldList == null) {
+					this.jsonFieldList.add(jsonField);
+				} else if (this.jsonFieldList != null && !this.jsonFieldList.contains(jsonField)) {
+					this.jsonFieldList.add(jsonField);
+				}
+				if (jsonObject.get(objct) instanceof JSONArray) {
+					getArray(jsonObject.get(objct), jsonField);
+
+				} else {
+					if (jsonObject.get(objct) instanceof JSONObject) {
+						//parentJson = new FastCodeField(objct.toString(), jsonObject.get(objct).toString());
+						parseJson(jsonObject.get(objct), jsonField);
+					}
+				}
+
+				//this.jsonFieldList.add(jsonField);
+			} catch (final Exception ex) {
+
+			}
+
+			/*final Set<Object> set = jsonObject.keySet();
+
+			final Iterator iterator = set.iterator();
+
+			while (iterator.hasNext()) {
+				final Object obj = iterator.next();
+				if (jsonObject.get(obj) instanceof JSONArray) {
+					System.out.println(obj.toString());
+
+					getArray(jsonObject.get(obj));
+				} else {
+					if (jsonObject.get(obj) instanceof JSONObject) {
+						parseJson((JSONObject) jsonObject.get(obj));
+					} else {
+						System.out.println(obj.toString() + "\t" + jsonObject.get(obj));
+					}
+				}
+			}*/
+		}
+	}
+
+	/**
+	 * @param object
+	 * @param jsonField
+	 * @throws ParseException
+	 */
+	private void getArray(final Object object, final FastCodeField jsonField) {
+		try {
+			final JSONArray jsonArr = (JSONArray) object;
+
+			for (int k = 0; k < jsonArr.size(); k++) {
+				if (jsonArr.get(k) instanceof JSONObject) {
+					parseJson(jsonArr.get(k), jsonField);//getChildrenForJson(jsonArr.get(k));
+				} else {
+					final FastCodeField field = new FastCodeField(jsonArr.toString(), jsonArr.get(k).toString(), jsonField);
+					if (this.jsonFieldList == null) {
+						this.jsonFieldList.add(field);
+					} else if (this.jsonFieldList != null && !this.jsonFieldList.contains(field)) {
+						this.jsonFieldList.add(field);
+					}
+				}
+				//System.out.println(jsonArr.get(k));
+			}
+		} catch (final Exception ex) {
+			// TODO Auto-generated catch block
+			ex.printStackTrace();
+		}
+
+	}
+
+	private class JsonLevelProvider implements ILabelProvider {
+
+		@Override
+		public void addListener(final ILabelProviderListener arg0) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void dispose() {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public boolean isLabelProperty(final Object arg0, final String arg1) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public void removeListener(final ILabelProviderListener arg0) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public Image getImage(final Object arg0) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public String getText(final Object obj) {
+			if (obj instanceof FastCodeField) {
+				return ((FastCodeField) obj).getName();
+			}
+			return null;
+		}
+
+	}
+
+	private class JsonContentProvider implements ITreeContentProvider {
+
+		@Override
+		public void dispose() {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void inputChanged(final Viewer arg0, final Object arg1, final Object arg2) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public Object[] getChildren(final Object input) {
+			final List<FastCodeField> subJsonField = new ArrayList<FastCodeField>();
+			if (input instanceof ArrayList<?>) {
+				return ((ArrayList<FastCodeField>) input).toArray(new FastCodeField[0]);
+
+			}
+			if (input instanceof FastCodeField) {
+				for (final FastCodeField fastCodeField : AbstractCreateNewSnippetAction.this.jsonFieldList) {
+					if (fastCodeField.getParentField() != null && fastCodeField.getParentField().equals(input)) {
+						subJsonField.add(fastCodeField);
+					}
+				}
+
+				return subJsonField.toArray(new FastCodeField[0]);
+			}
+			return null;
+
+		}
+
+		@Override
+		public Object[] getElements(final Object jsonObject) {
+			return getChildren(jsonObject);
+		}
+
+		@Override
+		public Object getParent(final Object obj) {
+			return obj instanceof FastCodeField ? ((FastCodeField) obj).getParentField() : null;
+		}
+
+		@Override
+		public boolean hasChildren(final Object obj) {
+			if (obj instanceof FastCodeField) {
+				if (((FastCodeField) obj).getParentField() == null) {
+					return true;
+				}
+			}
+
+			return false;
+
+		}
 	}
 }

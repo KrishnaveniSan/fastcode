@@ -92,6 +92,7 @@ public abstract class AbstractMethodBuilder implements MethodBuilder {
 	 * @return
 	 * @throws Exception
 	 */
+	@Override
 	public IMethod buildMethod(final IMethod method, final IType toType) throws Exception {
 		return this.buildMethod(method, toType, null, null);
 	}
@@ -103,6 +104,7 @@ public abstract class AbstractMethodBuilder implements MethodBuilder {
 	 * @throws Exception
 	 *
 	 */
+	@Override
 	public IMethod buildMethod(final IMethod method, final IType type, final CreateSimilarDescriptor createSimilarDescriptor,
 			final CreateSimilarDescriptorClass createSimilarDescriptorClass) throws Exception {
 		final IType declaringType = method.getDeclaringType();

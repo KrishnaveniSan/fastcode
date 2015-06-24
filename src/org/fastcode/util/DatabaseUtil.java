@@ -65,18 +65,31 @@ import static org.fastcode.preferences.PreferenceConstants.P_DBCONN_RECORD_DELIM
 import static org.fastcode.util.StringUtil.isEmpty;
 import static org.fastcode.util.StringUtil.reverseCamelCase;
 
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
+import org.fastcode.Activator;
 import org.fastcode.common.DatabaseDetails;
 import org.fastcode.common.FastCodeDataBaseField;
 import org.fastcode.common.FastCodeDataBaseFieldDecorator;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 public class DatabaseUtil {
 
@@ -466,5 +479,73 @@ public class DatabaseUtil {
 			}
 		}
 		return 0;
+	}
+
+	/**
+	 * 
+	 */
+	public static void parseSQLDatatypes() {
+
+		final Map<String, Map<String, ArrayList<SQLDatatypes>>> databaseDataTypesMap = new HashMap<String, Map<String, ArrayList<SQLDatatypes>>>();
+		final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		InputStream inputStream = null;
+		final SQLDatatypesMapping sqldatatypesMapping = SQLDatatypesMapping.getInstance();
+		try {
+			final DocumentBuilder docBuilder = factory.newDocumentBuilder();
+			inputStream = FileLocator.openStream(Activator.getDefault().getBundle(), new Path("resources/sql-datatypes.xml"), false);
+			final Document document = docBuilder.parse(inputStream);
+			final NodeList databaseList = document.getElementsByTagName("database");
+			final int size = databaseList.getLength();
+			for (int i = 0; i < size; i++) {
+				final Node databaseNode = databaseList.item(i);
+				final NamedNodeMap dbattributes = databaseNode.getAttributes();
+				final Node dbAttrNode = dbattributes.getNamedItem("name");
+				final String name = dbAttrNode.getNodeValue();
+
+				final Map<String, ArrayList<SQLDatatypes>> groupDataTypeMap = new HashMap<String, ArrayList<SQLDatatypes>>();
+				Node baseTypeNode = databaseNode.getFirstChild();
+
+				while (baseTypeNode != null) {
+					if (baseTypeNode.getNodeType() == Node.ELEMENT_NODE) {
+						final NamedNodeMap baseTypeAttr = baseTypeNode.getAttributes();
+						final Node groupTypeAttr = baseTypeAttr.getNamedItem("group");
+						final String groupType = groupTypeAttr.getNodeValue();
+
+						final List<SQLDatatypes> dataTypesDetailsList = new ArrayList<SQLDatatypes>();
+
+						Node dataTypeDetails = baseTypeNode.getFirstChild();
+
+						while (dataTypeDetails != null) {
+							if (dataTypeDetails.getNodeType() == Node.ELEMENT_NODE) {
+								final NamedNodeMap attributes = dataTypeDetails.getAttributes();
+								Node type = attributes.getNamedItem("type");
+								Node defaultValue = attributes.getNamedItem("default-value");
+								Node length = attributes.getNamedItem("length");
+								Node precision = attributes.getNamedItem("precision");
+								SQLDatatypes sqlDatatypes = new SQLDatatypes(type.getNodeValue(), defaultValue.getNodeValue(),
+										length.getNodeValue(), precision.getNodeValue());
+
+								dataTypesDetailsList.add(sqlDatatypes);
+								sqldatatypesMapping.getDataTypeNameAndDetailsMap().put(type.getNodeValue(), sqlDatatypes);
+							}
+							dataTypeDetails = dataTypeDetails.getNextSibling();
+						}
+
+						groupDataTypeMap.put(groupType, (ArrayList<SQLDatatypes>) dataTypesDetailsList);
+					}
+					baseTypeNode = baseTypeNode.getNextSibling();
+				}
+				databaseDataTypesMap.put(name, groupDataTypeMap);
+			}
+
+		} catch (final Exception ex) {
+			ex.printStackTrace();
+
+		} finally {
+
+			sqldatatypesMapping.setDatabaseDataTypeMap(databaseDataTypesMap);
+			FastCodeUtil.closeInputStream(inputStream);
+		}
+
 	}
 }

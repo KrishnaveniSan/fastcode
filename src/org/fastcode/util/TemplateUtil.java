@@ -661,10 +661,16 @@ public class TemplateUtil {
 
 		// final IFile templatefile = findFileFromPath("/" + PROJECT_NAME +
 		// "/resources/" + fileName);
-
+		//IFolder folder = null;
+		//if (create) {
 		final IFolder folder = getFolderFromPath(project, "resources" + FORWARD_SLASH + folderName);
+		if (folder != null && folder.exists()) {
+			return (IFile) (folder.getFile(fileName) != null ? folder.getFile(fileName) : create ? new File(fileName) : null);
+		}
+		//}
 
-		return (IFile) (folder.getFile(fileName) != null ? folder.getFile(fileName) : create ? new File(fileName) : null);
+		return null;
+		//return (IFile) (folder.getFile(fileName) != null ? folder.getFile(fileName) : create ? new File(fileName) : null);
 	}
 
 	/**
@@ -922,6 +928,7 @@ public class TemplateUtil {
 		/**
 		 *
 		 */
+		@Override
 		public InputSource resolveEntity(final String publicID, final String systemID) throws SAXException, IOException {
 			//			if (systemID.equals("")) {
 			final InputSource inputSource = new InputSource(this.inputStream);

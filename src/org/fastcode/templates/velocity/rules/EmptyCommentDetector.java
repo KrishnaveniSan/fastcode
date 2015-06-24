@@ -10,6 +10,7 @@ class EmptyCommentDetector implements IWordDetector {
 	/*
 	 * @see IWordDetector#isWordStart
 	 */
+	@Override
 	public boolean isWordStart(final char c) {
 		return c == '#';
 	}
@@ -17,6 +18,7 @@ class EmptyCommentDetector implements IWordDetector {
 	/*
 	 * @see IWordDetector#isWordPart
 	 */
+	@Override
 	public boolean isWordPart(final char c) {
 		return c == '*' || c == '#';
 	}

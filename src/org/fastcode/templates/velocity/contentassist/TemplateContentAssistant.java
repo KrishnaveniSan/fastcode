@@ -52,13 +52,25 @@ public class TemplateContentAssistant extends AbstractTemplateContentAssistant {
 	@Override
 	public List<ICompletionProposal> getCompletionProposals(final IDocument document, final int offset, final int length, final String spaceToPad) {
 		try {
+			final String templateBody = document.get(0, document.getLength());
 			final String element = getElement(document, offset, length);
 			if (element != null) {
-				/*System.out.println(document.getLength() + " -- " + offset);
-				final String text = document.get(0, offset == document.getLength() -1 ? offset : document.getLength()); //offset); //document.getLength());
+				System.out.println(document.getLength() + " -- " + offset);
+				/*final String text = document.get(0, offset == document.getLength() -1 ? offset : document.getLength()); //offset); //document.getLength());
 				System.out.println(text);*/
+				System.out.println("if--" + document.getLineOfOffset(document.getLength()));
+				//System.out.println("else--" + document.getLineOfOffset(offset + 1));
+
+				/*the below code is used to get the current line number of the cursor
+				 * document.getLineOfOffset -- starts from 0, so adding 1 after all calculation
+				 * offset is the number of chars before the $ sign, excluding $
+				 * control comes here as soon as we type $, so cursor will be in front of dollar
+				 */
+				final int currLine = offset + 1 == document.getLength() ? document.getLineOfOffset(document.getLength()) + 1 : document.getLineOfOffset(offset + 1) + 1;
+				System.out.println("currentline--" + currLine);
+				final boolean atEOF = offset + 1 == document.getLength(); //this is needed so that velocity engine does not error out, when we are parsing template body, while coding the template
 				return TemplateManager.getCompletionProposals(element, offset, length, this.templateItemsMap, this.propertiesOnly,
-						this.firstTemplateItem); //, text
+						this.firstTemplateItem, templateBody, currLine, atEOF); //, text
 			}
 		} catch (final Exception e) {/* ignore */
 			e.printStackTrace();

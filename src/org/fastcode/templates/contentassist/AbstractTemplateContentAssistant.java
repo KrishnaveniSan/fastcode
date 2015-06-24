@@ -26,12 +26,15 @@ public abstract class AbstractTemplateContentAssistant implements ITemplateConte
 		this.activationCharacters = activationCharacters;
 	}
 
+	@Override
 	public abstract List<ICompletionProposal> getCompletionProposals(IDocument document, int offset, int length, String  spaceToPad);
 
+	@Override
 	public char[] getActivationCharacters() {
 		return this.activationCharacters;
 	}
 
+	@Override
 	public int getStartPosition(final IDocument document, final IRegion region, final int offset) throws BadLocationException {
 		if (offset <= region.getOffset() || offset > region.getOffset() + region.getLength()) {
 			return -1;

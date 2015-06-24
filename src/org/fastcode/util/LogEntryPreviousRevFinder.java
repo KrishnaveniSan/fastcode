@@ -21,6 +21,7 @@ public class LogEntryPreviousRevFinder implements ISVNLogEntryHandler {
 		this.isSuccess = false;
 	}
 
+	@Override
 	public void handleLogEntry(final SVNLogEntry logEntry) throws SVNException {
 		if (this.isSuccess) {
 			return;

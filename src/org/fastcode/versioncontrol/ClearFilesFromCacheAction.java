@@ -13,16 +13,19 @@ import org.fastcode.preferences.VersionControlPreferences;
 
 public class ClearFilesFromCacheAction implements IEditorActionDelegate, IActionDelegate, IWorkbenchWindowActionDelegate {
 
+	@Override
 	public void dispose() {
 		// TODO Auto-generated method stub
 
 	}
 
+	@Override
 	public void init(final IWorkbenchWindow arg0) {
 		// TODO Auto-generated method stub
 
 	}
 
+	@Override
 	public void run(final IAction arg0) {
 		final FastCodeCheckinCache checkinCache = FastCodeCheckinCache.getInstance();
 		final VersionControlPreferences versionControlPreferences = VersionControlPreferences.getInstance();
@@ -36,11 +39,13 @@ public class ClearFilesFromCacheAction implements IEditorActionDelegate, IAction
 
 	}
 
+	@Override
 	public void selectionChanged(final IAction arg0, final ISelection arg1) {
 		// TODO Auto-generated method stub
 
 	}
 
+	@Override
 	public void setActiveEditor(final IAction arg0, final IEditorPart arg1) {
 		// TODO Auto-generated method stub
 

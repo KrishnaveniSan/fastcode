@@ -17,8 +17,8 @@ public class CreateSimilarPreferencesPage extends FieldEditorPreferencePage impl
 	public CreateSimilarPreferencesPage() {
 		super(GRID);
 		final IPreferenceStore store = new ScopedPreferenceStore(new InstanceScope(), FAST_CODE_PLUGIN_ID);
-		this.setPreferenceStore(store);
-		this.setDescription("Fast Code Create Similar Preference Page");
+		setPreferenceStore(store);
+		setDescription("Fast Code Create Similar Preference Page");
 	}
 
 	/*
@@ -38,6 +38,7 @@ public class CreateSimilarPreferencesPage extends FieldEditorPreferencePage impl
 	 * @see
 	 * org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
 	 */
+	@Override
 	public void init(final IWorkbench arg0) {
 		// TODO Auto-generated method stub
 

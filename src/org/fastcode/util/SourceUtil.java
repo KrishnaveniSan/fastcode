@@ -125,6 +125,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringBufferInputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -190,11 +192,13 @@ import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.ui.IEditorDescriptor;
@@ -452,7 +456,7 @@ public class SourceUtil {
 
 		// First try to find from the projects directly
 		for (final IJavaProject project : projects) {
-			if (project == null || !project.exists()) {
+			if (project == null || !project.exists() || !project.isOpen()) {
 				continue;
 			}
 			final IType type = project.findType(paramType);
@@ -992,7 +996,8 @@ public class SourceUtil {
 		if (parent instanceof IFolder && !parent.exists()) {
 			createFolder(parent.getFullPath());
 		}
-		folder.create(true, true, null);
+		refreshProject(PROJECT_NAME);
+		folder.create(true, true, new NullProgressMonitor());
 		return folder;
 	}
 
@@ -3996,8 +4001,8 @@ public class SourceUtil {
 	 * @return
 	 * @throws Exception
 	 */
-	public static ICompilationUnit createClass(final String snippet, final IPackageFragment packageFragment, final IJavaProject project, final String clasName)
-			throws Exception {
+	public static ICompilationUnit createClass(final String snippet, final IPackageFragment packageFragment, final IJavaProject project,
+			final String clasName) throws Exception {
 		ICompilationUnit compilationUnitNew = null;
 		String finalSnippet = snippet;
 
@@ -4140,6 +4145,9 @@ public class SourceUtil {
 		final String primElemt = pkgFrgmnt.getPrimaryElement().getElementName();
 		final String alteredPkgFullNme = fullPkgName.replaceAll(FORWARD_SLASH, DOT);
 		final String proj = pkgFrgmnt.getJavaProject().getElementName();
+		if (isEmpty(primElemt)) {
+			return LEFT_PAREN + proj + RIGHT_PAREN;
+		}
 		String srcPath = alteredPkgFullNme.substring(proj.length() + 2, alteredPkgFullNme.indexOf(primElemt) - 1);
 		srcPath = srcPath.replace(DOT, FORWARD_SLASH);
 		return pkgFrgmnt.getPrimaryElement().getElementName() + SPACE + LEFT_PAREN + proj + HYPHEN + srcPath + RIGHT_PAREN;
@@ -4704,7 +4712,6 @@ public class SourceUtil {
 				classBody = replacePlaceHolderWithBlank(classBody, null, CLASS_MODIFIER_STR, makePlaceHolder(CLASS_TYPE_STR));
 			}
 			placeHolders.put(PACKAGE_NAME_STR, packageFragment.getElementName());
-
 			placeHolders.put(CLASS_NAME_STR, clasName);
 			getGlobalSettings(placeHolders);
 
@@ -4751,4 +4758,76 @@ public class SourceUtil {
 			fastCodeCache.getEntityImageMap().put(elementName, elementImage);
 		}
 	}
+
+	/**
+	 * Gets the image.
+	 *
+	 * @param imageName
+	 *            the image name
+	 * @return the image
+	 */
+	public static Image getImage(String imageName) {
+		Image image;
+		URL url = null;
+		if (imageName == null) {
+			return null;
+		}
+		image = PlatformUI.getWorkbench().getSharedImages().getImage(imageName);
+		if (image != null && !image.isDisposed()) {
+			// this.image = null;
+			return image;
+		}
+		try {
+			if (imageName.startsWith("org.eclipse.jdt.ui.")) {
+				imageName = imageName.substring("org.eclipse.jdt.ui.".length());
+			}
+			url = new URL(Activator.getDefault().getDescriptor().getInstallURL(), "icons/" + imageName);
+		} catch (final MalformedURLException ex) {
+			ex.printStackTrace();
+			return null;
+		}
+		final ImageDescriptor descriptor = ImageDescriptor.createFromURL(url);
+		image = descriptor.createImage();
+		return image;
+	}
+
+	public static void checkForJavaProjectInWorkspace() {
+
+		// Warning msg to check if the JavaProject is there in workspace.
+					int i=0;
+					final IProject[] projectArr = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+					if (projectArr ==null || projectArr.length ==0 ){
+						Display.getDefault().syncExec(new Runnable() {
+							@Override
+							public void run() {
+						MessageDialog.openWarning(new Shell(), "Warning", "To use fastcode plugin, there should be atleast one java project in workspace");
+							}
+							});
+						return;
+						}
+
+
+					for (final IProject project : projectArr) {
+
+						final IJavaProject javaProject = JavaCore.create(project);
+						if (javaProject != null){
+							i=1;
+							break;
+						}
+						else if (javaProject == null || !javaProject.exists()) {
+							i=2;
+							return;
+						}
+					}
+					if(i==2){
+					Display.getDefault().syncExec(new Runnable() {
+						@Override
+						public void run() {
+					MessageDialog.openWarning(new Shell(), "Warning", "To use fastcode plugin, there should be atleast one java project in workspace");
+						}
+					});
+					return;
+					}
+	}
+
 }

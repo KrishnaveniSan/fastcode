@@ -61,6 +61,7 @@ public class DepencyInjectAction implements IObjectActionDelegate {
 	/**
 	 * @see IObjectActionDelegate#setActivePart(IAction, IWorkbenchPart)
 	 */
+	@Override
 	public void setActivePart(final IAction action, final IWorkbenchPart targetPart) {
 		this.page = targetPart.getSite().getPage();
 	}
@@ -68,6 +69,7 @@ public class DepencyInjectAction implements IObjectActionDelegate {
 	/**
 	 * @see IActionDelegate#run(IAction)
 	 */
+	@Override
 	public void run(final IAction action) {
 		String errorMessage = EMPTY_STR;
 		final IWorkingCopyManager manager = JavaUI.getWorkingCopyManager();
@@ -168,6 +170,7 @@ public class DepencyInjectAction implements IObjectActionDelegate {
 	/**
 	 * @see IActionDelegate#selectionChanged(IAction, ISelection)
 	 */
+	@Override
 	public void selectionChanged(final IAction action, final ISelection selection) {
 		this.selection = (StructuredSelection) selection;
 	}

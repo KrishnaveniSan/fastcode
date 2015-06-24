@@ -10,7 +10,7 @@ package org.fastcode.util;
 * Java(TM) 2 Runtime Environment, Standard Edition (build 1.3.1_01).
 * Check your version from command line.. java -showversion
 * API's: Requires java.io, java.util, java.lang, java.sql
-* Vesrion: $Id: TNSParser.java,v 1.5 2014/07/15 01:07:37 gdind2003 Exp $
+* Vesrion: $Id: TNSParse.java, Version 1.2, 04/05/2002, Rauf Sarwar Exp $
 * Bugs: Bug fixes, suggestions and/or comments should be sent to:
 * Rauf.Sarwar@ifsna.com
 * Usage: Freeware. Modify/Distribute as you wish.
@@ -94,7 +94,7 @@ public class TNSParser {
 	/*
 	* File Version
 
-	private final String version = "$Id: TNSParser.java,v 1.5 2014/07/15 01:07:37 gdind2003 Exp $";*/
+	private final String version = "$Id: TNSParse.java, Version 1.2, 04/05/2002, Rauf Sarwar Exp $";*/
 	/*
 	* java.sql Connection interface
 	*/

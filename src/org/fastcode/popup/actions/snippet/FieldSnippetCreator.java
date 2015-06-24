@@ -21,6 +21,7 @@ public class FieldSnippetCreator implements SnippetCreator {
 	 * @param spacesBeforeCursor
 	 *
 	 */
+	@Override
 	public Object createSnippet(final IEditorPart editorPart, final String template, final Map<String, Object> placeHolders,
 			final Map<String, Object> memberSelection, final String spacesBeforeCursor) throws Exception {
 		return null;

@@ -8,6 +8,7 @@ import org.eclipse.jface.text.ITextHover;
 import org.fastcode.templates.contentassist.AutoCloseStrategy;
 import org.fastcode.templates.contentassist.ITemplateContentAssistant;
 import org.fastcode.templates.contentassist.ParameterContentAssist;
+/*import org.fastcode.templates.velocity.contentassist.DirectiveAndCommentStartStrategy;*/
 import org.fastcode.templates.velocity.contentassist.TemplateTextHover;
 
 public class ParameterRulesContext {
@@ -27,7 +28,8 @@ public class ParameterRulesContext {
 	}
 
 	public IAutoEditStrategy[] getTemplateAutoEditStrategies() {
-		final IAutoEditStrategy[] autoEditStrategies = { new DefaultIndentLineAutoEditStrategy(), new AutoCloseStrategy() };
+		final IAutoEditStrategy[] autoEditStrategies = { new DefaultIndentLineAutoEditStrategy(), /*new DirectiveAndCommentStartStrategy(),*/
+				new AutoCloseStrategy() };
 		return autoEditStrategies;
 	}
 

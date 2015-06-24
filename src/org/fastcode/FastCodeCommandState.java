@@ -11,11 +11,13 @@ public class FastCodeCommandState extends AbstractSourceProvider {
 	public final static String	DISENABLED	= "DISENABLED";
 	private final boolean				enabled		= true;
 
+	@Override
 	public void dispose() {
 		// TODO Auto-generated method stub
 
 	}
 
+	@Override
 	public Map getCurrentState() {
 		final Map map = new HashMap(1);
 	    final String value = this.enabled ? ENABLED : DISENABLED;
@@ -23,6 +25,7 @@ public class FastCodeCommandState extends AbstractSourceProvider {
 	    return map;
 	}
 
+	@Override
 	public String[] getProvidedSourceNames() {
 		return new String[] { MY_STATE };
 	}

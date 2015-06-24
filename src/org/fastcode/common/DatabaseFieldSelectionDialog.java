@@ -44,12 +44,14 @@ public class DatabaseFieldSelectionDialog extends FastCodeSelectionDialog {
 
 		selectAllButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 
 				DatabaseFieldSelectionDialog.this.setSelection(DatabaseFieldSelectionDialog.this.columns.toArray(new String[0]));
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 

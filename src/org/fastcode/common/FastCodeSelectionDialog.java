@@ -20,6 +20,7 @@ import static org.fastcode.common.FastCodeConstants.COMMA;
 import static org.fastcode.common.FastCodeConstants.DOT;
 import static org.fastcode.common.FastCodeConstants.DOT_CHAR;
 import static org.fastcode.common.FastCodeConstants.EMPTY_STR;
+import static org.fastcode.common.FastCodeConstants.ENUM;
 import static org.fastcode.common.FastCodeConstants.EQUAL;
 import static org.fastcode.common.FastCodeConstants.EQUAL_WITH_SPACE;
 import static org.fastcode.common.FastCodeConstants.LEFT_PAREN;
@@ -183,6 +184,7 @@ public abstract class FastCodeSelectionDialog extends ElementListSelectionDialog
 		 *            the element
 		 * @return the image
 		 */
+		@Override
 		public Image getImage(final Object element) {
 			try {
 				final GlobalSettings globalSettings = GlobalSettings.getInstance();
@@ -197,7 +199,7 @@ public abstract class FastCodeSelectionDialog extends ElementListSelectionDialog
 				} else if (this.type == PACKAGE_FRAGMENT) {
 					return getImageForPackage((IPackageFragment) element);
 				} else if (this.type == JAVA_PROJECT) {
-					if (fastCodeCache.getEntityImageMap().containsKey(PLACEHOLDER_JAVA_PROJECT)) {
+					if (this.fastCodeCache.getEntityImageMap().containsKey(PLACEHOLDER_JAVA_PROJECT)) {
 						return getImagefromFCCacheMap(PLACEHOLDER_JAVA_PROJECT);
 					}
 					image = globalSettings.getPropertyValue(PLACEHOLDER_JAVA_PROJECT.toUpperCase() + UNDERSCORE + "IMAGE", EMPTY_STR);
@@ -207,7 +209,7 @@ public abstract class FastCodeSelectionDialog extends ElementListSelectionDialog
 				} else if (element instanceof FastCodeType) {
 					return getImageForFCType((FastCodeType) element);
 				} else if (element instanceof File) {
-					if (fastCodeCache.getEntityImageMap().containsKey(PLACEHOLDER_FILE)) {
+					if (this.fastCodeCache.getEntityImageMap().containsKey(PLACEHOLDER_FILE)) {
 						return getImagefromFCCacheMap(PLACEHOLDER_FILE);
 					}
 					image = globalSettings.getPropertyValue(PLACEHOLDER_FILE.toUpperCase() + UNDERSCORE + "IMAGE", EMPTY_STR);
@@ -229,20 +231,31 @@ public abstract class FastCodeSelectionDialog extends ElementListSelectionDialog
 		 * @param element
 		 * @return
 		 */
-		private Image getImageForPackage(IPackageFragment element) {
+		private Image getImageForPackage(final IPackageFragment element) {
 			final GlobalSettings globalSettings = GlobalSettings.getInstance();
 			String imageName = null;
 			Image image = null;
-			/*if(element.){
-				//for empty package
-			}else{*/
-			if (fastCodeCache.getEntityImageMap().containsKey(PLACEHOLDER_PACKAGE)) {
-				return getImagefromFCCacheMap(PLACEHOLDER_PACKAGE);
+			try {
+				if (element.getClassFiles() == null) {
+					if (this.fastCodeCache.getEntityImageMap().containsKey("empty" + PLACEHOLDER_PACKAGE)) {
+						return getImagefromFCCacheMap("empty" + PLACEHOLDER_PACKAGE);
+					}
+					imageName = globalSettings.getPropertyValue("EMPTY" + PLACEHOLDER_PACKAGE.toUpperCase() + UNDERSCORE + "IMAGE",
+							EMPTY_STR);
+					image = getImage(imageName);
+					populateFCCacheEntityImageMap("empty" + PLACEHOLDER_PACKAGE, image);
+
+				} else {
+					if (this.fastCodeCache.getEntityImageMap().containsKey(PLACEHOLDER_PACKAGE)) {
+						return getImagefromFCCacheMap(PLACEHOLDER_PACKAGE);
+					}
+					imageName = globalSettings.getPropertyValue(PLACEHOLDER_PACKAGE.toUpperCase() + UNDERSCORE + "IMAGE", EMPTY_STR);
+					image = getImage(imageName);
+					populateFCCacheEntityImageMap(PLACEHOLDER_PACKAGE, image);
+				}
+			} catch (final JavaModelException ex) {
+				ex.printStackTrace();
 			}
-			imageName = globalSettings.getPropertyValue(PLACEHOLDER_PACKAGE.toUpperCase() + UNDERSCORE + "IMAGE", EMPTY_STR);
-			image = getImage(imageName);
-			populateFCCacheEntityImageMap(PLACEHOLDER_PACKAGE, image);
-			//}
 
 			return image;
 		}
@@ -256,14 +269,14 @@ public abstract class FastCodeSelectionDialog extends ElementListSelectionDialog
 			String imageName;
 			Image image = null;
 			if (element.getFile().isDirectory()) {
-				if (fastCodeCache.getEntityImageMap().containsKey(PLACEHOLDER_FOLDER)) {
+				if (this.fastCodeCache.getEntityImageMap().containsKey(PLACEHOLDER_FOLDER)) {
 					return getImagefromFCCacheMap(PLACEHOLDER_FOLDER);
 				}
 				imageName = globalSettings.getPropertyValue(PLACEHOLDER_FOLDER.toUpperCase() + UNDERSCORE + "IMAGE", EMPTY_STR);
 				image = getImage(imageName);
 				populateFCCacheEntityImageMap(PLACEHOLDER_FOLDER, image);
 			} else {
-				if (fastCodeCache.getEntityImageMap().containsKey(PLACEHOLDER_FILE)) {
+				if (this.fastCodeCache.getEntityImageMap().containsKey(PLACEHOLDER_FILE)) {
 					return getImagefromFCCacheMap(PLACEHOLDER_FILE);
 				}
 				imageName = globalSettings.getPropertyValue(PLACEHOLDER_FILE.toUpperCase() + UNDERSCORE + "IMAGE", EMPTY_STR);
@@ -283,35 +296,35 @@ public abstract class FastCodeSelectionDialog extends ElementListSelectionDialog
 			final GlobalSettings globalSettings = GlobalSettings.getInstance();
 			Image image = null;
 			if (isPrivate(element.getField().getFlags())) {
-				if (fastCodeCache.getEntityImageMap().containsKey("field_private")) {
+				if (this.fastCodeCache.getEntityImageMap().containsKey("field_private")) {
 					return getImagefromFCCacheMap("field_private");
 				}
 				imageName = ISharedImages.IMG_FIELD_PRIVATE;
 				image = getImage(imageName);//"int_obj.gif";
 				populateFCCacheEntityImageMap("field_private", image);
 			} else if (isProtected(element.getField().getFlags())) {
-				if (fastCodeCache.getEntityImageMap().containsKey("field_protected")) {
+				if (this.fastCodeCache.getEntityImageMap().containsKey("field_protected")) {
 					return getImagefromFCCacheMap("field_protected");
 				}
 				imageName = ISharedImages.IMG_FIELD_PROTECTED;
 				image = getImage(imageName);//"int_obj.gif";
 				populateFCCacheEntityImageMap("field_protected", image);
 			} else if (isPublic(element.getField().getFlags())) {
-				if (fastCodeCache.getEntityImageMap().containsKey("field_public")) {
+				if (this.fastCodeCache.getEntityImageMap().containsKey("field_public")) {
 					return getImagefromFCCacheMap("field_public");
 				}
 				imageName = ISharedImages.IMG_FIELD_PUBLIC;
 				image = getImage(imageName);//"int_obj.gif";
 				populateFCCacheEntityImageMap("field_public", image);
 			} else if (element.getField().isEnumConstant()) {
-				if (fastCodeCache.getEntityImageMap().containsKey("field_enum")) {
+				if (this.fastCodeCache.getEntityImageMap().containsKey("field_enum")) {
 					return getImagefromFCCacheMap("field_enum");
 				}
 				imageName = globalSettings.getPropertyValue(PLACEHOLDER_ENUM.toUpperCase() + UNDERSCORE + "IMAGE", EMPTY_STR);
 				image = getImage(imageName);//"int_obj.gif";
 				populateFCCacheEntityImageMap("field_enum", image);
 			} else {
-				if (fastCodeCache.getEntityImageMap().containsKey("field")) {
+				if (this.fastCodeCache.getEntityImageMap().containsKey("field")) {
 					return getImagefromFCCacheMap("field");
 				}
 				imageName = ISharedImages.IMG_FIELD_DEFAULT;
@@ -335,7 +348,7 @@ public abstract class FastCodeSelectionDialog extends ElementListSelectionDialog
 			final GlobalSettings globalSettings = GlobalSettings.getInstance();
 			Image image = null;
 			if (type.isInterface()) {
-				if (fastCodeCache.getEntityImageMap().containsKey(PLACEHOLDER_INTERFACE)) {
+				if (this.fastCodeCache.getEntityImageMap().containsKey(PLACEHOLDER_INTERFACE)) {
 					return getImagefromFCCacheMap(PLACEHOLDER_INTERFACE);
 				}
 				imageName = globalSettings.getPropertyValue(PLACEHOLDER_INTERFACE.toUpperCase() + UNDERSCORE + "IMAGE", EMPTY_STR);
@@ -343,7 +356,7 @@ public abstract class FastCodeSelectionDialog extends ElementListSelectionDialog
 				populateFCCacheEntityImageMap(PLACEHOLDER_INTERFACE, image);
 
 			} else if (type.isClass()) {
-				if (fastCodeCache.getEntityImageMap().containsKey(PLACEHOLDER_CLASS)) {
+				if (this.fastCodeCache.getEntityImageMap().containsKey(PLACEHOLDER_CLASS)) {
 					return getImagefromFCCacheMap(PLACEHOLDER_CLASS);
 				}
 				imageName = globalSettings.getPropertyValue(PLACEHOLDER_CLASS.toUpperCase() + UNDERSCORE + "IMAGE", EMPTY_STR);
@@ -366,20 +379,27 @@ public abstract class FastCodeSelectionDialog extends ElementListSelectionDialog
 			String imageName = null;
 			final GlobalSettings globalSettings = GlobalSettings.getInstance();
 			Image image = null;
-			if (type.getiType().isInterface()) {
-				if (fastCodeCache.getEntityImageMap().containsKey(PLACEHOLDER_INTERFACE)) {
+			if (type.isInterface()) {
+				if (this.fastCodeCache.getEntityImageMap().containsKey(PLACEHOLDER_INTERFACE)) {
 					return getImagefromFCCacheMap(PLACEHOLDER_INTERFACE);
 				}
 				imageName = globalSettings.getPropertyValue(PLACEHOLDER_INTERFACE.toUpperCase() + UNDERSCORE + "IMAGE", EMPTY_STR);
 				image = getImage(imageName);//"int_obj.gif";
 				populateFCCacheEntityImageMap(PLACEHOLDER_INTERFACE, image);
-			} else if (type.getiType().isClass()) {
-				if (fastCodeCache.getEntityImageMap().containsKey(PLACEHOLDER_CLASS)) {
+			} else if (type.isClass()) {
+				if (this.fastCodeCache.getEntityImageMap().containsKey(PLACEHOLDER_CLASS)) {
 					return getImagefromFCCacheMap(PLACEHOLDER_CLASS);
 				}
 				imageName = globalSettings.getPropertyValue(PLACEHOLDER_CLASS.toUpperCase() + UNDERSCORE + "IMAGE", EMPTY_STR);
 				image = getImage(imageName);//"classs_obj.gif";
 				populateFCCacheEntityImageMap(PLACEHOLDER_CLASS, image);
+			} else if (type.isEnum()) {
+				if (this.fastCodeCache.getEntityImageMap().containsKey(ENUM)) {
+					return getImagefromFCCacheMap(ENUM);
+				}
+				imageName = globalSettings.getPropertyValue(ENUM.toUpperCase() + UNDERSCORE + "IMAGE", EMPTY_STR);
+				image = getImage(imageName);//"classs_obj.gif";
+				populateFCCacheEntityImageMap("enum", image);
 			}
 			return image;
 		}
@@ -422,14 +442,14 @@ public abstract class FastCodeSelectionDialog extends ElementListSelectionDialog
 			Image image = null;
 			if (isJunitTest(method.getDeclaringType())) {
 				if (isNegativeJunit(method)) {
-					if (fastCodeCache.getEntityImageMap().containsKey("method_negative_junit")) {
+					if (this.fastCodeCache.getEntityImageMap().containsKey("method_negative_junit")) {
 						return getImagefromFCCacheMap("method_negative_junit");
 					}
 					imageName = "junit-negative-small.gif";
 					image = getImage(imageName);
 					populateFCCacheEntityImageMap("method_negative_junit", image);
 				} else {
-					if (fastCodeCache.getEntityImageMap().containsKey("method_positive_junit")) {
+					if (this.fastCodeCache.getEntityImageMap().containsKey("method_positive_junit")) {
 						return getImagefromFCCacheMap("method_positive_junit");
 					}
 					imageName = "junit-positive-small.gif";
@@ -438,21 +458,21 @@ public abstract class FastCodeSelectionDialog extends ElementListSelectionDialog
 				}
 			} else {
 				if (isPrivate(method.getFlags())) {
-					if (fastCodeCache.getEntityImageMap().containsKey("method_private")) {
+					if (this.fastCodeCache.getEntityImageMap().containsKey("method_private")) {
 						return getImagefromFCCacheMap("method_private");
 					}
 					imageName = globalSettings.getPropertyValue(METHOD_PRIVATE.toUpperCase() + UNDERSCORE + "IMAGE", EMPTY_STR);
 					image = getImage(imageName);
 					populateFCCacheEntityImageMap("method_private", image);
 				} else if (isProtected(method.getFlags())) {
-					if (fastCodeCache.getEntityImageMap().containsKey("method_protected")) {
+					if (this.fastCodeCache.getEntityImageMap().containsKey("method_protected")) {
 						return getImagefromFCCacheMap("method_protected");
 					}
 					imageName = globalSettings.getPropertyValue(METHOD_PROTECTED.toUpperCase() + UNDERSCORE + "IMAGE", EMPTY_STR);
 					image = getImage(imageName);
 					populateFCCacheEntityImageMap("method_protected", image);
 				} else if (isPublic(method.getFlags())) {
-					if (fastCodeCache.getEntityImageMap().containsKey("method_public")) {
+					if (this.fastCodeCache.getEntityImageMap().containsKey("method_public")) {
 						return getImagefromFCCacheMap("method_public");
 					}
 					imageName = globalSettings.getPropertyValue(METHOD_PUBLIC.toUpperCase() + UNDERSCORE + "IMAGE", EMPTY_STR);
@@ -501,6 +521,7 @@ public abstract class FastCodeSelectionDialog extends ElementListSelectionDialog
 		 *            the element
 		 * @return the text
 		 */
+		@Override
 		public String getText(final Object element) {
 			try {
 				if (this.type == METHOD) {
@@ -746,6 +767,7 @@ public abstract class FastCodeSelectionDialog extends ElementListSelectionDialog
 		 *
 		 * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
 		 */
+		@Override
 		public void dispose() {
 			/*	if (this.image != null && !this.image.isDisposed()) {
 					this.image.dispose();
@@ -759,6 +781,7 @@ public abstract class FastCodeSelectionDialog extends ElementListSelectionDialog
 		 * org.eclipse.jface.viewers.IBaseLabelProvider#addListener(org.eclipse
 		 * .jface.viewers.ILabelProviderListener)
 		 */
+		@Override
 		public void addListener(final ILabelProviderListener listener) {
 
 		}
@@ -770,6 +793,7 @@ public abstract class FastCodeSelectionDialog extends ElementListSelectionDialog
 		 * org.eclipse.jface.viewers.IBaseLabelProvider#isLabelProperty(java
 		 * .lang.Object, java.lang.String)
 		 */
+		@Override
 		public boolean isLabelProperty(final Object element, final String property) {
 			if (element instanceof IMethod) {
 				return property.equals("elementName");
@@ -784,6 +808,7 @@ public abstract class FastCodeSelectionDialog extends ElementListSelectionDialog
 		 * org.eclipse.jface.viewers.IBaseLabelProvider#removeListener(org.eclipse
 		 * .jface.viewers.ILabelProviderListener)
 		 */
+		@Override
 		public void removeListener(final ILabelProviderListener listener) {
 		}
 

@@ -30,6 +30,7 @@ public class AddClassToCacheAction implements IEditorActionDelegate, IActionDele
 	 *
 	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
 	 */
+	@Override
 	public void run(final IAction action) {
 		final IWorkingCopyManager manager = JavaUI.getWorkingCopyManager();
 		if (manager == null) {
@@ -71,21 +72,25 @@ public class AddClassToCacheAction implements IEditorActionDelegate, IActionDele
 
 	}
 
+	@Override
 	public void dispose() {
 		// TODO Auto-generated method stub
 
 	}
 
+	@Override
 	public void selectionChanged(final IAction action, final ISelection selection) {
 		// TODO Auto-generated method stub
 
 	}
 
+	@Override
 	public void setActiveEditor(final IAction action, final IEditorPart targetEditor) {
 		// TODO Auto-generated method stub
 
 	}
 
+	@Override
 	public void init(final IWorkbenchWindow window) {
 		this.window = window;
 

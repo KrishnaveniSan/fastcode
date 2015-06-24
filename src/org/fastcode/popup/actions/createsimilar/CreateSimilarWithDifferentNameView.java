@@ -60,12 +60,13 @@ public class CreateSimilarWithDifferentNameView extends CreateSimilarSupport imp
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IEditorActionDelegate#setActiveEditor(org.eclipse.jface.action.IAction, org.eclipse.ui.IEditorPart)
 	 */
+	@Override
 	public void setActiveEditor(final IAction action, final IEditorPart targetEditor) {
 		this.editorPart = targetEditor;
 		if (this.editorPart == null) {
 			return;
 		}
-		IWorkingCopyManager manager = JavaUI.getWorkingCopyManager();
+		final IWorkingCopyManager manager = JavaUI.getWorkingCopyManager();
 		if (manager == null) {
 			return;
 		}
@@ -75,6 +76,7 @@ public class CreateSimilarWithDifferentNameView extends CreateSimilarSupport imp
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
 	 */
+	@Override
 	public void selectionChanged(final IAction action, final ISelection selection) {
 		if (selection instanceof ITextSelection) {
 			this.selection = (ITextSelection) selection;
@@ -87,7 +89,7 @@ public class CreateSimilarWithDifferentNameView extends CreateSimilarSupport imp
 			if (this.selection != null) {
 				return (IMember) this.compUnit.getElementAt(this.selection.getOffset());
 			}
-		} catch (JavaModelException ex) {
+		} catch (final JavaModelException ex) {
 			// TODO Auto-generated catch block
 			ex.printStackTrace();
 		}
@@ -105,6 +107,7 @@ public class CreateSimilarWithDifferentNameView extends CreateSimilarSupport imp
 	/**
 	 *
 	 */
+	@Override
 	public void dispose() {
 
 	}
@@ -112,6 +115,7 @@ public class CreateSimilarWithDifferentNameView extends CreateSimilarSupport imp
 	/**
 	 * @param window
 	 */
+	@Override
 	public void init(final IWorkbenchWindow window) {
 		this.window = window;
 	}

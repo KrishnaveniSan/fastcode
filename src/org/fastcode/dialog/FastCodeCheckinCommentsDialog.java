@@ -77,10 +77,12 @@ public class FastCodeCheckinCommentsDialog extends TrayDialog {
 		this.addPrefixFooter.setSelection(true);
 		this.addPrefixFooter.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				FastCodeCheckinCommentsDialog.this.fastCodeCheckinCommentsData.setAddPrefixFooter(((Button) event.widget).getSelection());
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -110,6 +112,7 @@ public class FastCodeCheckinCommentsDialog extends TrayDialog {
 		}
 
 		this.commentsFromCacheCombo.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final String prevComnt = FastCodeCheckinCommentsDialog.this.commentsFromCacheCombo.getItem(FastCodeCheckinCommentsDialog.this.commentsFromCacheCombo
 						.getSelectionIndex());
@@ -117,6 +120,7 @@ public class FastCodeCheckinCommentsDialog extends TrayDialog {
 				FastCodeCheckinCommentsDialog.this.finalComment.setText(isEmpty(finalComnt) ? prevComnt : finalComnt.trim() + NEWLINE + prevComnt);
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -133,6 +137,7 @@ public class FastCodeCheckinCommentsDialog extends TrayDialog {
 		}
 
 		this.commentsFromRepositoryCombo.addSelectionListener(new SelectionListener() {
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final String prevComnt = FastCodeCheckinCommentsDialog.this.commentsFromRepositoryCombo.getItem(FastCodeCheckinCommentsDialog.this.commentsFromRepositoryCombo
 						.getSelectionIndex());
@@ -141,6 +146,7 @@ public class FastCodeCheckinCommentsDialog extends TrayDialog {
 				FastCodeCheckinCommentsDialog.this.addPrefixFooter.setSelection(false);
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -162,6 +168,7 @@ public class FastCodeCheckinCommentsDialog extends TrayDialog {
 		}
 		this.finalComment.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent arg0) {
 				if (isEmpty(FastCodeCheckinCommentsDialog.this.finalComment.getText())) {
 					FastCodeCheckinCommentsDialog.this.addPrefixFooter.setSelection(true);

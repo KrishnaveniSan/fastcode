@@ -34,6 +34,7 @@ public class FieldBuilderImpl implements FieldBuilder {
 	/* (non-Javadoc)
 	 * @see org.fastcode.util.FieldBuilder#buildFieldSource(org.eclipse.jdt.core.IType, org.fastcode.common.CreateVariableData, java.lang.String)
 	 */
+	@Override
 	public String buildFieldSource(final IType type, final CreateVariableData createVariableData, final String fieldName) {
 
 		String fldType = null;

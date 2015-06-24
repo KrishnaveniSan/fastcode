@@ -32,6 +32,7 @@ import static org.fastcode.preferences.PreferenceConstants.P_GLOBAL_ENABLE_TEMPL
 import static org.fastcode.preferences.PreferenceConstants.P_GLOBAL_STRICTLY_MAINTAIN_GETTER_SETTER;
 
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -42,6 +43,7 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
+import org.fastcode.common.FastCodeConstants.EMBEDDED_FIELDS_VIEW;
 import org.fastcode.templates.util.VariablesUtil;
 
 /**
@@ -147,6 +149,9 @@ public class TemplatePreferencePage extends FieldEditorPreferencePage implements
 	public void propertyChange(final PropertyChangeEvent event) {
 		final Object source = event.getSource();
 		final Object newValue = event.getNewValue();
+		if (newValue == EMBEDDED_FIELDS_VIEW.HIERARCHICAL_VIEW.getValue()){
+			MessageDialog.openWarning(getShell(), "Warning", "Please include packages to view parent-child fields as hierarchical view.");
+		}
 	}
 
 	/*
@@ -155,6 +160,7 @@ public class TemplatePreferencePage extends FieldEditorPreferencePage implements
 	 * @see
 	 * org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
 	 */
+	@Override
 	public void init(final IWorkbench workbench) {
 	}
 

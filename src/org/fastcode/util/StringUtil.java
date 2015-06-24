@@ -24,13 +24,16 @@ package org.fastcode.util;
 import static org.fastcode.common.FastCodeConstants.ASTERISK;
 import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_ALLOWED_VALUES;
 import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_DEPENDSON;
+import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_ENABLED;
 import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_LABEL;
 import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_MAX;
 import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_MIN;
 import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_PATTERN;
 import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_REQUIRED;
+import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_TYPE;
 import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_VALUE;
 import static org.fastcode.common.FastCodeConstants.COLON;
+import static org.fastcode.common.FastCodeConstants.COLON_CHAR;
 import static org.fastcode.common.FastCodeConstants.COMMA;
 import static org.fastcode.common.FastCodeConstants.DEFAULT_TEMPLATE_VARIATION_FIELD;
 import static org.fastcode.common.FastCodeConstants.DEFAULT_TEMPLATE_VARIATION_FIELD_NAME;
@@ -47,15 +50,19 @@ import static org.fastcode.common.FastCodeConstants.LEFT_PAREN_CHAR;
 import static org.fastcode.common.FastCodeConstants.NEWLINE;
 import static org.fastcode.common.FastCodeConstants.PLACEHOLDER_PROJECT;
 import static org.fastcode.common.FastCodeConstants.QUOTE_STR;
+import static org.fastcode.common.FastCodeConstants.QUOTE_STR_CHAR;
 import static org.fastcode.common.FastCodeConstants.RIGHT_CURL;
 import static org.fastcode.common.FastCodeConstants.RIGHT_PAREN_CHAR;
 import static org.fastcode.common.FastCodeConstants.SPACE;
+import static org.fastcode.common.FastCodeConstants.SPACE_CHAR;
 import static org.fastcode.common.FastCodeConstants.STRING_CONSTANT;
+import static org.fastcode.common.FastCodeConstants.TAB_CHAR;
 import static org.fastcode.common.FastCodeConstants.TEMPLATE_TAG_PREFIX;
 import static org.fastcode.common.FastCodeConstants.TODAY;
 import static org.fastcode.common.FastCodeConstants.UNDERSCORE;
 import static org.fastcode.common.FastCodeConstants.XML_END;
 import static org.fastcode.common.FastCodeConstants.XML_START;
+import static org.fastcode.common.FastCodeConstants.ZERO_STRING;
 import static org.fastcode.setting.GlobalSettings.getInstance;
 import static org.fastcode.util.SourceUtil.getFQNameFromFieldTypeName;
 import static org.fastcode.util.SourceUtil.isNativeType;
@@ -109,19 +116,16 @@ import org.fastcode.common.Pair;
 import org.fastcode.common.XmlElement;
 import org.fastcode.exception.FastCodeException;
 import org.fastcode.setting.GlobalSettings;
+import org.fastcode.templates.util.FcTagAttributes;
+import org.fastcode.templates.util.TagAttributeList;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import com.sun.corba.se.spi.extension.ZeroPortPolicy;
 import com.sun.org.apache.xml.internal.serialize.OutputFormat;
 import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
-import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_ENABLED;
-import static org.fastcode.common.FastCodeConstants.ZERO_STRING;
-import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_TYPE;
-import org.fastcode.common.FastCodeConstants;
 
 /**
  * @author Gautam Dev
@@ -129,14 +133,14 @@ import org.fastcode.common.FastCodeConstants;
  */
 public class StringUtil {
 
-	private static Map<String, String>	specialTokens				= new HashMap<String, String>();
-	private static final String[]		EXCLUDE_GLOBAL_PROPERTIES	= { DEFAULT_TEMPLATE_VARIATION_FIELD,
-			DEFAULT_TEMPLATE_VARIATION_FIELD_NAME, DEFAULT_TEMPLATE_VARIATION_FIELD_VALUE, EXCLUDE_FIELDS_FROM_SNIPPETS };
-	public static final String[]		JAVA_RESERVED_WORDS			= { "abstract", "continue", "for", "new", "switch", "assert",
-			"default", "goto", "package", "synchronized", "boolean", "do", "if", "private", "this", "break", "double", "implements",
-			"protected", "throw", "byte", "else", "import", "public", "throws", "case", "enum", "instanceof", "return", "transient",
-			"catch", "extends", "int", "short", "try", "char", "final", "interface", "static", "void", "class", "finally", "long",
-			"strictfp", "volatile", "const", "float", "native", "super", "while", "true", "false" };
+	private static Map<String, String> specialTokens = new HashMap<String, String>();
+	private static final String[] EXCLUDE_GLOBAL_PROPERTIES = { DEFAULT_TEMPLATE_VARIATION_FIELD, DEFAULT_TEMPLATE_VARIATION_FIELD_NAME,
+			DEFAULT_TEMPLATE_VARIATION_FIELD_VALUE, EXCLUDE_FIELDS_FROM_SNIPPETS };
+	public static final String[] JAVA_RESERVED_WORDS = { "abstract", "continue", "for", "new", "switch", "assert", "default", "goto",
+			"package", "synchronized", "boolean", "do", "if", "private", "this", "break", "double", "implements", "protected", "throw",
+			"byte", "else", "import", "public", "throws", "case", "enum", "instanceof", "return", "transient", "catch", "extends", "int",
+			"short", "try", "char", "final", "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile", "const",
+			"float", "native", "super", "while", "true", "false" };
 	static {
 		specialTokens.put("\\\"", "\"");
 		specialTokens.put("\\n", "\n");
@@ -619,7 +623,11 @@ public class StringUtil {
 
 		final StringWriter writer = new StringWriter();
 
+		final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
 		try {
+			final ClassLoader classLoader = VelocityUtil.class.getClassLoader();
+			loadVelocityClasses(classLoader);
+			Thread.currentThread().setContextClassLoader(classLoader);
 			Velocity.init();
 			final VelocityContext context = new VelocityContext();
 			// context.put("esc", new EscapeTool());
@@ -630,15 +638,36 @@ public class StringUtil {
 			}
 
 			Velocity.evaluate(context, writer, "LOG", template);
+			if (writer.getBuffer() == null || writer.getBuffer().length() == 0) {
+				throw new Exception("There was some problem with Velocity");
+			}
 			return writer.getBuffer().toString();
 		} catch (final Exception ex) {
 			ex.printStackTrace();
 			throw new Exception(ex);
 		} finally {
+			Thread.currentThread().setContextClassLoader(contextClassLoader);
 			writer.close();
 		}
 	}
 
+	/**
+	 *
+	 * @param classLoader
+	 */
+	public static void loadVelocityClasses (final ClassLoader classLoader) {
+		try {
+			classLoader.loadClass("org.apache.velocity.VelocityContext");
+			classLoader.loadClass("org.apache.velocity.runtime.RuntimeSingleton");
+			classLoader.loadClass("org.apache.velocity.runtime.RuntimeInstance");
+			classLoader.loadClass("org.apache.velocity.runtime.resource.ResourceManager");
+			classLoader.loadClass("org.apache.velocity.runtime.resource.ResourceManagerImpl");
+			classLoader.loadClass("org.apache.velocity.runtime.resource.loader.StringResourceLoader");
+			classLoader.loadClass("org.apache.velocity.app.Velocity");
+		} catch (final ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
 	/**
 	 *
 	 * @param context
@@ -1344,6 +1373,9 @@ public class StringUtil {
 		final String[] words = arg1.split(SPACE);
 		final StringBuilder word = new StringBuilder();
 		for (final String w : words) {
+			if (isEmpty(w)) {
+				continue;
+			}
 			word.append(w.substring(0, 1).toUpperCase() + w.substring(1).toLowerCase()).append(SPACE);
 		}
 		return word.toString().trim();
@@ -1750,7 +1782,7 @@ public class StringUtil {
 				System.out.println("i am here");
 			}*/
 			if (spaceFound && !attriListStart) {
-				System.out.println("i am here");
+				//System.out.println("i am here");
 				spaceFound = false;
 				createObj = true;
 				paramTypeFound = false;
@@ -1852,7 +1884,8 @@ public class StringUtil {
 							|| attribute.getKey().equals(PLACEHOLDER_PROJECT) || attribute.getKey().equals(ATTRIBUTE_LABEL)
 							|| attribute.getKey().equals(ATTRIBUTE_ALLOWED_VALUES) || attribute.getKey().equals(ATTRIBUTE_VALUE)
 							|| attribute.getKey().equals(ATTRIBUTE_ENABLED) || attribute.getKey().equals(ATTRIBUTE_MAX)
-							|| attribute.getKey().equals(ATTRIBUTE_MIN) || attribute.getKey().equals(ATTRIBUTE_TYPE) || attribute.getKey().equals(ATTRIBUTE_DEPENDSON))) {
+							|| attribute.getKey().equals(ATTRIBUTE_MIN) || attribute.getKey().equals(ATTRIBUTE_TYPE) || attribute.getKey()
+							.equals(ATTRIBUTE_DEPENDSON))) {
 						throw new FastCodeException("Attribute - " + attribute.getKey() + ", for parameter - " + paramVar
 								+ ", must be one of required/pattern/allowed_values/value/project/label/enabled");
 					}
@@ -1889,8 +1922,8 @@ public class StringUtil {
 						allAttributes.get(ATTRIBUTE_ENABLED) == null ? Boolean.toString(true) : allAttributes.get(ATTRIBUTE_ENABLED),
 						allAttributes.get(ATTRIBUTE_MIN) == null ? ZERO_STRING : allAttributes.get(ATTRIBUTE_MIN),
 						allAttributes.get(ATTRIBUTE_MAX) == null ? ZERO_STRING : allAttributes.get(ATTRIBUTE_MAX),
-								allAttributes.get(ATTRIBUTE_TYPE) == null ? EMPTY_STR : allAttributes.get(ATTRIBUTE_TYPE),
-										allAttributes.get(ATTRIBUTE_DEPENDSON) == null ? EMPTY_STR : allAttributes.get(ATTRIBUTE_DEPENDSON));
+						allAttributes.get(ATTRIBUTE_TYPE) == null ? EMPTY_STR : allAttributes.get(ATTRIBUTE_TYPE),
+						allAttributes.get(ATTRIBUTE_DEPENDSON) == null ? EMPTY_STR : allAttributes.get(ATTRIBUTE_DEPENDSON));
 				additionalParamsList.add(additionalParams);
 				createObj = false;
 				colonFound = false;
@@ -1916,7 +1949,8 @@ public class StringUtil {
 					|| attribute.getKey().equals(PLACEHOLDER_PROJECT) || attribute.getKey().equals(ATTRIBUTE_LABEL)
 					|| attribute.getKey().equals(ATTRIBUTE_ALLOWED_VALUES) || attribute.getKey().equals(ATTRIBUTE_VALUE)
 					|| attribute.getKey().equals(ATTRIBUTE_ENABLED) || attribute.getKey().equals(ATTRIBUTE_MAX)
-					|| attribute.getKey().equals(ATTRIBUTE_MIN) || attribute.getKey().equals(ATTRIBUTE_TYPE) || attribute.getKey().equals(ATTRIBUTE_DEPENDSON))) {
+					|| attribute.getKey().equals(ATTRIBUTE_MIN) || attribute.getKey().equals(ATTRIBUTE_TYPE) || attribute.getKey().equals(
+					ATTRIBUTE_DEPENDSON))) {
 				throw new FastCodeException("Attribute - " + attribute.getKey() + ", for parameter - " + paramVar
 						+ ", must be one of required/pattern/allowed_values/value/project/label");
 			}
@@ -1951,15 +1985,15 @@ public class StringUtil {
 				allAttributes.get(ATTRIBUTE_ENABLED) == null ? Boolean.toString(true) : allAttributes.get(ATTRIBUTE_ENABLED),
 				allAttributes.get(ATTRIBUTE_MIN) == null ? ZERO_STRING : allAttributes.get(ATTRIBUTE_MIN),
 				allAttributes.get(ATTRIBUTE_MAX) == null ? ZERO_STRING : allAttributes.get(ATTRIBUTE_MAX),
-						allAttributes.get(ATTRIBUTE_TYPE) == null ? EMPTY_STR : allAttributes.get(ATTRIBUTE_TYPE),
-								allAttributes.get(ATTRIBUTE_DEPENDSON) == null ? EMPTY_STR : allAttributes.get(ATTRIBUTE_DEPENDSON));
+				allAttributes.get(ATTRIBUTE_TYPE) == null ? EMPTY_STR : allAttributes.get(ATTRIBUTE_TYPE),
+				allAttributes.get(ATTRIBUTE_DEPENDSON) == null ? EMPTY_STR : allAttributes.get(ATTRIBUTE_DEPENDSON));
 		additionalParamsList.add(additionalParams);
 
-		System.out.println(paramVar.toString());
-		System.out.println(paramType.toString());
+		/*System.out.println(paramVar.toString());
+		System.out.println(paramType.toString());*/
 		/*System.out.println("attri " + attribute_1.toString());
 		System.out.println("val " + value_1.toString());*/
-		System.out.println(allAttributes);
+		//System.out.println(allAttributes);
 		return additionalParamsList;
 
 	}
@@ -1997,6 +2031,106 @@ public class StringUtil {
 		//return input.matches("[a-zA-Z\d][\w#@]{0,127}$");
 		return input.matches("^[a-zA-Z_][a-zA-Z0-9_]*$");
 		//return input.matches("^(\\w*\\d*[^\\s+][^!@#$%^&*:|])$");
+	}
+
+	public static List<TagAttributeList> parseFCTag(final String templateBody) {
+		final List<TagAttributeList> tagTypeAttributeList = new ArrayList<TagAttributeList>();
+		int lineNo = 1;
+		final String[] tempBodySplit = templateBody.split(NEWLINE);
+
+		for (final String lineContent : tempBodySplit) {
+
+			if (!lineContent.trim().contains("<fc:")) {
+				lineNo++;
+				continue;
+			}
+
+			final int indexOfFCTagStart = lineContent.indexOf("<fc:");
+			String tagName = EMPTY_STR;
+			String attriName = EMPTY_STR;
+			final List<FcTagAttributes> attributesList = new ArrayList<FcTagAttributes>();
+			boolean attriStart = false;
+			boolean tagNameStart = false;
+			boolean quoteStart = false;
+			final boolean quoteEnd = false;
+			boolean angle_left = false;
+			String tagStart = EMPTY_STR;
+			int colNo = -1;
+
+			for (final char ch : lineContent.toCharArray()) {
+				colNo++;
+
+				if (colNo < indexOfFCTagStart) {
+					continue;
+				}
+
+				if (ch == '<') {
+					angle_left = true;
+					tagStart = tagStart + ch;
+					continue;
+				}
+
+				if (angle_left && (ch == 'f' || ch == 'c')) {
+					if (!(tagNameStart || attriStart)) {
+						if (!quoteStart) {
+
+							tagStart = tagStart + ch;
+							continue;
+						}
+					}
+				}
+
+				if (ch == QUOTE_STR_CHAR) {
+					if (quoteStart) {
+						quoteStart = false;
+						attriStart = true;
+					} else {
+						quoteStart = true;
+					}
+					continue;
+				}
+
+				if (quoteStart) {
+					continue;
+				}
+
+				if (ch == '>' || ch == '/') {
+					tagTypeAttributeList.add(new TagAttributeList(tagName, attributesList));
+					break;
+				}
+
+				if (tagStart.equals("<fc") && ch == COLON_CHAR) {
+					tagNameStart = true;
+					continue;
+				}
+
+				if (ch == SPACE_CHAR && (tagNameStart || attriStart)) {
+					attriStart = true;
+					tagNameStart = false;
+					//colNoFound = true;
+					continue;
+				}
+
+				if (ch == '=') {
+					attributesList.add(new FcTagAttributes(attriName, lineNo, colNo - attriName.length()));
+					attriStart = false;
+					//colNoFound = false;
+					attriName = EMPTY_STR;
+					continue;
+				}
+
+				if (tagNameStart) {
+					tagName = tagName + ch;
+				}
+				if (attriStart) {
+					attriName = attriName + ch;
+				}
+
+			}
+			lineNo++;
+		}
+		return tagTypeAttributeList;
+
 	}
 
 	/**
@@ -2137,8 +2271,8 @@ public class StringUtil {
 		// System.out.println((reverseCamelCase("prod_tpy",'_')).substring(0,1).toLowerCase()+(reverseCamelCase("prod_tpy",'_')).substring(1));
 
 		final String fieldSrc = "\t\t\t\t@Column(name = \"ipaddress\",nullable=false,length = 10)\n private String ipaddress;"; //"\t\t\t\t@Column \n private String ipaddress;"; // final String
-		final String fieldname = parseFieldName(fieldSrc);
-		System.out.println(fieldname);
+		/*final String fieldname = parseFieldName(fieldSrc);
+		System.out.println(fieldname);*/
 
 		/*
 		 * final String setMethod =
@@ -2221,7 +2355,29 @@ public class StringUtil {
 				"}";*/
 		//	final String abc = "/**/n*/n* @return/n*/ /n public int getVar2 ()  {int getVar2 =  testOfCVDialog.getVar2();return getVar2;}";
 		//	System.out.println("method name -- " + parseMethodName(abc));
+		final String testStr = "            <fc:file dir=\"${scripts.fullPath}/${module.toLowerCase()}\" name=\"${module}.js\">";
+		parseFCTag(testStr);
 
+	}
+
+	/**
+	 * get the number of tabs in the beginning of the string
+	 * @param lineContent
+	 * @param noOfTab
+	 * @return
+	 */
+	public static int getNoOfTabs(final String lineContent) {
+		int noOfTab = 0;
+		for (final char ch : lineContent.toCharArray()) {
+			if (ch == TAB_CHAR) {
+				noOfTab++;
+				continue;
+			}
+			if (Character.isLetterOrDigit(ch)) {
+				break;
+			}
+		}
+		return noOfTab;
 	}
 
 }

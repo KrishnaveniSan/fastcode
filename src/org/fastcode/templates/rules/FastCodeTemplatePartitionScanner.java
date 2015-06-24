@@ -36,8 +36,6 @@ public class FastCodeTemplatePartitionScanner extends RuleBasedPartitionScanner 
 		final IToken fcProperty= new Token(FastCodeTemplatePartitions.FC_PROPERTY);
 		final IToken fcInfo= new Token(FastCodeTemplatePartitions.FC_INFO);
 		final IToken fcSnippet= new Token(FastCodeTemplatePartitions.FC_SNIPPET);
-		final IToken multiLineJavaComment = new Token(FastCodeTemplatePartitions.MULTI_LINE_JAVA_COMMENT);
-		final IToken singleLineJavaComment = new Token(FastCodeTemplatePartitions.SINGLE_LINE_JAVA_COMMENT);
 
 		final List<IRule> rules = new ArrayList<IRule>();
 
@@ -66,8 +64,6 @@ public class FastCodeTemplatePartitionScanner extends RuleBasedPartitionScanner 
 		rules.add(new MultiLineRule("<fc:property ", "</fc:property>", fcProperty));
 		rules.add(new MultiLineRule("<fc:info ", "</fc:info>", fcInfo));
 		rules.add(new MultiLineRule("<fc:snippet ", "</fc:snippet>", fcSnippet));
-		rules.add(new EndOfLineRule("//", singleLineJavaComment));
-		rules.add(new MultiLineRule("/*", "*/", multiLineJavaComment));
 
 		final IPredicateRule[] result = new IPredicateRule[rules.size()];
 		final IPredicateRule[] array = rules.toArray(result);

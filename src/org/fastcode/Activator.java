@@ -25,9 +25,11 @@ package org.fastcode;
 import static org.fastcode.common.FastCodeConstants.CHECKED;
 import static org.fastcode.common.FastCodeConstants.DISABLED_CHECKBOX;
 import static org.fastcode.common.FastCodeConstants.UNCHECKED;
+import static org.fastcode.util.SourceUtil.checkForJavaProjectInWorkspace;
 
 import java.util.Map.Entry;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -74,10 +76,16 @@ public class Activator extends AbstractUIPlugin {
 			super.start(context);
 			plugin = this;
 			this.workspace.addResourceChangeListener(this.listener);
+			checkForJavaProjectInWorkspace();
 		} catch (final Exception e) {
 			//
 			e.printStackTrace();
 		}
+	}
+
+	private boolean isEmpty(final IProject[] projectArr) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	/*
@@ -92,10 +100,10 @@ public class Activator extends AbstractUIPlugin {
 
 			FastCodeFont.disposeFont();
 			FastCodeColor.disposeColor();
-			FastCodeCache fastCodeCache = FastCodeCache.getInstance();
-			for (Entry<String, Image> entry : fastCodeCache.getEntityImageMap().entrySet()) {
+			final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
+			for (final Entry<String, Image> entry : fastCodeCache.getEntityImageMap().entrySet()) {
 
-				Image image = entry.getValue();
+				final Image image = entry.getValue();
 				if (image != null && !image.isDisposed()) {
 					image.dispose();
 				}

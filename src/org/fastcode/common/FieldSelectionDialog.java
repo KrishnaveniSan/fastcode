@@ -63,10 +63,12 @@ public class FieldSelectionDialog extends FastCodeSelectionDialog {
 
 		selectAllButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				FieldSelectionDialog.this.setSelection(FieldSelectionDialog.this.fields.toArray(new FastCodeField[0]));
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 

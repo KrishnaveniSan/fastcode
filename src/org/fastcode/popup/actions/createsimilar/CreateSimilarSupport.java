@@ -546,6 +546,7 @@ public abstract class CreateSimilarSupport {
 				}
 			}
 			final IRunnableWithProgress op = new IRunnableWithProgress() {
+				@Override
 				public void run(final IProgressMonitor monitor) {
 					try {
 						CreateSimilarSupport.this.member = CreateSimilarSupport.this.createNew ? null : getSelectedMember();

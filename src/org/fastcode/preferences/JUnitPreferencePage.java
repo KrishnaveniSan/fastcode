@@ -343,6 +343,7 @@ public class JUnitPreferencePage extends FieldEditorPreferencePage implements IW
 		this.importButton.setText("Import");
 		this.importButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				try {
 					//processXML("UnitTestPreferences.xml", EMPTY_STR, UNIT_TEST_FOLDER);
@@ -359,6 +360,7 @@ public class JUnitPreferencePage extends FieldEditorPreferencePage implements IW
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -369,6 +371,7 @@ public class JUnitPreferencePage extends FieldEditorPreferencePage implements IW
 
 		this.exportButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				try {
 					//processXML("UnitTestPreferences.xml", EMPTY_STR, UNIT_TEST_FOLDER);
@@ -385,6 +388,7 @@ public class JUnitPreferencePage extends FieldEditorPreferencePage implements IW
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -720,6 +724,7 @@ public class JUnitPreferencePage extends FieldEditorPreferencePage implements IW
 	 *
 	 * @see org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
 	 */
+	@Override
 	public void init(final IWorkbench workbench) {
 	}
 

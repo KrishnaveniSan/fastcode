@@ -108,7 +108,7 @@ public class XMLUtil {
 		// final String templatePrefix = null;
 
 		final IFile file = findOrcreateTemplate(fileName, folderName);
-		boolean validation = true;
+		Boolean validation = true;
 		if (file == null || !file.exists()) {
 			throw new Exception("Template File \"" + fileName + "\" does not exist, please export and try again.");
 		}
@@ -146,13 +146,15 @@ public class XMLUtil {
 					}
 				} else {
 					validation = tv.validateTemplate(file.getContents(), templatePreferenceName);
-					if (validation) {
+					if (validation!= null && validation) {
 						updateTemplateStore(store, inputStream, TEMPLATE_PREFERENCE_NAME.getTemplatePrefix(templatePreferenceName),
 								templatePreferenceName, false);
 					}
 				}
 			}
-			if (validation) {
+			if (validation== null) {
+				MessageDialog.openInformation(new Shell(), "Import not done, as validation was not done.", "Please validate the templates manually and try again.");
+			} else if (validation) {
 				MessageDialog.openInformation(new Shell(), "Success", "Import was successfully completed.");
 			}
 		} finally {
@@ -189,7 +191,7 @@ public class XMLUtil {
 			if (file.exists()) {
 				final IPreferenceStore preferenceStore = new ScopedPreferenceStore(new InstanceScope(), FAST_CODE_PLUGIN_ID);
 				final String exportOption = preferenceStore.getString(P_EXPORT_SETTINGS);
-				String folderPath = "resources" + FORWARD_SLASH + folderName;
+				final String folderPath = "resources" + FORWARD_SLASH + folderName;
 				// final boolean backup =
 				// exportOption.equals(EXPORT_OPTIONS.BACKUP.getValue());
 				if (exportOption.equals(EXPORT_OPTIONS.ASK_TO_OVERWRITE_OR_BACKUP.getValue())) {

@@ -66,6 +66,7 @@ public class WhereFieldTableDialog extends TitleAreaDialog {
 
 	private class TableLabelProvider extends LabelProvider implements ITableLabelProvider {
 
+		@Override
 		public Image getColumnImage(final Object element, final int columnIndex) {
 
 			final int EQUAL_TO_COLUMN = 1;
@@ -82,7 +83,7 @@ public class WhereFieldTableDialog extends TitleAreaDialog {
 			FastCodeDataBaseFieldDecorator fastCodeDataBaseFieldDecorator = new FastCodeDataBaseFieldDecorator();
 
 			fastCodeDataBaseFieldDecorator = getFastCodeDataBaseFieldDecorator(((WhereQualifier) element).getFieldName());
-			FastCodeCache fastCodeCache = FastCodeCache.getInstance();
+			final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
 			Image checked = null;
 			Image unchecked = null;
 			Image disabled = null;
@@ -93,13 +94,13 @@ public class WhereFieldTableDialog extends TitleAreaDialog {
 				populateFCCacheEntityImageMap(CHECKED, checked);
 			}
 			if (fastCodeCache.getEntityImageMap().containsKey(UNCHECKED)) {
-				checked = getImagefromFCCacheMap(UNCHECKED);
+				unchecked = getImagefromFCCacheMap(UNCHECKED);
 			} else {
 				unchecked = Activator.getDefault().getImageRegistry().get(UNCHECKED);
 				populateFCCacheEntityImageMap(UNCHECKED, unchecked);
 			}
 			if (fastCodeCache.getEntityImageMap().containsKey(DISABLED_CHECKBOX)) {
-				checked = getImagefromFCCacheMap(DISABLED_CHECKBOX);
+				disabled = getImagefromFCCacheMap(DISABLED_CHECKBOX);
 			} else {
 				disabled = Activator.getDefault().getImageRegistry().get(DISABLED_CHECKBOX);
 				populateFCCacheEntityImageMap(DISABLED_CHECKBOX, disabled);
@@ -232,6 +233,7 @@ public class WhereFieldTableDialog extends TitleAreaDialog {
 			return returnImage;
 		}
 
+		@Override
 		public String getColumnText(final Object element, final int columnIndex) {
 			final int FIELD_NAME = 0;
 			final WhereQualifier whereQualifier = (WhereQualifier) element;
@@ -250,14 +252,17 @@ public class WhereFieldTableDialog extends TitleAreaDialog {
 	}
 
 	private static class ContentProvider implements IStructuredContentProvider {
+		@Override
 		public Object[] getElements(final Object inputElement) {
 
 			return ((List<WhereQualifier>) inputElement).toArray();
 		}
 
+		@Override
 		public void dispose() {
 		}
 
+		@Override
 		public void inputChanged(final Viewer viewer, final Object oldInput, final Object newInput) {
 		}
 	}
@@ -427,6 +432,7 @@ public class WhereFieldTableDialog extends TitleAreaDialog {
 
 		this.table.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 
 				updateSelectedFields((WhereQualifier) WhereFieldTableDialog.this.tableViewer.getElementAt(WhereFieldTableDialog.this.table
@@ -436,6 +442,7 @@ public class WhereFieldTableDialog extends TitleAreaDialog {
 						.getSelectionIndex()));
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 				// TODO Auto-generated method stub
 

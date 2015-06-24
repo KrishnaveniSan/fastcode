@@ -226,11 +226,13 @@ public class CreateUnitTestDialog extends TrayDialog {
 
 		this.dependsOnMethodsList.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				CreateUnitTestDialog.this.createUnitTestData.setSelectedDependsOnMethod(CreateUnitTestDialog.this.dependsOnMethodsList
 						.getSelection());
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -258,11 +260,13 @@ public class CreateUnitTestDialog extends TrayDialog {
 		this.dataProviderCombo.setEnabled(false);
 		this.dataProviderCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				CreateUnitTestDialog.this.createUnitTestData.setSelectedDataProvider(CreateUnitTestDialog.this.dataProviderCombo
 						.getItem(CreateUnitTestDialog.this.dataProviderCombo.getSelectionIndex()));
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -337,6 +341,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 		gridDataText.minimumWidth = 300;
 		this.excepClassText.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 				if (CreateUnitTestDialog.this.excepClassText.getEnabled()) {
 					if (isEmpty(CreateUnitTestDialog.this.excepClassText.getText())) {
@@ -355,9 +360,11 @@ public class CreateUnitTestDialog extends TrayDialog {
 		this.browse.setLayoutData(gridDataButton);
 		this.browse.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 			}
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 
 				final SelectionDialog selectionDialog;
@@ -516,6 +523,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 
 		this.junitTestProfileCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				CreateUnitTestDialog.this.createUnitTestData.setJunitTestProfileName(CreateUnitTestDialog.this.junitTestProfileCombo
 						.getItem(CreateUnitTestDialog.this.junitTestProfileCombo.getSelectionIndex()));
@@ -526,6 +534,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -564,6 +573,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 
 		this.methodSelectionList.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				//final String[] selectedMethods = CreateUnitTestDialog.this.methodSelectionList.getSelection();
 				final int[] selectedIndex = CreateUnitTestDialog.this.methodSelectionList.getSelectionIndices();
@@ -571,6 +581,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 
 			}
@@ -587,10 +598,12 @@ public class CreateUnitTestDialog extends TrayDialog {
 
 		this.testMethodName.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 				CreateUnitTestDialog.this.createUnitTestData.setTestMethodName(CreateUnitTestDialog.this.testMethodName.getText());
 			}
 
+			@Override
 			public void focusGained(final FocusEvent e) {
 
 			}
@@ -996,10 +1009,12 @@ public class CreateUnitTestDialog extends TrayDialog {
 		this.regularTestButton.setText("Regular Test");
 		this.regularTestButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -1009,6 +1024,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 		this.exceptionTestButton.setText("Exception Test");
 		this.exceptionTestButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (CreateUnitTestDialog.this.createUnitTestData.getClassMethodsSelected().size() == 1) {
 					final IMethod methodChosen = CreateUnitTestDialog.this.createUnitTestData.getClassMethodsSelected().get(0);
@@ -1019,6 +1035,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 				CreateUnitTestDialog.this.consumeExceptionButton.setSelection(false);*/
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -1041,6 +1058,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 		//this.throwExceptionButton.setSelection(true);
 		this.throwExceptionButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (CreateUnitTestDialog.this.throwExceptionButton.getSelection()) {
 					//CreateUnitTestDialog.this.setErrorMessage(CreateUnitTestDialog.this.defaultMessage, false);
@@ -1048,6 +1066,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -1057,6 +1076,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 		this.consumeExceptionButton.setText("Consume Exception");
 		this.consumeExceptionButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (CreateUnitTestDialog.this.consumeExceptionButton.getSelection()) {
 					//CreateUnitTestDialog.this.setErrorMessage(CreateUnitTestDialog.this.defaultMessage,false);
@@ -1066,6 +1086,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -1088,6 +1109,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 		this.additionalTestButton.setEnabled(false);
 		this.additionalTestButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (CreateUnitTestDialog.this.additionalTestButton.getSelection()) {
 					CreateUnitTestDialog.this.tstMethName = new StringBuilder(CreateUnitTestDialog.this.methodSelected.getElementName()
@@ -1108,6 +1130,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -1117,6 +1140,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 		this.jumpToTestButton.setEnabled(false);
 		this.jumpToTestButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 
 				/*if (methods.length == 1) {
@@ -1134,6 +1158,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 				}*/
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -1148,6 +1173,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 
 		this.additionalMethodName.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 				CreateUnitTestDialog.this.tstMethName = new StringBuilder(CreateUnitTestDialog.this.additionalMethodName.getText());
 				final IMethod testMethod = CreateUnitTestDialog.this.createUnitTestData.getUnitTestCU().findPrimaryType()
@@ -1164,6 +1190,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 		});
 		this.additionalMethodName.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 				/*				CreateUnitTestDialog.this.tstMethName = new StringBuilder(CreateUnitTestDialog.this.additionalMethodName.getText());
 								final IMethod testMethod = CreateUnitTestDialog.this.createUnitTestData.getUnitTestCU().findPrimaryType().getMethod(CreateUnitTestDialog.this.tstMethName.toString(), null);
@@ -1175,6 +1202,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 				*/
 			}
 
+			@Override
 			public void focusGained(final FocusEvent e) {
 
 			}
@@ -1217,6 +1245,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 
 		this.stubMethod1.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				if (CreateUnitTestDialog.this.stubMethod1.getSelection()) {
 					CreateUnitTestDialog.this.createUnitTestData.getSelectedStubMethodsList().add(
@@ -1225,6 +1254,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 			}
 		});
@@ -1235,6 +1265,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 		this.stubMethod2.setText("tearDownAfterClass");
 		this.stubMethod2.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				if (CreateUnitTestDialog.this.stubMethod2.getSelection()) {
 					CreateUnitTestDialog.this.createUnitTestData.getSelectedStubMethodsList().add(
@@ -1243,6 +1274,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 
 			}
@@ -1254,6 +1286,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 		this.stubMethod3.setText("setUp");
 		this.stubMethod3.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				if (CreateUnitTestDialog.this.stubMethod3.getSelection()) {
 					CreateUnitTestDialog.this.createUnitTestData.getSelectedStubMethodsList().add(
@@ -1262,6 +1295,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 
 			}
@@ -1273,6 +1307,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 		this.stubMethod4.setText("tearDown");
 		this.stubMethod4.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				if (CreateUnitTestDialog.this.stubMethod4.getSelection()) {
 					CreateUnitTestDialog.this.createUnitTestData.getSelectedStubMethodsList().add(
@@ -1281,6 +1316,7 @@ public class CreateUnitTestDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent e) {
 
 			}
@@ -1372,12 +1408,14 @@ public class CreateUnitTestDialog extends TrayDialog {
 		*/
 		this.unitTestResultFormatList.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				final String[] selectedIndices = CreateUnitTestDialog.this.unitTestResultFormatList.getSelection();
 				for (final String test : selectedIndices) {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}

@@ -233,6 +233,7 @@ public class VersionControlPreferencePage extends FieldEditorPreferencePage impl
 		}
 		this.addButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		this.addButton.addListener(SWT.Selection, new Listener() {
+			@Override
 			public void handleEvent(final Event e) {
 				final String prjUrlPairs = VersionControlPreferencePage.this.preferenceStore.getString(P_REPOSIROTY_PROJECT_URL_PAIR);
 				final RepositoryData repositoryData = new RepositoryData();
@@ -290,6 +291,7 @@ public class VersionControlPreferencePage extends FieldEditorPreferencePage impl
 			this.editButton.setEnabled(false);
 		}
 		this.editButton.addListener(SWT.Selection, new Listener() {
+			@Override
 			public void handleEvent(final Event e) {
 
 				final String prjUrlPairs = VersionControlPreferencePage.this.preferenceStore.getString(P_REPOSIROTY_PROJECT_URL_PAIR);
@@ -349,6 +351,7 @@ public class VersionControlPreferencePage extends FieldEditorPreferencePage impl
 		this.removeButton.setText("Remove");
 		this.removeButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		this.removeButton.addListener(SWT.Selection, new Listener() {
+			@Override
 			public void handleEvent(final Event e) {
 				final int index = VersionControlPreferencePage.this.table.getSelectionIndex();
 				System.out.println("index--" + index);
@@ -583,6 +586,7 @@ public class VersionControlPreferencePage extends FieldEditorPreferencePage impl
 		return true;
 	}
 
+	@Override
 	public void init(final IWorkbench arg0) {
 		// TODO Auto-generated method stub
 
@@ -593,6 +597,7 @@ public class VersionControlPreferencePage extends FieldEditorPreferencePage impl
 		/*
 		 * @see IStructuredContentProvider#getElements(Object)
 		 */
+		@Override
 		public Object[] getElements(final Object input) {
 			return ((List<RepositoryData>) input).toArray();
 		}
@@ -600,6 +605,7 @@ public class VersionControlPreferencePage extends FieldEditorPreferencePage impl
 		/*
 		 * @see IContentProvider#inputChanged(Viewer, Object, Object)
 		 */
+		@Override
 		public void inputChanged(final Viewer viewer, final Object oldInput, final Object newInput) {
 
 		}
@@ -607,6 +613,7 @@ public class VersionControlPreferencePage extends FieldEditorPreferencePage impl
 		/*
 		 * @see IContentProvider#dispose()
 		 */
+		@Override
 		public void dispose() {
 
 		}
@@ -620,6 +627,7 @@ public class VersionControlPreferencePage extends FieldEditorPreferencePage impl
 		 * org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang
 		 * .Object, int)
 		 */
+		@Override
 		public Image getColumnImage(final Object element, final int columnIndex) {
 			return null;
 		}
@@ -629,6 +637,7 @@ public class VersionControlPreferencePage extends FieldEditorPreferencePage impl
 		 * org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang
 		 * .Object, int)
 		 */
+		@Override
 		public String getColumnText(final Object element, final int columnIndex) {
 			final RepositoryData data = (RepositoryData) element;
 

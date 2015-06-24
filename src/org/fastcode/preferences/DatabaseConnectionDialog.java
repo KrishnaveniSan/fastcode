@@ -146,11 +146,13 @@ public class DatabaseConnectionDialog extends TrayDialog {
 
 		final FocusListener listener = new FocusListener() {
 
+			@Override
 			public void focusGained(final FocusEvent e) {
 				setErrorMessage(null);
 
 			}
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 				// TODO Auto-generated method stub
 
@@ -168,6 +170,7 @@ public class DatabaseConnectionDialog extends TrayDialog {
 		this.databaseTypeField.addFocusListener(listener);
 		this.databaseTypeField.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 				if (!DatabaseConnectionDialog.this.databaseTypeField.getText().equals(EMPTY_STR)) {
 					enableFields(true);
@@ -216,6 +219,7 @@ public class DatabaseConnectionDialog extends TrayDialog {
 		this.databasePort.setLayoutData(new GridData(300, 20));
 		this.databasePort.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusGained(final FocusEvent e) {
 				if (!DatabaseConnectionDialog.this.databasePort.getText().equals(EMPTY_STR)
 						&& !DatabaseConnectionDialog.this.databasePort.getText().matches("\\d{4}")) {
@@ -225,6 +229,7 @@ public class DatabaseConnectionDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 
 			}
@@ -232,6 +237,7 @@ public class DatabaseConnectionDialog extends TrayDialog {
 		});
 		this.databasePort.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 				if (!DatabaseConnectionDialog.this.databasePort.getText().equals(EMPTY_STR)
 						&& !DatabaseConnectionDialog.this.databasePort.getText().matches("\\d{4}")) {
@@ -283,6 +289,7 @@ public class DatabaseConnectionDialog extends TrayDialog {
 		this.browseButton.setLayoutData(gridDataButton);
 		this.browseButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent arg0) {
 				final SelectionDialog selectionDialog;
 				try {
@@ -299,14 +306,15 @@ public class DatabaseConnectionDialog extends TrayDialog {
 					DatabaseConnectionDialog.this.driverClass.setText(driverClass.getFullyQualifiedName());
 					DatabaseConnectionDialog.this.driverFQName = driverClass.getFullyQualifiedName();
 					DatabaseConnectionDialog.this.driverPrj = driverClass.getJavaProject().getElementName();
+					setErrorMessage(null);
 
 				} catch (final JavaModelException ex) {
-					// TODO Auto-generated catch block
 					ex.printStackTrace();
 				}
 
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -341,6 +349,7 @@ public class DatabaseConnectionDialog extends TrayDialog {
 			this.passwordField.setText(this.databaseConndata.getPassword());
 			this.defaultCheckBox.setSelection(this.databaseConndata.isDefaultConn());
 			this.driverClass.setText(this.databaseConndata.getDriverClass() == null ? EMPTY_STR : this.databaseConndata.getDriverClass());
+			this.driverPrj = this.databaseConndata.getDriverPrj() == null ? EMPTY_STR : this.databaseConndata.getDriverPrj();
 			this.currConnString = this.databaseConndata.getDatabaseType() + this.FIELD_DELIMITER + this.databaseConndata.getDatabaseName()
 					+ this.FIELD_DELIMITER + this.databaseConndata.getHostAddress() + this.FIELD_DELIMITER
 					+ this.databaseConndata.getPort() + this.FIELD_DELIMITER + this.databaseConndata.getUserName() + this.FIELD_DELIMITER
@@ -432,7 +441,7 @@ public class DatabaseConnectionDialog extends TrayDialog {
 			return true;
 		}
 
-		if (this.driverClass.equals(EMPTY_STR)) {
+		if (this.driverFQName.equals(EMPTY_STR)) {
 			setErrorMessage("Please select driver class");
 			return true;
 		}
@@ -446,9 +455,10 @@ public class DatabaseConnectionDialog extends TrayDialog {
 
 	/**
 	 * @param currDatabaseName
+	 * @param newConnString
 	 */
 
-	private void updatePreferenceStore(final String currDatabaseName) {
+	private void updatePreferenceStore(final String currDatabaseName, final String newConnString) {
 
 		final String dbConnRecords = this.preferenceStore.getString(P_DATABASE_CONN_DATA);
 		String newConnRecords = EMPTY_STR;
@@ -459,23 +469,32 @@ public class DatabaseConnectionDialog extends TrayDialog {
 				if (!isEmpty(record)) {
 					String[] attrValues = record.split(this.FIELD_DELIMITER);
 					System.out.println(attrValues.length);
-					if (attrValues.length == 7) {
-						attrValues = resizeArray(attrValues, 9);
-						//attrValues = System.arraycopy(arg0, arg1, arg2, arg3, arg4)(attrValues, attrValues.length + 2);
-						attrValues[7] = this.driverFQName;
-						attrValues[8] = this.driverPrj;
-					}
-					if (!attrValues[1].equals(this.currDatabaseName) && Boolean.valueOf(attrValues[6]).equals(true)) {
+					if (attrValues.length > 3) {
+						if (attrValues.length == 7) {
+							attrValues = resizeArray(attrValues, 9);
+							//attrValues = System.arraycopy(arg0, arg1, arg2, arg3, arg4)(attrValues, attrValues.length + 2);
+							if (attrValues[1].equals(this.currDatabaseName)) {
+								attrValues[7] = this.driverFQName;
+								attrValues[8] = this.driverPrj;
+							} else {
+								attrValues[7] = EMPTY_STR;
+								attrValues[8] = EMPTY_STR;
+							}
+						}
+						if (this.isdefaultConn && !attrValues[1].equals(this.currDatabaseName) && Boolean.valueOf(attrValues[6]).equals(true)) {
 
-						attrValues[6] = String.valueOf(false);
-						final String newrecord = attrValues[0] + this.FIELD_DELIMITER + attrValues[1] + this.FIELD_DELIMITER
-								+ attrValues[2] + this.FIELD_DELIMITER + attrValues[3] + this.FIELD_DELIMITER + attrValues[4]
-								+ this.FIELD_DELIMITER + attrValues[5] + this.FIELD_DELIMITER + attrValues[6] + this.FIELD_DELIMITER
-								+ attrValues[7] + this.FIELD_DELIMITER + attrValues[8];
-						newConnRecords += newrecord + this.RECORD_DELIMITER;
+							attrValues[6] = String.valueOf(false);
+							final String newrecord = attrValues[0] + this.FIELD_DELIMITER + attrValues[1] + this.FIELD_DELIMITER
+									+ attrValues[2] + this.FIELD_DELIMITER + attrValues[3] + this.FIELD_DELIMITER + attrValues[4]
+									+ this.FIELD_DELIMITER + attrValues[5] + this.FIELD_DELIMITER + attrValues[6] + this.FIELD_DELIMITER
+									+ attrValues[7] + this.FIELD_DELIMITER + attrValues[8];
+							newConnRecords += newrecord + this.RECORD_DELIMITER;
 
-					} else {
-						newConnRecords += record + this.RECORD_DELIMITER;
+						} else if (attrValues[1].equals(this.currDatabaseName)) {
+							newConnRecords += newConnString + this.RECORD_DELIMITER;
+						} else {
+							newConnRecords += record + this.RECORD_DELIMITER;
+						}
 					}
 				}
 
@@ -508,11 +527,10 @@ public class DatabaseConnectionDialog extends TrayDialog {
 		this.currUserName = this.userNameField.getText();
 		this.currPassword = this.passwordField.getText();
 		this.isdefaultConn = this.defaultCheckBox.getSelection();
-		/*	this.driverFQName = ((IType)this.driverClass.getText()).getFullyQualifiedName();
-			this.driverPrj = ((IType)this.driverClass.getText()).getJavaProject().getElementName();*/
-		if (this.isdefaultConn == true) {
+		this.driverFQName = this.driverClass.getText(); // ((IType)this.driverClass.getText()).getFullyQualifiedName();
+		/*if (this.isdefaultConn == true) {
 			updatePreferenceStore(this.currDatabaseName);
-		}
+		}*/
 
 		if (isFieldsEmpty()) {
 			return;
@@ -526,12 +544,16 @@ public class DatabaseConnectionDialog extends TrayDialog {
 					+ this.currHostAddress + this.FIELD_DELIMITER + this.currPortNumber + this.FIELD_DELIMITER + this.currUserName
 					+ this.FIELD_DELIMITER + this.currPassword + this.FIELD_DELIMITER + this.isdefaultConn + this.FIELD_DELIMITER
 					+ this.driverFQName + this.FIELD_DELIMITER + this.driverPrj;
-			String existingConns = this.preferenceStore.getString(P_DATABASE_CONN_DATA);
-			if (this.editConn) {
-				existingConns = existingConns.replace(this.currConnString, newConnString);
+
+			updatePreferenceStore(this.currDatabaseName, newConnString);
+
+			if (!this.editConn) {
+				/*existingConns = existingConns.replace(this.currConnString, newConnString);
 				this.preferenceStore.setValue(P_DATABASE_CONN_DATA, existingConns);
 
-			} else {
+				} else {*/
+
+				final String existingConns = this.preferenceStore.getString(P_DATABASE_CONN_DATA);
 				this.preferenceStore.setValue(P_DATABASE_CONN_DATA, existingConns + this.RECORD_DELIMITER + newConnString);
 			}
 

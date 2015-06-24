@@ -199,6 +199,7 @@ public class SynchronizedMemberView extends AbstractActionSupport implements IEd
 
 	}
 
+	@Override
 	public void dispose() {
 
 	}

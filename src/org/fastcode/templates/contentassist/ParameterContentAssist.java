@@ -18,6 +18,7 @@ import static org.fastcode.common.FastCodeConstants.EMPTY_STR;
 import static org.fastcode.common.FastCodeConstants.COLON;
 import static org.fastcode.common.FastCodeConstants.EQUAL;
 import static org.fastcode.util.StringUtil.isEmpty;
+import static org.fastcode.templates.util.ContentAssistUtil.isWithinQuotes;
 
 public class ParameterContentAssist extends AbstractTemplateContentAssistant {
 	private static ColonDetector	colonDetector	= new ColonDetector();
@@ -160,6 +161,13 @@ public class ParameterContentAssist extends AbstractTemplateContentAssistant {
 
 		try {
 			for (int i = offset; i > 0; i--) {
+				System.out.println("doc length" + document.getLength());
+
+				System.out.println(document.get(i, 1));
+				if (document.get(i - 4, 4).equals(EQUAL + DOUBLE_QUOTES + DOUBLE_QUOTES)) {
+					System.out.println("finally found the codition");
+					System.out.println(document.get(i - 4, 4));
+				}
 				if (document.get(i - 4, 4).equals(EQUAL + DOUBLE_QUOTES + DOUBLE_QUOTES) || document.get(i, 1).equals("(")) {
 					for (int j = i; j < offset; j++) {
 						if (document.get(j, 1).equals(")")) {
@@ -179,39 +187,7 @@ public class ParameterContentAssist extends AbstractTemplateContentAssistant {
 		return false;
 	}
 
-	private boolean isWithinQuotes(final IDocument document, final int offset) {
 
-		boolean leftQuoteFound = false;
-		boolean rightQuoteFound = false;
-		try {
-			for (int i = offset; i > 0; i--) {
-				if (document.get(i, 1).equals(EQUAL)) {
-					break;
-				}
-				if (document.get(i, 1).equals(DOUBLE_QUOTES)) {
-					leftQuoteFound = true;
-					break;
-				}
-			}
-			for (int i = offset; i <= document.getLength(); i++) {
-				if (document.get(i, 1).equals(RIGHT_PAREN)) {
-					break;
-				}
-				if (document.get(i, 1).equals(DOUBLE_QUOTES)) {
-					rightQuoteFound = true;
-					break;
-				}
-			}
-
-			return leftQuoteFound && rightQuoteFound;
-
-		} catch (final BadLocationException ex) {
-			// TODO Auto-generated catch block
-			ex.printStackTrace();
-		}
-
-		return false;
-	}
 
 	private boolean isValidElement(final String element) {
 		final char[] chars = element.toCharArray();

@@ -8,6 +8,7 @@ import static org.fastcode.common.FastCodeConstants.OPTIONAL;
 import static org.fastcode.common.FastCodeConstants.SPACE;
 import static org.fastcode.common.FastCodeConstants.TAB;
 import static org.fastcode.common.FastCodeConstants.TRUE_STR;
+import static org.fastcode.util.StringUtil.isEmpty;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -29,6 +30,8 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.swt.graphics.Point;
 import org.fastcode.Activator;
 import org.fastcode.templates.contentassist.TemplateProposal;
+import org.fastcode.templates.util.FcTagAttributes;
+import org.fastcode.templates.util.TagAttributeList;
 import org.fastcode.util.FastCodeUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -44,6 +47,7 @@ public class FastCodeKeywordsManager {
 
 	private static Map<String, ArrayList<String>>	requiredAttributesMap	= new TreeMap<String, ArrayList<String>>();
 	private static Map<String, ArrayList<String>>	optionalAttributesMap	= new TreeMap<String, ArrayList<String>>();
+	private static Map<String, ArrayList<String>>	oldAttributesMap	= new TreeMap<String, ArrayList<String>>();
 
 	private static Map<String, String>				defaultDirectives		= new TreeMap<String, String>();
 
@@ -97,10 +101,13 @@ public class FastCodeKeywordsManager {
 	 * @param length
 	 *            the length
 	 * @param spaceToPad
+	 * @param proposalsToSkip
+	 * @param fcTagType
 	 *
 	 * @return the completion proposals
 	 */
-	public static List<ICompletionProposal> getCompletionProposals(final String partition, final String element, final int offset, final int length, final String spaceToPad) {
+	public static List<ICompletionProposal> getCompletionProposals(final String partition, final String element, final int offset,
+			final int length, final String spaceToPad, final String fcTagType, final List<String> proposalsToSkip) {
 		final List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
 
 		if (!IDocument.DEFAULT_CONTENT_TYPE.equals(partition)) {
@@ -180,6 +187,57 @@ public class FastCodeKeywordsManager {
 
 				}
 
+			}
+		} else if (element.startsWith(SPACE)) {
+
+			final int cursorOffset = fcTagType.length();
+			if (requiredAttributesMap.containsKey(fcTagType)) {
+				for (final String attrs : requiredAttributesMap.get(fcTagType)) {
+					String reqdAttr = EMPTY_STR;
+					if (attrs != EMPTY_STR) {
+						boolean skipProp = false;
+						for (final String propToSkip : proposalsToSkip.toArray(new String[0])) {
+							if (attrs.trim().startsWith(propToSkip)) {
+								skipProp = true;
+								break;
+							}
+						}
+
+						if (skipProp) {
+							continue;
+						}
+						reqdAttr += SPACE + attrs + EQUAL + DOUBLE_QUOTES + DOUBLE_QUOTES;
+						final String displayString = attrs;
+						proposals.add(createTemplateProposal(reqdAttr, displayString, offset, length, cursorOffset));
+					}
+				}
+			}
+
+			if (optionalAttributesMap.containsKey(fcTagType)) {
+				for (final String attrs : optionalAttributesMap.get(fcTagType)) {
+					String optionalAttr = EMPTY_STR;
+					if (attrs != EMPTY_STR) {
+						boolean skipProp = false;
+						for (final String propToSkip : proposalsToSkip.toArray(new String[0])) {
+							if (attrs.trim().startsWith(propToSkip)) {
+								skipProp = true;
+								break;
+							}
+						}
+
+						if (skipProp) {
+							continue;
+						}
+						if (attrs.endsWith(OPTIONAL)) {
+							optionalAttr += SPACE + attrs + EQUAL + DOUBLE_QUOTES + TRUE_STR + DOUBLE_QUOTES;
+						} else {
+							optionalAttr += SPACE + attrs + EQUAL + DOUBLE_QUOTES + DOUBLE_QUOTES;
+						}
+
+						final String displayString = attrs;
+						proposals.add(createTemplateProposal(optionalAttr, displayString, offset, length, cursorOffset));
+					}
+				}
 			}
 		}
 
@@ -272,29 +330,33 @@ public class FastCodeKeywordsManager {
 
 			final int size = fctagList.getLength();
 			for (int i = 0; i < size; i++) {
-				final Node databaseNode = fctagList.item(i);
-				final NamedNodeMap dbattributes = databaseNode.getAttributes();
-				final Node nameNode = dbattributes.getNamedItem("name");
+				final Node tagNode = fctagList.item(i);
+				final NamedNodeMap tagAttributes = tagNode.getAttributes();
+				final Node nameNode = tagAttributes.getNamedItem("name");
 				final String tagName = nameNode.getNodeValue();
 				FC_START_DIRECTIVES.add("<fc:" + tagName + ">");
 				// FC_END_DIRECTIVES.add("</fc:" + tagName + ">");
 
-				final Node endNode = dbattributes.getNamedItem("endtag");
+				final Node endNode = tagAttributes.getNamedItem("endtag");
 				final boolean hasEndTag = Boolean.valueOf(endNode.getNodeValue());
 				FC_END_DIRECTIVES.add(hasEndTag ? "fc:" + tagName : "");
 				COLOR_DIRECTIVES.add("fc:" + tagName);
 
-				if (databaseNode.getTextContent().trim() != "") {
-					signatureMap.put(tagName, databaseNode.getTextContent().trim());
+				if (tagNode.getTextContent().trim() != "") {
+					signatureMap.put(tagName, tagNode.getTextContent().trim());
 				}
 
-				final Node reqdAttrNode = dbattributes.getNamedItem("required");
+				final Node reqdAttrNode = tagAttributes.getNamedItem("required");
 				final String requiredAttibutes = reqdAttrNode.getNodeValue();
 				requiredAttributesMap.put(tagName, new ArrayList<String>(Arrays.asList(requiredAttibutes.split(","))));
 
-				final Node optionalAttrNode = dbattributes.getNamedItem("optional");
+				final Node optionalAttrNode = tagAttributes.getNamedItem("optional");
 				final String optionalAttibutes = optionalAttrNode.getNodeValue();
 				optionalAttributesMap.put(tagName, new ArrayList<String>(Arrays.asList(optionalAttibutes.split(","))));
+
+				final Node oldAttrNode = tagAttributes.getNamedItem("old");
+				final String oldAttibutes = oldAttrNode.getNodeValue();
+				oldAttributesMap.put(tagName, new ArrayList<String>(Arrays.asList(oldAttibutes.split(","))));
 
 			}
 
@@ -306,5 +368,63 @@ public class FastCodeKeywordsManager {
 			FastCodeUtil.closeInputStream(inputStream);
 		}
 
+	}
+
+	public static List<FcTagAttributes> validateAttriutes(final List<TagAttributeList> tagAttriLsit) {
+		final List<FcTagAttributes> inValidAttributes = new ArrayList<FcTagAttributes>();
+		for (final TagAttributeList fcTagAttributes : tagAttriLsit) {
+			if (isEmpty(fcTagAttributes.getTagName())) {
+				continue;
+			}
+			final List<String> allAttributesForTag = new ArrayList<String>(requiredAttributesMap.get(fcTagAttributes.getTagName()));
+			allAttributesForTag.addAll(optionalAttributesMap.get(fcTagAttributes.getTagName()));
+			allAttributesForTag.addAll(oldAttributesMap.get(fcTagAttributes.getTagName()));
+			for (final FcTagAttributes attri : fcTagAttributes.getAttributesList()) {
+				if (allAttributesForTag.contains(attri.getVarName().trim())) {
+					continue;
+				}
+				inValidAttributes.add(attri);
+			}
+			 /*allAttributesForTag = optionalAttributesMap.get(fcTagAttributes.getKey());
+				for (final FcTagAttributes attri : fcTagAttributes.getValue()) {
+					if (allAttributesForTag.contains(attri.getVarName().trim())) {
+						continue;
+					}
+					inValidAttributes.add(attri);
+				}*/
+		}
+
+		return inValidAttributes;
+	}
+
+	public static List<FcTagAttributes> getabsentReqdAttriutes(final List<TagAttributeList> tagAttriList) {
+		final List<FcTagAttributes> absentReqdAttributes = new ArrayList<FcTagAttributes>();
+		for (final TagAttributeList fcTagAttributes : tagAttriList) {
+			if (isEmpty(fcTagAttributes.getTagName())) {
+				continue;
+			}
+			int lineNo = 0;
+			int colNo = 0;
+			for (final String reqdAttri : requiredAttributesMap.get(fcTagAttributes.getTagName())) {
+				if (isEmpty(reqdAttri)) {
+					continue;
+				}
+				boolean found = false;
+				for (final FcTagAttributes attribute : fcTagAttributes.getAttributesList()) {
+					lineNo = attribute.getVarLineNo();
+					colNo = attribute.getVarCol();
+					if (attribute.getVarName().equals(reqdAttri)) {
+						found = true;
+						break;
+					}
+					//found = false;
+				}
+				if (!found) {
+					absentReqdAttributes.add(new FcTagAttributes(reqdAttri, lineNo, colNo));
+				}
+			}
+		}
+
+		return absentReqdAttributes;
 	}
 }

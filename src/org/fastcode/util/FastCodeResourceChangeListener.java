@@ -53,6 +53,7 @@ public class FastCodeResourceChangeListener implements IResourceChangeListener {
 		return (FastCodeResourceChangeListener) resourceChangeListener;
 	}
 
+	@Override
 	public void resourceChanged(final IResourceChangeEvent event) {
 		if (event == null) {
 			return;
@@ -188,6 +189,7 @@ public class FastCodeResourceChangeListener implements IResourceChangeListener {
 
 					checkInNow(new Callback() {
 
+						@Override
 						public void onSuccess(final boolean value) throws FastCodeRepositoryException {
 							if (value) {
 
@@ -242,6 +244,7 @@ public class FastCodeResourceChangeListener implements IResourceChangeListener {
 
 					checkInNow(new Callback() {
 
+						@Override
 						public void onSuccess(final boolean value) throws FastCodeRepositoryException {
 							if (value) {
 
@@ -365,6 +368,7 @@ public class FastCodeResourceChangeListener implements IResourceChangeListener {
 			return;
 		} else if (versionControlPreferences.getCheckIn().equals(CHECK_IN.ASK_BEFORE_CHECKIN.getValue())) {
 			Display.getDefault().syncExec(new Runnable() {
+				@Override
 				public void run() {
 					final boolean answer = MessageDialog.openQuestion(new Shell(), FastCodeResourceChangeListener.this.title,
 							FastCodeResourceChangeListener.this.message + FastCodeResourceChangeListener.this.affectedChild.getFullPath()

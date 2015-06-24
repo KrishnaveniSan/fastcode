@@ -23,6 +23,7 @@ public class ParameterTypeRulesStrategie implements IRulesStrategy {
 	 * @see org.fastcode.templates.rules.IRulesStrategy#createRules()
 	 */
 
+	@Override
 	public List<IRule> createRules() {
 		final List<IRule> rules = new ArrayList<IRule>();
 
@@ -64,6 +65,7 @@ public class ParameterTypeRulesStrategie implements IRulesStrategy {
 		 * .rules.ICharacterScanner)
 		*/
 
+		@Override
 		public IToken evaluate(final ICharacterScanner scanner) {
 			final int character = scanner.read();
 

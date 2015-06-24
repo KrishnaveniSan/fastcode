@@ -15,9 +15,11 @@ import org.fastcode.templates.velocity.rules.FastCodeKeywordDetector;
 
 public class FastCodeJavaKeywordRulesStrategie implements IRulesStrategy {
 
+
 	/*
 	 * @see org.fastcode.templates.rules.IRulesStrategy#createRules()
 	 */
+	@Override
 	public List<IRule> createRules() {
 		final List<IRule> rules = new ArrayList<IRule>();
 

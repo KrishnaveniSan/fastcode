@@ -24,14 +24,20 @@ import static org.fastcode.preferences.PreferenceConstants.P_TEMPLATE_SECOND_TEM
 import static org.fastcode.preferences.PreferenceConstants.P_TEMPLATE_VARIATION;
 import static org.fastcode.preferences.PreferenceConstants.P_TEMPLATE_VARIATION_FIELD;
 import static org.fastcode.preferences.PreferenceUtil.getTemplatePreferenceKey;
+import static org.fastcode.util.FastCodeUtil.getEmptyListForNull;
+import static org.fastcode.util.SourceUtil.showWarning;
+import static org.fastcode.util.StringUtil.getNoOfTabs;
 import static org.fastcode.util.StringUtil.isEmpty;
+import static org.fastcode.util.StringUtil.loadVelocityClasses;
 import static org.fastcode.util.StringUtil.parseAdditonalParam;
+import static org.fastcode.util.StringUtil.parseFCTag;
 
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.apache.velocity.runtime.RuntimeSingleton;
 import org.apache.velocity.runtime.parser.ParseException;
@@ -40,17 +46,24 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.StringFieldEditor;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.Position;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.fastcode.common.FastCodeAdditionalParams;
@@ -62,8 +75,12 @@ import org.fastcode.common.Template;
 import org.fastcode.common.TemplateStore;
 import org.fastcode.exception.FastCodeException;
 import org.fastcode.setting.GlobalSettings;
+import org.fastcode.templates.util.FcTagAttributes;
+import org.fastcode.templates.util.TagAttributeList;
 import org.fastcode.templates.util.VariablesUtil;
+import org.fastcode.templates.velocity.contentassist.FastCodeKeywordsManager;
 import org.fastcode.templates.viewer.TemplateFieldEditor;
+import org.fastcode.templates.viewer.TemplateFieldEditor.ErrorAnnotation;
 import org.fastcode.util.DefaultTemplatesManager;
 import org.fastcode.util.TemplateItemsUtil;
 import org.fastcode.util.VelocityUtil;
@@ -78,9 +95,9 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 	private Composite				parent;
 	private TemplatePreferencePart	templatePreferencePart;
 	private Text					errorMessageText;
-	private String					defaultMessage			= null;
-	private String					currentFirstTemplateItemValue;
-	private String					currentSecondTemplateItemValue;
+	private String					defaultMessage					= null;
+	private String					currentFirstTemplateItemValue	= EMPTY_STR;
+	private String					currentSecondTemplateItemValue	= EMPTY_STR;
 	private final boolean			newTemplate;
 	private StringFieldEditor		descriptionField;
 	private String					templateName;
@@ -99,13 +116,16 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 	private String					prefValueOf2ndTempalteItem;
 	private final String			allTemplatesPreferenceKey;
 	private StringFieldEditor		templateNameField;
-	protected boolean				existingTemplateRenamed	= false;
+	protected boolean				existingTemplateRenamed			= false;
 	private String					additionalParamValue;
 	private String					sampleTemplateBody;
 	private String					warningMessage;
 	private String					errorMessage;
-	private boolean					fieldModified			= false;
+	private boolean					fieldModified					= false;
 	private Shell					shell;
+	private final static Logger		LOGGER							= Logger.getLogger(OpenEditTemplateDialog.class.getName());
+	String							templateBodyLast				= EMPTY_STR;
+	boolean							validate						= true;
 
 	@Override
 	protected void configureShell(final Shell shell) {
@@ -115,7 +135,6 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 		}
 		shell.setText(this.newTemplate ? "New Template " : "Edit Template ");
 		this.shell = shell;
-
 	}
 
 	@Override
@@ -166,12 +185,14 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 		});*/
 		this.templateNameField.getTextControl(this.parent).addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusGained(final FocusEvent e) {
 				setErrorMessage(null);
 				//				EnableTemplateFields(true);
 
 			}
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 				if (OpenEditTemplateDialog.this.newTemplate) {
 					final TemplateStore templateStore = TemplateStore.getInstance();
@@ -213,6 +234,7 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 
 		this.templateNameField.getTextControl(this.parent).addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent e) {
 				// TODO Auto-generated method stub
 
@@ -240,10 +262,12 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 		});
 		this.additionalParameterField.getControl().addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusGained(final FocusEvent e) {
 
 			}
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 				setAdditionalParamValues();
 			}
@@ -412,17 +436,44 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 		addField(this.templateBodyField);
 		this.templateBodyField.getControl().addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusGained(final FocusEvent e) {
 				setErrorMessage(null);
 			}
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 				// TODO Auto-generated method stub
-
+				setErrorMessage(null);
 			}
 
 		});
 
+		this.templateBodyField.getControl().addKeyListener(new KeyListener() {
+
+			@Override
+			public void keyReleased(final KeyEvent arg0) {
+				// TODO Auto-generated method stub
+				setErrorMessage(null);
+			}
+
+			@Override
+			public void keyPressed(final KeyEvent arg0) {
+				//System.out.println("key pressed ->" + arg0.character);
+				//LOGGER.log(Level.FINE, "key pressed ->" + arg0.character);
+				setErrorMessage(null);
+
+			}
+		});
+		this.templateBodyField.getControl().addListener(SWT.CHANGED, new Listener() {
+
+			@Override
+			public void handleEvent(final Event event) {
+				//System.out.println(event.type);
+				//LOGGER.log(Level.FINE, "Event Type" + event.type);
+				setErrorMessage(null);
+			}
+		});
 	}
 
 	/**
@@ -498,6 +549,7 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 
 	@Override
 	public void okPressed() {
+		this.templateBodyField.removeAllAnnotations();
 
 		if (this.templateNameField.getStringValue().trim().equals(EMPTY_STR)) {
 			setErrorMessage("Template Name Field is blank.");
@@ -557,34 +609,95 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 				}
 			}
 		}
-		if (isEmpty(this.currentFirstTemplateItemValue)) {
-			this.currentFirstTemplateItemValue = this.prefValueOf1stTemplateItem;
-		}
-		if (isEmpty(this.currentSecondTemplateItemValue)) {
-			this.currentSecondTemplateItemValue = this.prefValueOf2ndTempalteItem;
-		}
-		if (isEmpty(this.additionalParamValue)) {
-			this.additionalParamValue = getPreferenceStore().getString(
-					getTemplatePreferenceKey(this.templatePreferencePart.templateName, P_TEMPLATE_ADDITIONAL_PARAMETERS));
-		}
-		setErrorMessage("Please hold while the template is being validated.....");
-		try {
-			RuntimeSingleton.parse(new StringReader(this.templateBodyField.getStringValue()), this.templateName);
-		} catch (final ParseException pe) {
-			pe.printStackTrace();
-			if (pe.currentToken != null && pe.currentToken.next != null) {
-				final int lineNo = pe.currentToken.next.beginLine - 1;
-				final int colNo = pe.currentToken.next.beginColumn - 1;
-				MessageDialog.openError(new Shell(), "Error", "Error in template body " + pe.getLocalizedMessage());
+		setSourceItems();
+		if (this.validate) {
+			setErrorMessage("Please hold while the template is being validated.....");
+			final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+			try {
+				final ClassLoader classLoader = this.getClass().getClassLoader();
+				Thread.currentThread().setContextClassLoader(classLoader);
+				loadVelocityClasses(classLoader);
+				RuntimeSingleton.parse(new StringReader(this.templateBodyField.getStringValue()), this.templateName);
+			} catch (final ParseException pe) {
+				pe.printStackTrace();
+				if (pe.currentToken != null && pe.currentToken.next != null) {
+					int lineNo = pe.currentToken.next.beginLine - 1;
+					final int colNo = pe.currentToken.next.beginColumn - 1;
+					int lineOffset = 0;
+					int docLen = 0;
+					try {
+						final IRegion reg = this.templateBodyField.getDocument().getLineInformation(lineNo);
+						docLen = this.templateBodyField.getDocument().getLineLength(lineNo);
+						lineOffset = this.templateBodyField.getDocument().getLineOffset(lineNo);
+						final int lineOfOffset = this.templateBodyField.getDocument().getLineOfOffset(lineNo);
+						final String lineContent = this.templateBodyField.getDocument().get(reg.getOffset(), reg.getLength());
+						/*System.out.println(reg);
+						System.out.println(lineOffset);
+						System.out.println(docLen);
+						System.out.println("text-" + reg.toString());
+						System.out.println("line content-" + this.templateBodyField.getDocument().get(lineOffset - docLen, docLen));
+						System.out.println(lineOffset - docLen);
+						System.out.println("content-" + lineContent);*/
+						if (isEmpty(lineContent)) {
+							lineOffset = this.templateBodyField.getDocument().getLineOffset(lineNo - 1);
+							lineNo = lineNo - 1;
+
+						}
+					} catch (final BadLocationException ex) {
+						// TODO Auto-generated catch block
+						ex.printStackTrace();
+					}
+					final ErrorAnnotation errorAnnotation = this.templateBodyField.new ErrorAnnotation(lineNo, pe.getLocalizedMessage());
+					this.templateBodyField.addAnnotation(errorAnnotation, new Position(lineOffset, 5));
+					MessageDialog.openError(new Shell(), "Error", "Error in template body " + pe.getLocalizedMessage());
+					return;
+				}
+			} catch (final Exception e) {
+				e.printStackTrace();
+			} finally {
+				Thread.currentThread().setContextClassLoader(contextClassLoader);
+			}
+
+
+			final VelocityUtil velocityUtil = VelocityUtil.getInstance();
+			final boolean showErrorMessage = true;
+			final Boolean varvalidation = velocityUtil.validateVariablesAndMethods(this.templateBodyField.getStringValue(),
+					this.currentFirstTemplateItemValue, this.currentSecondTemplateItemValue, this.additionalParamValue, this.templateName,
+					this.templatePrefix, this.store, this.templateBodyField, showErrorMessage);
+			velocityUtil.reset();
+			if (varvalidation == null) {
+				System.out.println("line 671");
+				this.validate = false;
+				setErrorMessage(this.defaultMessage);
+				final String msg2 = "Cannot validate the template now. Please validate manually. Do u want to proceed or stay here and validate the template?";
+				if (!showWarning("Template " + this.templateName + ", cannot be validated now." + msg2, "Proceed Anyway", "Cancel")) {
+					return;
+				}
+				final boolean validFCTags = validateFCTagAttributes();
+				if (!validFCTags) {
+					final String msg3 = ".\nIt is recommended to correct the errors. Do u want to proceed or stay here and correct the errors?";
+					if (!showWarning("Template " + this.templateName + ", has errors in FC tags." + msg3, "Proceed Anyway", "Cancel")) {
+						return;
+					}
+				}
+				System.out.println("line 678");
+				super.okPressed();
+			} else if (varvalidation) { //if (this.validVariables) {
+				System.out.println("line 681");
+				final boolean validFCTags = validateFCTagAttributes();
+				if (!validFCTags) {
+					final String msg3 = ".\nIt is recommended to correct the errors. Do u want to proceed or stay here and correct the errors?";
+					if (!showWarning("Template " + this.templateName + ", has errors in FC tags." + msg3, "Proceed Anyway", "Cancel")) {
+						return;
+					}
+				}
+				setErrorMessage(this.defaultMessage);
+				super.okPressed();
+			} else {
+				System.out.println("line 683");
 				return;
 			}
 		}
-
-		final VelocityUtil velocityUtil = VelocityUtil.getInstance();
-		final boolean varvalidation = velocityUtil.validateVariablesAndMethods(this.templateBodyField.getStringValue(),
-				this.currentFirstTemplateItemValue, this.currentSecondTemplateItemValue, this.additionalParamValue, this.templateName,
-				this.templatePrefix, this.store);
-		velocityUtil.reset();
 
 		/*final IRunnableWithProgress op = new IRunnableWithProgress() {
 			public void run(final IProgressMonitor monitor) {
@@ -632,13 +745,32 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 		//		final boolean varvalidation = new VelocityUtil().validateVariablesAndMethods(this.templateBodyField.getStringValue(),
 		//				this.currentFirstTemplateItemValue, this.currentSecondTemplateItemValue, this.additionalParamValue, this.templateName,
 		//				this.templatePrefix, this.store);
-		if (varvalidation) { //if (this.validVariables) {
+		/*if (varvalidation) { //if (this.validVariables) {
 			setErrorMessage(this.defaultMessage);
 			super.okPressed();
 		} else {
 			return;
-		}
+		}*/
 
+		setErrorMessage(this.defaultMessage);
+		System.out.println("line 744");
+		super.okPressed();
+	}
+
+	/**
+	 *
+	 */
+	public void setSourceItems() {
+		if (isEmpty(this.currentFirstTemplateItemValue)) {
+			this.currentFirstTemplateItemValue = this.prefValueOf1stTemplateItem;
+		}
+		if (isEmpty(this.currentSecondTemplateItemValue)) {
+			this.currentSecondTemplateItemValue = this.prefValueOf2ndTempalteItem;
+		}
+		if (isEmpty(this.additionalParamValue)) {
+			this.additionalParamValue = getPreferenceStore().getString(
+					getTemplatePreferenceKey(this.templatePreferencePart.templateName, P_TEMPLATE_ADDITIONAL_PARAMETERS));
+		}
 	}
 
 	@Override
@@ -721,8 +853,92 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 		} else if (source == this.templatePreferencePart.additionalParametersField) {
 			validateAdditionalparameters(newValue.toString());
 
+		} else if (source == this.templateBodyField) {
+			//System.out.println("template body changed");
+
+			if (!this.templateBodyLast.trim().equals(this.templateBodyField.getStringValue().trim())) {
+				if (this.validate) {
+					this.templateBodyField.removeAllAnnotations();
+					final boolean showErrorMessage = false;
+					setSourceItems();
+					final VelocityUtil velocityUtil = VelocityUtil.getInstance();
+					final Boolean varvalidation = velocityUtil.validateVariablesAndMethods(this.templateBodyField.getStringValue(),
+							this.currentFirstTemplateItemValue, this.currentSecondTemplateItemValue, this.additionalParamValue,
+							this.templateName, this.templatePrefix, this.store, this.templateBodyField, showErrorMessage);
+					velocityUtil.reset();
+					if (varvalidation == null) {
+						setWarningMessage("Cannot validate the template now. Please validate manually and proceed.");
+						this.validate = false;
+					} else {
+						validateFCTagAttributes();
+					}
+				}
+			}
+
+			this.templateBodyLast = this.templateBodyField.getStringValue();
 		}
 
+	}
+
+	private boolean validateFCTagAttributes() {
+		boolean invalidAttri = false;
+		boolean absentArrti = false;
+		final List<TagAttributeList> tagAttriList = parseFCTag(this.templateBodyField.getStringValue());
+		if (tagAttriList.isEmpty() || tagAttriList.size() < 1) {
+			return true;
+		}
+		final List<FcTagAttributes> invalidAttributesList = FastCodeKeywordsManager.validateAttriutes(tagAttriList);
+		if (!invalidAttributesList.isEmpty()) {
+			markErrorAnnotation(invalidAttributesList, "Invalid Attribute", false);
+			invalidAttri = true;
+		}
+		final List<FcTagAttributes> absentReqdAttributesList = FastCodeKeywordsManager.getabsentReqdAttriutes(tagAttriList);
+		if (!absentReqdAttributesList.isEmpty()) {
+			final boolean absentWord = true; //to mark word that is not der in the template body, send true, so that 1st few letters in the beginning of the line will be marked
+			markErrorAnnotation(absentReqdAttributesList, "Require Attribute(s)", absentWord);
+			absentArrti = true;
+		}
+
+		if (invalidAttri || absentArrti) {
+			return false;
+		}
+		return true;
+	}
+
+	private void markErrorAnnotation(final List<FcTagAttributes> invalidAttributesList, final String errorMsg, final boolean absentWord) {
+		for (final FcTagAttributes invalidAttributes : getEmptyListForNull(invalidAttributesList)) {
+
+			if (this.templateBodyField != null) {
+				int lineOffset = 0;
+				int pos = 0;
+				try {
+					final IRegion reg = this.templateBodyField.getDocument().getLineInformation(
+							invalidAttributes.getVarLineNo() > 0 ? invalidAttributes.getVarLineNo() - 1 : invalidAttributes.getVarLineNo());
+					lineOffset = this.templateBodyField.getDocument().getLineOffset(
+							invalidAttributes.getVarLineNo() > 0 ? invalidAttributes.getVarLineNo() - 1 : invalidAttributes.getVarLineNo());
+					final String lineContent = this.templateBodyField.getDocument().get(reg.getOffset(), reg.getLength());
+					/*System.out.println(lineContent);
+					System.out.println(lineContent.indexOf(invalidVar.getVarName()));
+					System.out.println(reg.toString());
+					System.out.println(lineOffset);*/
+					if (absentWord) {
+						pos = lineOffset + getNoOfTabs(lineContent);
+					} else {
+						pos = lineOffset + invalidAttributes.getVarCol();// - getNoOfTabs(lineContent) * 7; //lineContent.indexOf(invalidAttributes.getVarName()); //(lineContent.indexOf(invalidAttributes.getVarName()) == -1 ? 0 : lineContent.indexOf(invalidAttributes.getVarName()));
+					}
+				} catch (final BadLocationException ex) {
+					// TODO Auto-generated catch block
+					ex.printStackTrace();
+				}
+				final ErrorAnnotation errorAnnotation = this.templateBodyField.new ErrorAnnotation(
+						invalidAttributes.getVarLineNo() > 0 ? invalidAttributes.getVarLineNo() - 1 : invalidAttributes.getVarLineNo(),
+						errorMsg + " '" + invalidAttributes.getVarName() + "'");
+
+				this.templateBodyField.addAnnotation(errorAnnotation, new Position(pos, invalidAttributes.getVarName().length()));
+			}
+			//templateBodyField.getDocument().
+
+		}
 	}
 
 	/**
@@ -836,7 +1052,8 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.method.getValue())
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.file.getValue())
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.property.getValue())
-					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.data.getValue())) {
+					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.data.getValue())
+					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.json.getValue())) {
 				setErrorMessage("Please choose only Class or None in Second Template Item.");
 			} else {
 				setErrorMessage(null);
@@ -849,7 +1066,8 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.method.getValue())
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.Class.getValue())
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.property.getValue())
-					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.data.getValue())) {
+					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.data.getValue())
+					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.json.getValue())) {
 				setErrorMessage("Please choose only File or None in Second Template Item.");
 			} else {
 				setErrorMessage(null);
@@ -859,7 +1077,8 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 			if (newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.Class.getValue())
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.file.getValue())
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.property.getValue())
-					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.data.getValue())) {
+					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.data.getValue())
+					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.json.getValue())) {
 
 				setErrorMessage("Please choose only Field, Method, Both or Custom in Second Template Item.");
 			} else {
@@ -886,7 +1105,7 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.both.getValue())
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.custom.getValue())
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.method.getValue())) {
-				setErrorMessage("Please choose data, property or None in Second Template Item.");
+				setErrorMessage("Please choose data, property,json or None in Second Template Item.");
 			} else {
 
 				setErrorMessage(null);
@@ -903,7 +1122,8 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.custom.getValue())
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.method.getValue())
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.property.getValue())
-					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.data.getValue())) {
+					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.data.getValue())
+					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.json.getValue())) {
 
 				templatePreferencePart.getterSetterRadioButton.setEnabled(false, this.parent);
 				setErrorMessage("Please choose only Field or None in Second Template Item.");
@@ -924,7 +1144,8 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 						|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.method.getValue())
 						|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.property.getValue())
 						|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.field.getValue())
-						|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.data.getValue())) {
+						|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.data.getValue())
+						|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.json.getValue())) {
 					setErrorMessage("Second Template item should be none");
 
 				} else {
@@ -1224,11 +1445,15 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 			};
 			dialog.open();
 			if (dialog.getReturnCode() == 0) {
+				final VelocityUtil veloUtil = VelocityUtil.getInstance();
+				veloUtil.clearLocalVarsList();
 				super.cancelPressed();
 			} else {
 				return;
 			}
 		} else {
+			final VelocityUtil veloUtil = VelocityUtil.getInstance();
+			veloUtil.clearLocalVarsList();
 			super.cancelPressed();
 		}
 	}

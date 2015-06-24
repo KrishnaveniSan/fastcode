@@ -8,7 +8,9 @@ import static org.fastcode.common.FastCodeConstants.PLACEHOLDER_BASE_CLASS;
 import static org.fastcode.common.FastCodeConstants.SPACE;
 import static org.fastcode.common.FastCodeConstants.TEMPLATES_FOLDER;
 import static org.fastcode.common.FastCodeConstants.UNDERSCORE;
+import static org.fastcode.util.SourceUtil.showWarning;
 import static org.fastcode.util.StringUtil.isEmpty;
+import static org.fastcode.util.StringUtil.loadVelocityClasses;
 import static org.fastcode.util.StringUtil.parseAdditonalParam;
 import static org.fastcode.util.TemplateUtil.findOrcreateTemplate;
 import static org.fastcode.util.TemplateUtil.makeTemplateSettings;
@@ -73,6 +75,7 @@ public class TemplateValidator {
 
 	static StringBuilder			allSnippets		= new StringBuilder(EMPTY_STR);
 	private ScopedPreferenceStore	store;
+	boolean							validate		= true;
 
 	/**
 	 *
@@ -85,6 +88,8 @@ public class TemplateValidator {
 		final String codeSnippet = EMPTY_STR;
 		final StringBuilder allTemplateErrors = new StringBuilder(EMPTY_STR);
 		//final StringBuilder allTemplateWarn = new StringBuilder(EMPTY_STR);
+		final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+		Thread.currentThread().setContextClassLoader(VelocityUtil.class.getClassLoader());
 
 		try {
 			RuntimeSingleton.parse(new StringReader(templateBody), "TemplateValidation");
@@ -119,6 +124,8 @@ public class TemplateValidator {
 			allTemplateErrors.append(EMPTY_STR.equals(allTemplateErrors.toString()) ? ex.getMessage() : COLON + ex.getMessage());
 			throw new Exception("Error in template " + placeHolder.get("template_name") + newLine + allTemplateErrors.toString());
 
+		} finally {
+			Thread.currentThread().setContextClassLoader(contextClassLoader);
 		}
 		return allSnippets.toString();
 	}
@@ -321,7 +328,7 @@ public class TemplateValidator {
 	 * @param templatePrefix
 	 * @throws Exception
 	 */
-	public boolean validateTemplate(final InputStream inputStream, final String templatePreferenceName) throws Exception {
+	public Boolean validateTemplate(final InputStream inputStream, final String templatePreferenceName) throws Exception {
 		Map templateNameBody = new HashMap<String, TemplateSettings>();
 		final String templateBody = EMPTY_STR;
 		final String variation = EMPTY_STR;
@@ -329,7 +336,8 @@ public class TemplateValidator {
 		TemplateSettings templateSettings;
 		final Map<String, Object> placeHolder;
 		final String snippet = EMPTY_STR;
-		boolean varValidation = true;
+		Boolean varValidation = true;
+
 		templateNameBody = getTemplateBody(inputStream, TEMPLATE_PREFERENCE_NAME.getTemplatePrefix(templatePreferenceName));
 
 		if (templateNameBody != null) {
@@ -337,9 +345,9 @@ public class TemplateValidator {
 
 			final Iterator templateNameBodyItr = templateNameBody.entrySet().iterator();
 			while (templateNameBodyItr.hasNext()) {
-				final Map.Entry teplateNameBodyPair = (Map.Entry) templateNameBodyItr.next();
-				templateType = (String) teplateNameBodyPair.getKey();
-				templateSettings = (TemplateSettings) teplateNameBodyPair.getValue();
+				final Map.Entry templateNameBodyPair = (Map.Entry) templateNameBodyItr.next();
+				templateType = (String) templateNameBodyPair.getKey();
+				templateSettings = (TemplateSettings) templateNameBodyPair.getValue();
 				//	placeHolder.put("template_name", templateSettings.getTemplateName());
 				validateVelocitySyntax(templateSettings.getTemplateBody(), templateSettings.getTemplateName());
 				final VelocityUtil velocityUtil = VelocityUtil.getInstance();
@@ -349,13 +357,26 @@ public class TemplateValidator {
 						additionalParam = additionalParam + SPACE + templateSettings.getAdditionalParamaters()[i];
 					}
 				}*/
-				varValidation = velocityUtil.validateVariablesAndMethods(templateSettings.getTemplateBody(), templateSettings
-						.getFirstTemplateItem().getValue(), templateSettings.getSecondTemplateItem().getValue(), additionalParam,
-						templateSettings.getTemplateName(), TEMPLATE_PREFERENCE_NAME.getTemplatePrefix(templatePreferenceName),
-						new ScopedPreferenceStore(new InstanceScope(), FAST_CODE_PLUGIN_ID));
-				velocityUtil.reset();
-				if (!varValidation) {
-					break;
+				if (this.validate) {
+					final boolean showErrorMessage = true;
+					varValidation = velocityUtil.validateVariablesAndMethods(templateSettings.getTemplateBody(), templateSettings
+							.getFirstTemplateItem().getValue(), templateSettings.getSecondTemplateItem().getValue(), additionalParam,
+							templateSettings.getTemplateName(), TEMPLATE_PREFERENCE_NAME.getTemplatePrefix(templatePreferenceName),
+							new ScopedPreferenceStore(new InstanceScope(), FAST_CODE_PLUGIN_ID), null, showErrorMessage);
+					velocityUtil.reset();
+					if (varValidation == null) {
+						final String msg2 = "Cannot validate the template now. Please validate manually. Do u want to proceed or go back and validate the template?";
+						if (!showWarning("Template " + templateSettings.getTemplateName() + ", cannot be validated now." + msg2, "Proceed Anyway", "Cancel")) {
+							break;
+						} else {
+							this.validate = false;
+							varValidation = true;
+							continue;
+						}
+					}
+					if (varValidation != null && !varValidation) {
+						break;
+					}
 				}
 			}
 		} else {
@@ -461,10 +482,11 @@ public class TemplateValidator {
 					if (!isEmpty(choice2)
 							&& choice1.equalsIgnoreCase(FIRST_TEMPLATE.File.getValue())
 							&& !(choice2.equalsIgnoreCase(SECOND_TEMPLATE.none.getValue())
-									|| choice2.equalsIgnoreCase(SECOND_TEMPLATE.property.getValue()) || choice2
-										.equalsIgnoreCase(SECOND_TEMPLATE.data.getValue()))) {
+									|| choice2.equalsIgnoreCase(SECOND_TEMPLATE.property.getValue())
+									|| choice2.equalsIgnoreCase(SECOND_TEMPLATE.data.getValue()) || choice2
+										.equalsIgnoreCase(SECOND_TEMPLATE.json.getValue()))) {
 						throw new Exception(templateName
-								+ " : when 1st template item is - file - 2nd template item can  be property/data/none.");
+								+ " : when 1st template item is - file - 2nd template item can  be property/data/json/none.");
 					}
 					if (isEmpty(choice2)
 							|| choice1.equalsIgnoreCase(FIRST_TEMPLATE.Package.getValue())
@@ -590,7 +612,10 @@ public class TemplateValidator {
 	 */
 	private String validateVelocitySyntax(final String templateBody, final String template_name) throws Exception {
 		final StringBuilder allTemplateErrors = new StringBuilder(EMPTY_STR);
-
+		final ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+		final ClassLoader classLoader = VelocityUtil.class.getClassLoader();
+		Thread.currentThread().setContextClassLoader(classLoader);
+		loadVelocityClasses(classLoader);
 		try {
 			RuntimeSingleton.parse(new StringReader(templateBody), "TemplateValidation");
 
@@ -611,6 +636,8 @@ public class TemplateValidator {
 			allTemplateErrors.append(EMPTY_STR.equals(allTemplateErrors.toString()) ? ex.getMessage() : COLON + ex.getMessage());
 			throw new Exception("Error in template " + template_name + newLine + allTemplateErrors.toString());
 
+		} finally {
+			Thread.currentThread().setContextClassLoader(contextClassLoader);
 		}
 		return allSnippets.toString();
 	}

@@ -160,7 +160,7 @@ public class FastCodeConstants {
 
 	public static final String	EXCLUDE_FIELDS_FILE_EXTENSIONS			= "exclude.fields.file.extensions";
 
-	public static final String	ENUM									= "enum_constant";
+	public static final String	ENUM									= "enum";
 
 	public static final String	METHOD_PRIVATE							= "method_private";
 
@@ -809,7 +809,7 @@ public class FastCodeConstants {
 
 	public static enum SECOND_TEMPLATE {
 		method("method"), field("field"), both("both"), custom("custom"), Class("class"), file("file"), none("none"), property("property"), data(
-				"data");
+				"data"), json("json");
 
 		private String	value;
 
@@ -1050,7 +1050,7 @@ public class FastCodeConstants {
 	public static final String	HQL_NAMED_QUERY_WITH_ANNOTATION_STR	= "NAMED_QUERY_WITH_ANNOTATION";
 
 	public static enum ACTION_TYPE {
-		Create("create"), Prompt("prompt"), Import("import"), Select("select"), Update("update");
+		Create("create"), Prompt("prompt"), Import("import"), Select("select"), Update("update"), Run("run");
 
 		private String	value;
 
@@ -1096,7 +1096,8 @@ public class FastCodeConstants {
 	public static enum ACTION_ENTITY {
 		Class("class"), Field("field"), Interface("interface"), Snippet("snippet"), Method("method"), File("file"), Folder("folder"), Package(
 				"package"), Import("import"), Xml("xml"), Message("message"), Exit("exit"), LocalVar("localVar"), Innerclass("innerclass"), Test(
-				"test"), Project("project"), Classes("classes"), Files("files"), Property("property"), Info("info");
+				"test"), Project("project"), Classes("classes"), Files("files"), Property("property"), Info("info"), Read("read"), Write(
+				"write"), Open("open"), Command("command");
 
 		private String	value;
 
@@ -1254,7 +1255,7 @@ public class FastCodeConstants {
 	public static final String	DISABLED_CHECKBOX	= "disabled_checkbox";
 
 	public static enum TemplateTag {
-		IMPORT, METHOD, FIELD, FILES, FILE, XML, CLASSES, CLASS, MESSAGE, EXIT, LOCALVAR, FOLDER, PACKAGE, PROJECT, PROPERTY, SNIPPET, INFO
+		IMPORT, METHOD, FIELD, FILES, FILE, XML, CLASSES, CLASS, MESSAGE, EXIT, LOCALVAR, FOLDER, PACKAGE, PROJECT, PROPERTY, SNIPPET, INFO, COMMAND
 	}
 
 	public static final String	TEMPLATE_TAG_PREFIX	= "fc";
@@ -1772,13 +1773,31 @@ public class FastCodeConstants {
 		}
 	}
 
-	public static final String	ATTRIBUTE_MIN		= "min";
+	public static final String	ATTRIBUTE_MIN			= "min";
 
-	public static final String	ATTRIBUTE_MAX		= "max";
+	public static final String	ATTRIBUTE_MAX			= "max";
 
-	public static final String	ZERO_STRING			= "0";
+	public static final String	ZERO_STRING				= "0";
 
-	public static final String	ATTRIBUTE_TYPE		= "type";
+	public static final String	ATTRIBUTE_TYPE			= "type";
 
-	public static final String	ATTRIBUTE_DEPENDSON	= "dependsOn";
+	public static final String	ATTRIBUTE_DEPENDSON		= "dependsOn";
+
+	public static final String	VALID_VARIABLES			= "valid_variables";
+
+	public static final String	LOCAL_VARIABLES			= "local_variables";
+
+	public static final String	SET_VARIABLES			= "set_variables";
+
+	public static final String	RETURN_VALUE			= "return_value";
+
+	public static final String	FOR_LOOP_LOCAL_VAR		= "for_loop_local_var";
+
+	public static final String	FC_LOCAL_VAL_LIST		= "fc_local_val_list";
+
+	public static final String	VALID_VARIABLE_LIST		= "valid_variableslist";
+
+	public static final String	INVALID_ATTRIBUTES_LIST	= "invalid_attributes_list";
+
+	public static final String REPLACE_SELECTED_TEXT = "replace_selected_text";
 }

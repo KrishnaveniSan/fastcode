@@ -1,6 +1,9 @@
 package org.fastcode.templates.util;
 
 import static org.fastcode.common.FastCodeConstants.DOT;
+import static org.fastcode.common.FastCodeConstants.DOUBLE_QUOTES;
+import static org.fastcode.common.FastCodeConstants.EQUAL;
+import static org.fastcode.common.FastCodeConstants.RIGHT_PAREN;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -12,6 +15,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.IDocument;
 import org.fastcode.Activator;
 import org.fastcode.templates.contentassist.ElementProposal;
 import org.fastcode.templates.contentassist.FunctionProposal;
@@ -238,6 +243,40 @@ public class ContentAssistUtil {
 		}
 		return eProposalList;
 
+	}
+
+	public static boolean isWithinQuotes(final IDocument document, final int offset) {
+
+		boolean leftQuoteFound = false;
+		boolean rightQuoteFound = false;
+		try {
+			for (int i = offset; i > 0; i--) {
+				if (document.get(i, 1).equals(EQUAL)) {
+					break;
+				}
+				if (document.get(i, 1).equals(DOUBLE_QUOTES)) {
+					leftQuoteFound = true;
+					break;
+				}
+			}
+			for (int i = offset; i <= document.getLength(); i++) {
+				if (document.get(i, 1).equals(RIGHT_PAREN)) {
+					break;
+				}
+				if (document.get(i, 1).equals(DOUBLE_QUOTES)) {
+					rightQuoteFound = true;
+					break;
+				}
+			}
+
+			return leftQuoteFound && rightQuoteFound;
+
+		} catch (final BadLocationException ex) {
+			// TODO Auto-generated catch block
+			ex.printStackTrace();
+		}
+
+		return false;
 	}
 
 }

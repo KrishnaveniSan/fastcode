@@ -47,6 +47,7 @@ public class CreateSimilarAction extends CreateSimilarSupport implements IObject
 	/**
 	 * @see IObjectActionDelegate#setActivePart(IAction, IWorkbenchPart)
 	 */
+	@Override
 	public void setActivePart(final IAction action, final IWorkbenchPart targetPart) {
 		this.page = targetPart.getSite().getPage();
 	}
@@ -54,6 +55,7 @@ public class CreateSimilarAction extends CreateSimilarSupport implements IObject
 	/**
 	 * @see IActionDelegate#selectionChanged(IAction, ISelection)
 	 */
+	@Override
 	public void selectionChanged(final IAction action, final ISelection selection) {
 		this.selection = (StructuredSelection) selection;
 		if (this.selection.getFirstElement() instanceof ICompilationUnit) {

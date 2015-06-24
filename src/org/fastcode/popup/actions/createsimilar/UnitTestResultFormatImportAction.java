@@ -79,6 +79,7 @@ public class UnitTestResultFormatImportAction extends AbstractActionSupport impl
 
 	}
 
+	@Override
 	public void dispose() {
 		// TODO Auto-generated method stub
 

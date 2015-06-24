@@ -3,6 +3,7 @@ package org.fastcode.common;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.fastcode.common.FastCodeConstants.JOIN_TYPES;
 import org.fastcode.common.FastCodeConstants.NUMBER_OF_JOIN_TABLES;
@@ -42,6 +43,8 @@ public class CreateJoinData {
 	private String									thirdSchemaSelected;
 	private boolean									useAliasName;
 	private String									selectedDatabaseName;
+	private IJavaProject							javaProject;
+	private FastCodeProject							selectedProject;
 
 	/*
 	 * public void setWhereClauseQualifier(final WHERE_CLAUSE_QUALIFIER
@@ -288,13 +291,29 @@ public class CreateJoinData {
 	 * @return the selectedDatabaseName
 	 */
 	public String getSelectedDatabaseName() {
-		return selectedDatabaseName;
+		return this.selectedDatabaseName;
 	}
 
 	/**
 	 * @param selectedDatabaseName the selectedDatabaseName to set
 	 */
-	public void setSelectedDatabaseName(String selectedDatabaseName) {
+	public void setSelectedDatabaseName(final String selectedDatabaseName) {
 		this.selectedDatabaseName = selectedDatabaseName;
+	}
+
+	public FastCodeProject getSelectedProject() {
+		return this.selectedProject;
+	}
+
+	public void setSelectedProject(final FastCodeProject selectedProject) {
+		this.selectedProject = selectedProject;
+	}
+
+	public IJavaProject getJavaProject() {
+		return javaProject;
+	}
+
+	public void setJavaProject(IJavaProject javaProject) {
+		this.javaProject = javaProject;
 	}
 }

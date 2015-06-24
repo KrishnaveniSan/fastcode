@@ -315,7 +315,7 @@ public class TemplateField extends FieldEditor {
 	 */
 	public FastCodeTemplateViewer getTextControl(final Composite parent) {
 		if (this.templateField == null) {
-			this.templateField = new FastCodeTemplateViewer(parent, SWT.SINGLE | SWT.BORDER);
+			this.templateField = new FastCodeTemplateViewer(parent, null, null, SWT.SINGLE | SWT.BORDER);
 			this.templateField.getControl().setFont(parent.getFont());
 			switch (this.validateStrategy) {
 			case VALIDATE_ON_KEY_STROKE:
@@ -364,6 +364,7 @@ public class TemplateField extends FieldEditor {
 				Assert.isTrue(false, "Unknown validate strategy");//$NON-NLS-1$
 			}
 			this.templateField.getControl().addDisposeListener(new DisposeListener() {
+				@Override
 				public void widgetDisposed(final DisposeEvent event) {
 					TemplateField.this.templateField = null;
 				}

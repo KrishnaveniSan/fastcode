@@ -16,16 +16,17 @@ public class FastCodeFont {
 
 	private static Font	boldFont;
 	private static Font	SimpleFont;
+	private static Font	lineNumberFont;
 
 	/**
 	 * @param fontName
 	 * @param fontHeight
 	 * @return
 	 */
-	public static Font getBoldFont(String fontName, int fontHeight) {
-		Font boldFont = null;
+	public static Font getBoldFont(final String fontName, final int fontHeight) {
+		//Font boldFont = null;
 		if (boldFont == null) {
-			Device device = Display.getCurrent();
+			final Device device = Display.getCurrent();
 			boldFont = new Font(device, fontName, fontHeight, SWT.BOLD);
 		}
 		return boldFont;
@@ -37,13 +38,29 @@ public class FastCodeFont {
 	 * @param fontHeight
 	 * @return
 	 */
-	public static Font getSimpleFont(String fontName, int fontHeight) {
-		Font SimpleFont = null;
+	public static Font getSimpleFont(final String fontName, final int fontHeight) {
+		//Font SimpleFont = null;
 		if (SimpleFont == null) {
-			Device device = Display.getCurrent();
+			final Device device = Display.getCurrent();
 			SimpleFont = new Font(device, fontName, fontHeight, SWT.SIMPLE);
 		}
 		return SimpleFont;
+
+	}
+
+	/**
+	 *
+	 * @param fontName
+	 * @param fontHeight
+	 * @return
+	 */
+	public static Font getLineNumberFont(final String fontName, final int fontHeight) {
+		//Font lineNumberFont = null;
+		if (lineNumberFont == null) {
+			final Device device = Display.getCurrent();
+			lineNumberFont = new Font(device, fontName, 8, SWT.SIMPLE);
+		}
+		return lineNumberFont;
 
 	}
 
@@ -54,6 +71,10 @@ public class FastCodeFont {
 
 		if (SimpleFont != null && !SimpleFont.isDisposed()) {
 			SimpleFont.dispose();
+		}
+
+		if (lineNumberFont != null && !lineNumberFont.isDisposed()) {
+			lineNumberFont.dispose();
 		}
 	}
 

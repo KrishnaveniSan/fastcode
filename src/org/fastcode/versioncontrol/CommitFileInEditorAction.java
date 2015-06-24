@@ -74,15 +74,18 @@ public class CommitFileInEditorAction /*extends Action*/implements IEditorAction
 		});
 	}*/
 
+	@Override
 	public void dispose() {
 		// TODO Auto-generated method stub
 		System.out.println("inside dispose");
 	}
 
+	@Override
 	public void init(final IWorkbenchWindow window) {
 		this.window = window;
 	}
 
+	@Override
 	public void run(final IAction arg0) {
 		final IWorkingCopyManager manager = JavaUI.getWorkingCopyManager();
 		final VersionControlPreferences versionControlPreferences = VersionControlPreferences.getInstance();
@@ -201,6 +204,7 @@ public class CommitFileInEditorAction /*extends Action*/implements IEditorAction
 			//final RepositoryService checkin = getRepositoryServiceClass();
 
 			final IRunnableWithProgress op = new IRunnableWithProgress() {
+				@Override
 				public void run(final IProgressMonitor monitor) {
 					try {
 						/*final String url = checkin.getRepositoryURL(file.getProject());
@@ -230,11 +234,13 @@ public class CommitFileInEditorAction /*extends Action*/implements IEditorAction
 		}
 	}
 
+	@Override
 	public void selectionChanged(final IAction arg0, final ISelection arg1) {
 		// TODO Auto-generated method stub
 
 	}
 
+	@Override
 	public void setActiveEditor(final IAction arg0, final IEditorPart arg1) {
 		// TODO Auto-generated method stub
 

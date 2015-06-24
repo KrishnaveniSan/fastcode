@@ -1,12 +1,14 @@
 package org.fastcode.templates.velocity.contentassist;
 
 import static org.fastcode.common.FastCodeConstants.COMMA;
+import static org.fastcode.common.FastCodeConstants.DB_FOREACH_VARS;
 import static org.fastcode.common.FastCodeConstants.DOLLAR;
 import static org.fastcode.common.FastCodeConstants.EMPTY_STR;
 import static org.fastcode.common.FastCodeConstants.LEFT_CURL;
 import static org.fastcode.common.FastCodeConstants.RIGHT_CURL;
 import static org.fastcode.common.FastCodeConstants.SPACE;
 import static org.fastcode.preferences.PreferenceConstants.P_DATABASE_TEMPLATE_PREFIX;
+import static org.fastcode.util.FastCodeUtil.getEmptyArrayForNull;
 import static org.fastcode.util.StringUtil.isEmpty;
 
 import java.util.ArrayList;
@@ -24,8 +26,6 @@ import org.fastcode.templates.contentassist.ElementProposal;
 import org.fastcode.templates.contentassist.TemplateProposal;
 import org.fastcode.templates.util.VariablesUtil;
 import org.fastcode.util.VelocityUtil;
-import static org.fastcode.common.FastCodeConstants.DB_FOREACH_VARS;
-import static org.fastcode.util.FastCodeUtil.getEmptyArrayForNull;
 
 /**
  * Manager for Velocity directives.
@@ -186,6 +186,13 @@ public class FastCodeDirectiveVelocityUtil {
 							} else if (secondTemplateItem.equals(SECOND_TEMPLATE.data)) {
 								final String middle_part = DOLLAR + secondTemplateItem.getValue() + SPACE + "in" + SPACE + DOLLAR + LEFT_CURL
 										+ VariablesUtil.getInstance().getFilePlaceholderValue() + RIGHT_CURL;
+								final String proposalString = first_part + middle_part + last_part;
+								displayString = proposalString;
+								cursorOffset = proposalString.length();
+								proposals.add(createTemplateProposal(proposalString, displayString, offset, length, cursorOffset));
+							} else if (secondTemplateItem.equals(SECOND_TEMPLATE.json)) {
+								final String middle_part = DOLLAR + SECOND_TEMPLATE.field.getValue() + SPACE + "in" + SPACE + DOLLAR + LEFT_CURL
+										+ VariablesUtil.getPlural(SECOND_TEMPLATE.field.getValue()) + RIGHT_CURL;
 								final String proposalString = first_part + middle_part + last_part;
 								displayString = proposalString;
 								cursorOffset = proposalString.length();

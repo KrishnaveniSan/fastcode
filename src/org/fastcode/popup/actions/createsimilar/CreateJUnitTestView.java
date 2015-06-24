@@ -60,6 +60,7 @@ public class CreateJUnitTestView extends CreateJUnitTestActionSupport implements
 		return methodSelected;
 	}
 
+	@Override
 	public void dispose() {
 		// TODO Auto-generated method stub
 

@@ -67,9 +67,10 @@ public class WhereFieldTableDialogForJoin extends TitleAreaDialog {
 		/* (non-Javadoc)
 		 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 		 */
+		@Override
 		public Image getColumnImage(final Object element, final int columnIndex) {
 
-			FastCodeCache fastCodeCache = FastCodeCache.getInstance();
+			final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
 			Image checked = null;
 			Image unchecked = null;
 			Image disabled = null;
@@ -80,13 +81,13 @@ public class WhereFieldTableDialogForJoin extends TitleAreaDialog {
 				populateFCCacheEntityImageMap(CHECKED, checked);
 			}
 			if (fastCodeCache.getEntityImageMap().containsKey(UNCHECKED)) {
-				checked = getImagefromFCCacheMap(UNCHECKED);
+				unchecked = getImagefromFCCacheMap(UNCHECKED);
 			} else {
 				unchecked = Activator.getDefault().getImageRegistry().get(UNCHECKED);
 				populateFCCacheEntityImageMap(UNCHECKED, unchecked);
 			}
 			if (fastCodeCache.getEntityImageMap().containsKey(DISABLED_CHECKBOX)) {
-				checked = getImagefromFCCacheMap(DISABLED_CHECKBOX);
+				disabled = getImagefromFCCacheMap(DISABLED_CHECKBOX);
 			} else {
 				disabled = Activator.getDefault().getImageRegistry().get(DISABLED_CHECKBOX);
 				populateFCCacheEntityImageMap(DISABLED_CHECKBOX, disabled);
@@ -234,6 +235,7 @@ public class WhereFieldTableDialogForJoin extends TitleAreaDialog {
 			return returnImage;
 		}
 
+		@Override
 		public String getColumnText(final Object element, final int columnIndex) {
 			final int TABLE_NAME = 0;
 			final int FIELD_NAME = 1;
@@ -258,14 +260,17 @@ public class WhereFieldTableDialogForJoin extends TitleAreaDialog {
 	}
 
 	private static class ContentProvider implements IStructuredContentProvider {
+		@Override
 		public Object[] getElements(final Object inputElement) {
 
 			return ((List<WhereQualifierForJoin>) inputElement).toArray();
 		}
 
+		@Override
 		public void dispose() {
 		}
 
+		@Override
 		public void inputChanged(final Viewer viewer, final Object oldInput, final Object newInput) {
 		}
 	}
@@ -547,6 +552,7 @@ public class WhereFieldTableDialogForJoin extends TitleAreaDialog {
 
 		this.tableViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 
+			@Override
 			public void selectionChanged(final SelectionChangedEvent event) {
 
 				setSelectedFields((WhereQualifierForJoin) WhereFieldTableDialogForJoin.this.tableViewer

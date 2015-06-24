@@ -240,6 +240,7 @@ public class UnitTestImportView extends UnitTestImportExportView {
 		return "Import";
 	}
 
+	@Override
 	public void dispose() {
 		// TODO Auto-generated method stub
 

@@ -25,6 +25,7 @@ public class AutoCloseStrategy implements IAutoEditStrategy {
 	 * @see org.eclipse.jface.text.IAutoEditStrategy#customizeDocumentCommand(org.eclipse.jface.text.IDocument, org.eclipse.jface.text.DocumentCommand)
 	 */
 
+	@Override
 	public void customizeDocumentCommand(final IDocument document, final DocumentCommand command) {
 		if (document.getLength() == 0 || command.offset == -1 || command.length > 0 || command.text == null || command.text.length() != 1) {
 			return;

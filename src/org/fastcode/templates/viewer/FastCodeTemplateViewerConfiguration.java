@@ -3,21 +3,24 @@ package org.fastcode.templates.viewer;
 import org.eclipse.jface.text.IAutoEditStrategy;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextHover;
-import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.contentassist.ContentAssistant;
 import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.jface.text.contentassist.IContentAssistant;
+import org.eclipse.jface.text.formatter.ContentFormatter;
+import org.eclipse.jface.text.formatter.IContentFormatter;
 import org.eclipse.jface.text.presentation.IPresentationReconciler;
 import org.eclipse.jface.text.presentation.PresentationReconciler;
 import org.eclipse.jface.text.rules.DefaultDamagerRepairer;
 import org.eclipse.jface.text.rules.IToken;
 import org.eclipse.jface.text.rules.ITokenScanner;
-import org.eclipse.jface.text.rules.Token;
+import org.eclipse.jface.text.source.IAnnotationHover;
+import org.eclipse.jface.text.source.ISharedTextColors;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.text.source.SourceViewerConfiguration;
 import org.fastcode.FastCodeColorManager;
 import org.fastcode.templates.rules.FastCodeTemplatePartitions;
 import org.fastcode.templates.rules.SingleTokenScanner;
+import org.fastcode.templates.viewer.TemplateFieldEditor.ColorCache;
 
 /**
  * Viewer configuration for fastcode templates.
@@ -30,6 +33,7 @@ public class FastCodeTemplateViewerConfiguration extends SourceViewerConfigurati
 	private IAutoEditStrategy[]		autoEditStrategies;
 	private IContentAssistProcessor	assistProcessor;
 	private IContentAssistProcessor	fcTagProcessor;
+	private ColorCache	colorCache;
 
 	/**
 	 * Instantiates a new template viewer configuration.
@@ -38,7 +42,7 @@ public class FastCodeTemplateViewerConfiguration extends SourceViewerConfigurati
 	 * @param textHover the text hover
 	 */
 	public FastCodeTemplateViewerConfiguration(final ITokenScanner tokenScanner, final ITextHover textHover) {
-		this(tokenScanner, null, textHover, null, null, null);
+		this(tokenScanner, null, textHover, null, null, null, null);
 	}
 
 	/**
@@ -49,13 +53,14 @@ public class FastCodeTemplateViewerConfiguration extends SourceViewerConfigurati
 	 * @param autoEditStrategies the auto edit strategies
 	 * @param assistProcessor the assist processor
 	 */
-	public FastCodeTemplateViewerConfiguration(final ITokenScanner tokenScanner, final ITokenScanner fcTagTokenScanner,final ITextHover textHover, final IAutoEditStrategy[] autoEditStrategies, final IContentAssistProcessor assistProcessor, final IContentAssistProcessor fcTagProcessor) {
+	public FastCodeTemplateViewerConfiguration(final ITokenScanner tokenScanner, final ITokenScanner fcTagTokenScanner,final ITextHover textHover, final IAutoEditStrategy[] autoEditStrategies, final IContentAssistProcessor assistProcessor, final IContentAssistProcessor fcTagProcessor, final ISharedTextColors sharedColor) {
 		this.textHover = textHover;
 		this.tokenScanner = tokenScanner;
 		this.assistProcessor = assistProcessor;
 		this.autoEditStrategies = autoEditStrategies;
 		this.fcTagProcessor = fcTagProcessor;
 		this.fcTagTokenScanner = fcTagTokenScanner;
+		this.colorCache = (ColorCache) sharedColor;
 	}
 
 	public FastCodeTemplateViewerConfiguration() {
@@ -84,7 +89,9 @@ public class FastCodeTemplateViewerConfiguration extends SourceViewerConfigurati
 				FastCodeTemplatePartitions.FC_FILES,
 				FastCodeTemplatePartitions.FC_PROPERTY,
 				FastCodeTemplatePartitions.FC_INFO,
-				FastCodeTemplatePartitions.FC_SNIPPET
+				FastCodeTemplatePartitions.FC_SNIPPET/*,
+				FastCodeTemplatePartitions.SINGLE_LINE_JAVA_COMMENT,
+				FastCodeTemplatePartitions.MULTI_LINE_JAVA_COMMENT*/
 				};
 	}
 
@@ -235,7 +242,13 @@ public class FastCodeTemplateViewerConfiguration extends SourceViewerConfigurati
 		rec.setDamager(dr, FastCodeTemplatePartitions.MULTI_LINE_COMMENT);
 		rec.setRepairer(dr, FastCodeTemplatePartitions.MULTI_LINE_COMMENT);
 
+		/*dr = new DefaultDamagerRepairer(new SingleTokenScanner(commentToken));
+		rec.setDamager(dr, FastCodeTemplatePartitions.SINGLE_LINE_JAVA_COMMENT);
+		rec.setRepairer(dr, FastCodeTemplatePartitions.SINGLE_LINE_JAVA_COMMENT);
 
+		dr = new DefaultDamagerRepairer(new SingleTokenScanner(commentToken));
+		rec.setDamager(dr, FastCodeTemplatePartitions.MULTI_LINE_JAVA_COMMENT);
+		rec.setRepairer(dr, FastCodeTemplatePartitions.MULTI_LINE_JAVA_COMMENT);*/
 
 		return rec;
 	}
@@ -247,4 +260,31 @@ public class FastCodeTemplateViewerConfiguration extends SourceViewerConfigurati
 	public String getConfiguredDocumentPartitioning(final ISourceViewer sourceViewer) {
 		return FastCodeTemplatePartitions.TEMPLATE_PARTITIONING;
 	}
+
+	@Override
+	public IAnnotationHover getAnnotationHover(final ISourceViewer sourceViewer) {
+		return new FastCodeAnnotationHover(sourceViewer);
+	}
+
+	@Override
+	public IContentFormatter getContentFormatter(final ISourceViewer sourceViewer)
+	{
+	    final ContentFormatter formatter = new ContentFormatter();
+
+	    /*final XMLFormattingStrategy formattingStrategy = new XMLFormattingStrategy();
+	    final DefaultFormattingStrategy defaultStrategy = new DefaultFormattingStrategy();
+	    final TextFormattingStrategy textStrategy = new TextFormattingStrategy();
+	    final DocTypeFormattingStrategy doctypeStrategy = new DocTypeFormattingStrategy();
+	    final PIFormattingStrategy piStrategy = new PIFormattingStrategy();
+	    formatter.setFormattingStrategy(defaultStrategy, IDocument.DEFAULT_CONTENT_TYPE);
+	    formatter.setFormattingStrategy(textStrategy, FastCodeTemplatePartitions.TEMPLATE_PARTITIONING);
+	    formatter.setFormattingStrategy(doctypeStrategy, XMLPartitionScanner.XML_DOCTYPE);
+	    formatter.setFormattingStrategy(piStrategy, XMLPartitionScanner.XML_PI);
+	    formatter.setFormattingStrategy(textStrategy, XMLPartitionScanner.XML_CDATA);
+	    formatter.setFormattingStrategy(formattingStrategy, XMLPartitionScanner.XML_START_TAG);
+	    formatter.setFormattingStrategy(formattingStrategy, XMLPartitionScanner.XML_END_TAG);*/
+
+	    return formatter;
+	}
+
 }

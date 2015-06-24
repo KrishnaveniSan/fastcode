@@ -5,7 +5,7 @@ package org.fastcode.templates.contentassist;
 /**
  * Element proposal class.
  */
-public class ElementProposal implements Comparable<ElementProposal>{
+public class ElementProposal implements Comparable<ElementProposal> {
 	protected String proposal;
 	protected String displayPrefix;
 	protected String description;
@@ -138,6 +138,7 @@ public class ElementProposal implements Comparable<ElementProposal>{
 	}
 
 
+	@Override
 	public int compareTo(final ElementProposal elementProposal ) {
 		if( this.proposal.equals(elementProposal.getProposal())){
 			return 0;

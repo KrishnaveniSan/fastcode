@@ -46,7 +46,7 @@ public class TemplatePreferencePart {
 	private static final String[][]	NUMBER_OF_REQUIRED_ITMES	= { { "0", "0" }, { "1", "1" }, { "2", "2" } };
 	private static final String[][]	SECOND_TEMPLATE_CHOICE		= { { "Field", "field" }, { "Method", "method" },
 			{ "Method/Field", "both" }, { "Custom", "custom" }, { "Class", "class" }, { "File", "file" }, { "Property", "property" },
-			{ "Data", "data" }, { "None", "none" }				};
+			{ "Data", "data" }, { "Json", "json" }, { "None", "none" } };
 	private static final String[][]	FIRST_TEMPLATE_CHOICE		= { { "Class", "class" }, { "File", "file" }, { "Package", "package" },
 			{ "Folder", "folder" }, { "Enumeration", "enum" }, { "None", "none" } };
 	final String					templateName;
@@ -252,7 +252,8 @@ public class TemplatePreferencePart {
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		this.additionalParametersField = new TemplateFieldEditor(getTemplatePreferenceKey(this.templateName,
-				P_TEMPLATE_ADDITIONAL_PARAMETERS), " Additional Parameters", parent, templatePrefix, FIELDS.ADDITIONAL_PARAMETER, SWT.SINGLE);
+				P_TEMPLATE_ADDITIONAL_PARAMETERS), " Additional Parameters", parent, templatePrefix, FIELDS.ADDITIONAL_PARAMETER,
+				SWT.SINGLE);
 		this.additionalParametersField.getControl().setLayoutData(gd);
 		final GridData gd1 = new GridData(GridData.FILL_HORIZONTAL);
 		gd1.minimumHeight = 15;

@@ -14,6 +14,7 @@ public class FastCodeContentProposalProvider implements IContentProposalProvider
 	protected String[]	proposals	= null;
 	private String		comboName	= EMPTY_STR;
 
+	@Override
 	public IContentProposal[] getProposals(final String contents, final int arg1) {
 		final List contentProposals = getMatchingProposals(this.proposals, contents);
 		return (IContentProposal[]) contentProposals.toArray(new IContentProposal[contentProposals.size()]);
@@ -24,7 +25,7 @@ public class FastCodeContentProposalProvider implements IContentProposalProvider
 		this.proposals = proposals;
 	}
 
-	public FastCodeContentProposalProvider(String[] proposals, String comboName) {
+	public FastCodeContentProposalProvider(final String[] proposals, final String comboName) {
 		super();
 		this.proposals = proposals;
 		this.comboName = comboName;
@@ -32,7 +33,7 @@ public class FastCodeContentProposalProvider implements IContentProposalProvider
 
 	protected List<IContentProposal> getMatchingProposals(final String[] proposals, String contents) {
 		final List<IContentProposal> contentProposals = new ArrayList<IContentProposal>();
-		if (!isEmpty(comboName) & this.comboName.equals("snippet")) {
+		if (!isEmpty(this.comboName) & this.comboName.equals("snippet")) {
 			contents = ASTERISK + contents + ASTERISK;
 		}
 		for (int i = 0; i < proposals.length; i++) {
@@ -73,18 +74,22 @@ public class FastCodeContentProposalProvider implements IContentProposalProvider
 
 	private void addToList(final List<IContentProposal> contentProposals, final String proposal) {
 		contentProposals.add(new IContentProposal() {
+			@Override
 			public String getContent() {
 				return proposal;
 			}
 
+			@Override
 			public String getDescription() {
 				return null;
 			}
 
+			@Override
 			public String getLabel() {
 				return null;
 			}
 
+			@Override
 			public int getCursorPosition() {
 				return proposal.length();
 			}

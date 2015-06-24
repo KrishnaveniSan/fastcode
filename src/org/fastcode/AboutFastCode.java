@@ -12,28 +12,32 @@ import org.fastcode.dialog.AboutFastCodeDialog;
 
 public class AboutFastCode implements IEditorActionDelegate, IActionDelegate, IWorkbenchWindowActionDelegate {
 
+	@Override
 	public void dispose() {
+
+	}
+
+	@Override
+	public void init(final IWorkbenchWindow arg0) {
 		// TODO Auto-generated method stub
 
 	}
 
-	public void init(IWorkbenchWindow arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
-	public void run(IAction arg0) {
-		AboutFastCodeDialog aboutFastCodeDialog = new AboutFastCodeDialog(new Shell());
+	@Override
+	public void run(final IAction arg0) {
+		final AboutFastCodeDialog aboutFastCodeDialog = new AboutFastCodeDialog(new Shell());
 		aboutFastCodeDialog.open();
 
 	}
 
-	public void selectionChanged(IAction arg0, ISelection arg1) {
+	@Override
+	public void selectionChanged(final IAction arg0, final ISelection arg1) {
 		// TODO Auto-generated method stub
 
 	}
 
-	public void setActiveEditor(IAction arg0, IEditorPart arg1) {
+	@Override
+	public void setActiveEditor(final IAction arg0, final IEditorPart arg1) {
 		// TODO Auto-generated method stub
 
 	}

@@ -27,6 +27,7 @@ public class VariablesUtil {
 	private final List<ElementProposal>	addlparamList			= new ArrayList<ElementProposal>();
 	private String						filePlaceholderValue;
 	private static Map<String, String>	templateItemPluralMap	= new HashMap<String, String>();
+	List<FastCodeAdditionalParams> additnlParamList = new ArrayList<FastCodeAdditionalParams>();
 
 	public static VariablesUtil getInstance() {
 		if (variablesUtil == null || reLoad == true) {
@@ -49,8 +50,16 @@ public class VariablesUtil {
 
 	public void setadditionalParamList(final List<FastCodeAdditionalParams> fcAdditnlParamList) {
 		ElementProposal proposal;
-		this.addlparamList.clear();
-		this.variablesList.clear();
+		if (this.addlparamList != null) {
+			this.addlparamList.clear();
+		}
+		if (this.variablesList != null) {
+			this.variablesList.clear();
+		}
+		if (this.additnlParamList != null) {
+			this.additnlParamList.clear();
+		}
+		this.additnlParamList = fcAdditnlParamList;
 		if (fcAdditnlParamList != null) {
 			for (final FastCodeAdditionalParams param : fcAdditnlParamList.toArray(new FastCodeAdditionalParams[0])) {
 				proposal = new ElementProposal(param.getName(), param.getName(), "-");
@@ -104,5 +113,9 @@ public class VariablesUtil {
 	public static String getPlural(final String templateItem) {
 		return templateItemPluralMap.get(templateItem);
 
+	}
+
+	public List<FastCodeAdditionalParams> getAdditnlParamList() {
+		return this.additnlParamList;
 	}
 }

@@ -67,6 +67,7 @@ public class CommitToRepositoryAction implements IEditorActionDelegate, IActionD
 	String						noFile			= "-as the file does not exist on disk.";
 	String						staleAndNoFile	= "-because of time lapse, and the file does not exist.";
 
+	@Override
 	public void run(final IAction arg0) {
 		// TODO Auto-generated method stub
 		final FastCodeCheckInFileSelectionDialog selectionDialog;
@@ -183,6 +184,7 @@ public class CommitToRepositoryAction implements IEditorActionDelegate, IActionD
 			final RepositoryService checkin = getRepositoryServiceClass();
 
 			final IRunnableWithProgress op = new IRunnableWithProgress() {
+				@Override
 				public void run(final IProgressMonitor monitor) {
 					try {
 						for (final Object fcCheckinFile : filesToCommit) {
@@ -250,6 +252,7 @@ public class CommitToRepositoryAction implements IEditorActionDelegate, IActionD
 
 	}
 
+	@Override
 	public void selectionChanged(final IAction arg0, final ISelection arg1) {
 		// TODO Auto-generated method stub
 
@@ -260,15 +263,18 @@ public class CommitToRepositoryAction implements IEditorActionDelegate, IActionD
 
 	}
 
+	@Override
 	public void dispose() {
 		// TODO Auto-generated method stub
 
 	}
 
+	@Override
 	public void init(final IWorkbenchWindow window) {
 		this.window = window;
 	}
 
+	@Override
 	public void setActiveEditor(final IAction arg0, final IEditorPart arg1) {
 		// TODO Auto-generated method stub
 	}

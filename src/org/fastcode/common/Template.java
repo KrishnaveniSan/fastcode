@@ -170,6 +170,7 @@ public class Template implements Comparable<Template> {
 		this.additionalParameters = additionalParameters;
 	}
 
+	@Override
 	public int compareTo(final Template template) {
 		return getTemplateName().compareToIgnoreCase(template.getTemplateName());
 	}

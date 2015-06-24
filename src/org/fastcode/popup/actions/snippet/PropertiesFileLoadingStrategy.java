@@ -26,6 +26,7 @@ public class PropertiesFileLoadingStrategy implements FileLoadingStrategy {
 	 * @throws Exception
 	 *
 	 */
+	@Override
 	public Object[] loadFileElementsFromInputStream(final InputStream inputStream, final Object configuration) throws Exception {
 		final List<FastCodeProperty> fastCodeProperties = new ArrayList<FastCodeProperty>();
 

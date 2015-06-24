@@ -24,7 +24,8 @@ import static org.fastcode.util.StringUtil.isEmpty;
 import static org.fastcode.util.StringUtil.isValidTableOrColumnName;
 
 import java.sql.Connection;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
 
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -62,6 +63,8 @@ import org.fastcode.preferences.DatabaseConnectionSettings;
 import org.fastcode.util.ConnectToDatabase;
 import org.fastcode.util.DatabaseCache;
 import org.fastcode.util.FastCodeContentProposalProvider;
+import org.fastcode.util.SQLDatatypes;
+import org.fastcode.util.SQLDatatypesMapping;
 
 public class CreateTableDialog extends TrayDialog {
 	Shell							shell;
@@ -69,7 +72,7 @@ public class CreateTableDialog extends TrayDialog {
 	private Combo					schemaCombo;
 	private final IPreferenceStore	preferenceStore;
 	private Text					errorMessageText;
-	protected final String			defaultMessage		= NEWLINE;
+	protected final String			defaultMessage	= NEWLINE;
 	private String					errorMessage;
 	private Text					tableNameText;
 	private Text					columnNameText;
@@ -84,13 +87,13 @@ public class CreateTableDialog extends TrayDialog {
 	private Text					columnTypePrecisionAndScale;
 	private Text					defaultValue;
 	private Combo					databaseNameCombo;
-	String							tableName;
-	String							dbType;
+	private String					tableName;
+	private String					dbType;
 	private Button					lenByte;
 	private Button					lenChar;
-	Label							numberOfColumns;
-	int								SUBMT_ID			= 2;
-	Button							submitButton;
+	private Label					numberOfColumns;
+	private final int						SUBMT_ID		= 2;
+	private Button					submitButton;
 	CreateTableDialogCallback		createTableDialogCallback;
 
 	/**
@@ -206,6 +209,7 @@ public class CreateTableDialog extends TrayDialog {
 
 		this.columnTypeSize.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent modifyEvent) {
 				if (CreateTableDialog.this.columnTypeSize.isEnabled()) {
 					final String size = CreateTableDialog.this.columnTypeSize.getText();
@@ -227,6 +231,7 @@ public class CreateTableDialog extends TrayDialog {
 		});
 		this.columnTypePrecisionAndScale.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent modifyEvent) {
 				if (CreateTableDialog.this.columnTypePrecisionAndScale.isEnabled()) {
 					final String precisionAndScale = CreateTableDialog.this.columnTypePrecisionAndScale.getText();
@@ -246,11 +251,13 @@ public class CreateTableDialog extends TrayDialog {
 
 		this.notNullButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent arg0) {
 				CreateTableDialog.this.createTableData.setNotNull(CreateTableDialog.this.notNullButton.getSelection() ? CreateTableDialog.this.notNullButton
 						.getText().toUpperCase() : EMPTY_STR);
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -258,6 +265,7 @@ public class CreateTableDialog extends TrayDialog {
 
 		this.defaultValue.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent modifyEvent) {
 				final String defaultValue = CreateTableDialog.this.defaultValue.getText();
 				if (CreateTableDialog.this.createTableData.isAddColumnsToExistingTable()
@@ -272,6 +280,7 @@ public class CreateTableDialog extends TrayDialog {
 
 		this.lenByte.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent arg0) {
 				if (CreateTableDialog.this.lenByte.getSelection()) {
 					CreateTableDialog.this.createTableData.setLenType("byte");
@@ -279,6 +288,7 @@ public class CreateTableDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -286,6 +296,7 @@ public class CreateTableDialog extends TrayDialog {
 
 		this.lenChar.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent arg0) {
 				if (CreateTableDialog.this.lenChar.getSelection()) {
 					CreateTableDialog.this.createTableData.setLenType("char");
@@ -293,6 +304,7 @@ public class CreateTableDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -408,6 +420,7 @@ public class CreateTableDialog extends TrayDialog {
 		adapter.setProposalAcceptanceStyle(ContentProposalAdapter.PROPOSAL_REPLACE);
 		this.databaseNameCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent event) {
 				final String selectedDbName = removeSuffix(CreateTableDialog.this.databaseNameCombo.getText());
 				if (databaseConnectionSettings.getConnMap().keySet().contains(selectedDbName)) {
@@ -432,6 +445,17 @@ public class CreateTableDialog extends TrayDialog {
 								poulateTableCombo(connectToDatabase);
 							}
 							CreateTableDialog.this.createTableData.setSelectedDatabaseName(selectedDbName);
+							//getDatatypesList();
+
+							if (stringColumnTypeButton.getSelection()) {
+								populateColumnTypeCombo(stringColumnTypeButton.getText());
+							} else if (numberColumnTypeButton.getSelection()) {
+								populateColumnTypeCombo(numberColumnTypeButton.getText());
+							} else if (dateTimeColumnTypeButton.getSelection()) {
+								populateColumnTypeCombo("Datetime");
+							} else if (OthersColumnTypeButton.getSelection()) {
+								populateColumnTypeCombo(OthersColumnTypeButton.getText());
+							}
 							if (databaseDetails.getDatabaseType().equalsIgnoreCase(ORACLE)) {
 								CreateTableDialog.this.lenByte.setVisible(true);
 								CreateTableDialog.this.lenChar.setVisible(true);
@@ -452,6 +476,7 @@ public class CreateTableDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -582,9 +607,10 @@ public class CreateTableDialog extends TrayDialog {
 
 		this.stringColumnTypeButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (CreateTableDialog.this.stringColumnTypeButton.getSelection()) {
-					populateColumnTypeCombo(CreateTableDialog.this.createTableData.getStringColumnTypesList());
+					populateColumnTypeCombo(stringColumnTypeButton.getText());
 					CreateTableDialog.this.columnTypeCombo.setEnabled(true);
 					CreateTableDialog.this.columnTypeSize.setEnabled(true);
 					CreateTableDialog.this.defaultValue.setText(EMPTY_STR);
@@ -599,6 +625,7 @@ public class CreateTableDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -607,9 +634,11 @@ public class CreateTableDialog extends TrayDialog {
 
 		this.numberColumnTypeButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (CreateTableDialog.this.numberColumnTypeButton.getSelection()) {
-					populateColumnTypeCombo(CreateTableDialog.this.createTableData.getNumericColumnTypesList());
+					//getDatatypesList(CreateTableDialog.this.dbType);
+					populateColumnTypeCombo(numberColumnTypeButton.getText());
 					CreateTableDialog.this.columnTypeCombo.setEnabled(true);
 					CreateTableDialog.this.defaultValue.setText("0");
 					CreateTableDialog.this.createTableData.setDataType(NUMBER);
@@ -633,6 +662,7 @@ public class CreateTableDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -641,9 +671,11 @@ public class CreateTableDialog extends TrayDialog {
 
 		this.dateTimeColumnTypeButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (CreateTableDialog.this.dateTimeColumnTypeButton.getSelection()) {
-					populateColumnTypeCombo(CreateTableDialog.this.createTableData.getDateTimeColumnTypesList());
+					//getDatatypesList(CreateTableDialog.this.dbType);
+					populateColumnTypeCombo("Datetime");
 					CreateTableDialog.this.columnTypeCombo.setEnabled(true);
 					CreateTableDialog.this.defaultValue.setText(getDefaultDate());
 					CreateTableDialog.this.createTableData.setDataType(DATETIME);
@@ -662,6 +694,7 @@ public class CreateTableDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
@@ -669,10 +702,12 @@ public class CreateTableDialog extends TrayDialog {
 
 		this.OthersColumnTypeButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				{
 					if (CreateTableDialog.this.OthersColumnTypeButton.getSelection()) {
-						populateColumnTypeCombo(CreateTableDialog.this.createTableData.getOthersColumnTypesList());
+						//getDatatypesList(CreateTableDialog.this.dbType);
+						populateColumnTypeCombo(OthersColumnTypeButton.getText());
 						CreateTableDialog.this.columnTypeCombo.setEnabled(true);
 						CreateTableDialog.this.defaultValue.setText(EMPTY_STR);
 						CreateTableDialog.this.createTableData.setDataType("Others");
@@ -688,6 +723,7 @@ public class CreateTableDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -695,6 +731,7 @@ public class CreateTableDialog extends TrayDialog {
 		});
 		this.columnTypeCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				/*if (columnTypeCombo.getSelectionIndex() == 0) {
 					columnTypeCombo.select(1);
@@ -717,6 +754,7 @@ public class CreateTableDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -743,15 +781,17 @@ public class CreateTableDialog extends TrayDialog {
 	}
 
 	/**
-	 * @param columnTypesList
+	 * @param groupType
 	 */
-	protected void populateColumnTypeCombo(final List<String> columnTypesList) {
-
+	protected void populateColumnTypeCombo(final String groupType) {
+		final SQLDatatypesMapping sqldatatypesMapping = SQLDatatypesMapping.getInstance();
+		final Map<String, ArrayList<SQLDatatypes>> groupBaseTypeMap = sqldatatypesMapping.getDatabaseDataTypeMap().get(this.dbType);
 		if (this.columnTypeCombo != null) {
 			this.columnTypeCombo.removeAll();
 		}
-		for (final String columnType : getEmptyListForNull(columnTypesList)) {
-			this.columnTypeCombo.add(columnType.trim());
+
+		for (final SQLDatatypes columnType : getEmptyListForNull(groupBaseTypeMap.get(groupType))) {
+			this.columnTypeCombo.add(columnType.getType().trim());
 		}
 
 	}
@@ -774,6 +814,7 @@ public class CreateTableDialog extends TrayDialog {
 		text.setSize(200, 20);
 		text.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent modifyEvent) {
 				String[] columnNames = null;
 				final String names = CreateTableDialog.this.columnNameText.getText();
@@ -864,6 +905,7 @@ public class CreateTableDialog extends TrayDialog {
 		text.setSize(200, 20);
 		text.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent focusEvent) {
 				final String newTableName = CreateTableDialog.this.tableNameText.getText();
 
@@ -894,6 +936,7 @@ public class CreateTableDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -902,6 +945,7 @@ public class CreateTableDialog extends TrayDialog {
 
 		text.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent modifyEvent) {
 				final String newTableName = CreateTableDialog.this.tableNameText.getText();
 
@@ -962,6 +1006,7 @@ public class CreateTableDialog extends TrayDialog {
 		getNumberOfRec(CreateTableDialog.this.existingTableCombo.getText());
 		this.existingTableCombo.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent event) {
 				if (CreateTableDialog.this.createTableData.isAddColumnsToExistingTable()) {
 					/*CreateTableDialog.this.tableNameText.setText(CreateTableDialog.this.existingTableCombo.getText());
@@ -973,6 +1018,7 @@ public class CreateTableDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -980,6 +1026,7 @@ public class CreateTableDialog extends TrayDialog {
 		});
 		this.existingTableCombo.addModifyListener(new ModifyListener() {
 
+			@Override
 			public void modifyText(final ModifyEvent modifyEvent) {
 				if (CreateTableDialog.this.createTableData.isAddColumnsToExistingTable()) {
 					/*CreateTableDialog.this.tableNameText.setText(CreateTableDialog.this.existingTableCombo.getText());
@@ -1063,6 +1110,7 @@ public class CreateTableDialog extends TrayDialog {
 
 		this.schemaCombo.addFocusListener(new FocusListener() {
 
+			@Override
 			public void focusLost(final FocusEvent e) {
 				if (CreateTableDialog.this.createTableData.isAddColumnsToExistingTable()) {
 					poulateTableCombo(connectToDatabase);
@@ -1070,6 +1118,7 @@ public class CreateTableDialog extends TrayDialog {
 
 			}
 
+			@Override
 			public void focusGained(final FocusEvent arg0) {
 				// TODO Auto-generated method stub
 
@@ -1203,6 +1252,7 @@ public class CreateTableDialog extends TrayDialog {
 		this.submitButton = createButton(parent, this.SUBMT_ID, "Submit", true);
 		this.submitButton.addSelectionListener(new SelectionListener() {
 
+			@Override
 			public void widgetSelected(final SelectionEvent arg0) {
 				if (!validateData()) {
 					return;
@@ -1216,9 +1266,11 @@ public class CreateTableDialog extends TrayDialog {
 				}
 			}
 
+			@Override
 			public void widgetDefaultSelected(final SelectionEvent arg0) {
 
 			}
 		});
 	}
+
 }

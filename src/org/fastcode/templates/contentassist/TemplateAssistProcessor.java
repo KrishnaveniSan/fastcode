@@ -50,6 +50,7 @@ public class TemplateAssistProcessor implements IContentAssistProcessor {
 	/*
 	 * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#computeCompletionProposals(org.eclipse.jface.text.ITextViewer, int)
 	 */
+	@Override
 	public ICompletionProposal[] computeCompletionProposals(final ITextViewer viewer, final int documentOffset) {
 		List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
 		final IDocument document = viewer.getDocument();
@@ -83,7 +84,10 @@ public class TemplateAssistProcessor implements IContentAssistProcessor {
 				//System.out.println(textBeforeContent);
 				final String textAfterContent = getContentUptoNewLine(document.get(documentOffset,  document.getLength() - documentOffset));
 				//System.out.println(textAfterContent);
-				if (!isEmpty(textBeforeContent) || !isEmpty(textAfterContent)) {
+				final String element = document.get(startPosition, length);
+				//fc tags should be there only in new line..not between any other code/text
+				//3rd Dec '14 -- however, new code to show fc tag attributes by space is added, so including condition for space.
+				if ((!isEmpty(textBeforeContent) || !isEmpty(textAfterContent)) && !element.equals(SPACE)) {
 					System.out.println("im inside this...will exit");
 					return new ICompletionProposal[0];
 				}
@@ -113,6 +117,7 @@ public class TemplateAssistProcessor implements IContentAssistProcessor {
 	/*
 	 * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#getCompletionProposalAutoActivationCharacters()
 	 */
+	@Override
 	public char[] getCompletionProposalAutoActivationCharacters() {
 		int length = 0;
 		for (int i = 0; i < this.assistants.length; ++i) {
@@ -134,6 +139,7 @@ public class TemplateAssistProcessor implements IContentAssistProcessor {
 	/*
 	 * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#computeContextInformation(org.eclipse.jface.text.ITextViewer, int)
 	 */
+	@Override
 	public IContextInformation[] computeContextInformation(final ITextViewer viewer, final int offset) {
 		return null;
 	}
@@ -141,6 +147,7 @@ public class TemplateAssistProcessor implements IContentAssistProcessor {
 	/*
 	 * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#getContextInformationAutoActivationCharacters()
 	 */
+	@Override
 	public char[] getContextInformationAutoActivationCharacters() {
 		return null;
 	}
@@ -148,6 +155,7 @@ public class TemplateAssistProcessor implements IContentAssistProcessor {
 	/*
 	 * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#getContextInformationValidator()
 	 */
+	@Override
 	public IContextInformationValidator getContextInformationValidator() {
 		return null;
 	}
@@ -155,6 +163,7 @@ public class TemplateAssistProcessor implements IContentAssistProcessor {
 	/*
 	 * @see org.eclipse.jface.text.contentassist.IContentAssistProcessor#getErrorMessage()
 	 */
+	@Override
 	public String getErrorMessage() {
 		return null;
 	}

@@ -57,6 +57,7 @@ import static org.fastcode.preferences.PreferenceConstants.STATIC_IMPORT_CHOICE_
 import static org.fastcode.preferences.PreferenceConstants.TEMPLATE;
 import static org.fastcode.setting.GlobalSettings.getInstance;
 import static org.fastcode.util.MessageUtil.showError;
+import static org.fastcode.util.SourceUtil.checkForJavaProjectInWorkspace;
 
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.preference.BooleanFieldEditor;
@@ -140,6 +141,7 @@ public class FastCodePreferencePage extends FieldEditorPreferencePage implements
 		// setPreferenceStore(Activator.getDefault().getPreferenceStore());
 		setDescription("Fast Code Preference Page the plugin");
 		this.defaultPlaceHolderValue = getPreferenceStore().getDefaultString(P_GLOBAL_PLACE_HOLDER_VALUES);
+		checkForJavaProjectInWorkspace();
 	}
 
 	/**
@@ -368,6 +370,7 @@ public class FastCodePreferencePage extends FieldEditorPreferencePage implements
 	 * @see
 	 * org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
 	 */
+	@Override
 	public void init(final IWorkbench workbench) {
 	}
 

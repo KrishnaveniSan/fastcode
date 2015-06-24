@@ -18,6 +18,7 @@ public class DirectiveRulesStrategie implements IRulesStrategy {
 	/*
 	 * @see org.fastcode.templates.rules.IRulesStrategy#createRules()
 	 */
+	@Override
 	public List<IRule> createRules() {
 		final List<IRule> rules = new ArrayList<IRule>();
 

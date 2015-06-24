@@ -122,6 +122,8 @@ public class DirectiveContentAssistant extends AbstractTemplateContentAssistant 
 				return false;
 			}
 		}
+
 		return true;
 	}
 }
+

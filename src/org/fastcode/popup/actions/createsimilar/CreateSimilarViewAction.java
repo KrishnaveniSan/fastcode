@@ -57,12 +57,13 @@ public class CreateSimilarViewAction extends CreateSimilarSupport implements IEd
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IEditorActionDelegate#setActiveEditor(org.eclipse.jface.action.IAction, org.eclipse.ui.IEditorPart)
 	 */
+	@Override
 	public void setActiveEditor(final IAction action, final IEditorPart targetEditor) {
 		this.editorPart = targetEditor;
 		if (this.editorPart == null) {
 			return;
 		}
-		IWorkingCopyManager manager = JavaUI.getWorkingCopyManager();
+		final IWorkingCopyManager manager = JavaUI.getWorkingCopyManager();
 		if (manager == null) {
 			return;
 		}
@@ -72,6 +73,7 @@ public class CreateSimilarViewAction extends CreateSimilarSupport implements IEd
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
 	 */
+	@Override
 	public void selectionChanged(final IAction action, final ISelection selection) {
 		if (selection instanceof ITextSelection) {
 			this.selection = (ITextSelection) selection;
@@ -83,7 +85,7 @@ public class CreateSimilarViewAction extends CreateSimilarSupport implements IEd
 		if (this.selection == null || this.selection.isEmpty()) {
 			return null;
 		}
-		IJavaElement element = this.compUnit.getElementAt(this.selection.getOffset());
+		final IJavaElement element = this.compUnit.getElementAt(this.selection.getOffset());
 		if (element instanceof IMethod || element instanceof IField) {
 			return (IMember) element;
 		}
@@ -98,12 +100,12 @@ public class CreateSimilarViewAction extends CreateSimilarSupport implements IEd
 	 */
 	@Override
 	protected void showMember(final ICompilationUnit compilationUnit, final IMember member) throws Exception {
-		IMember newMember = findMember(compilationUnit, member);
+		final IMember newMember = findMember(compilationUnit, member);
 		if (newMember == null) {
 			return;
 		}
-		IWorkbenchPage page = this.editorPart.getSite().getPage();
-		ITextSelection sel = new TextSelection(newMember.getNameRange().getOffset(), newMember.getNameRange().getLength());
+		final IWorkbenchPage page = this.editorPart.getSite().getPage();
+		final ITextSelection sel = new TextSelection(newMember.getNameRange().getOffset(), newMember.getNameRange().getLength());
 
 		page.getActiveEditor().getEditorSite().getSelectionProvider().setSelection(sel);
 	}
@@ -111,6 +113,7 @@ public class CreateSimilarViewAction extends CreateSimilarSupport implements IEd
 	/**
 	 *
 	 */
+	@Override
 	public void dispose() {
 
 	}
@@ -118,6 +121,7 @@ public class CreateSimilarViewAction extends CreateSimilarSupport implements IEd
 	/**
 	 * @param window
 	 */
+	@Override
 	public void init(final IWorkbenchWindow window) {
 		this.window = window;
 	}

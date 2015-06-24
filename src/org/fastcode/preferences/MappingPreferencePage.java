@@ -196,6 +196,7 @@ public class MappingPreferencePage extends PreferencePage implements IWorkbenchP
 	 * @see
 	 * org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
 	 */
+	@Override
 	public void init(final IWorkbench workbench) {
 	}
 
@@ -221,6 +222,7 @@ public class MappingPreferencePage extends PreferencePage implements IWorkbenchP
 		 * org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java
 		 * .lang.Object, int)
 		 */
+		@Override
 		public Image getColumnImage(final Object element, final int columnIndex) {
 			final Image image = this.provider.getColumnImage(element, columnIndex);
 			if (this.decorator != null) {
@@ -239,6 +241,7 @@ public class MappingPreferencePage extends PreferencePage implements IWorkbenchP
 		 * org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.
 		 * lang.Object, int)
 		 */
+		@Override
 		public String getColumnText(final Object element, final int columnIndex) {
 			final String text = this.provider.getColumnText(element, columnIndex);
 			if (this.decorator != null) {
@@ -259,6 +262,7 @@ public class MappingPreferencePage extends PreferencePage implements IWorkbenchP
 			this.mappingDefinitions = mappingDefinitionList.getMappingDefinitions();
 		}
 
+		@Override
 		public void dispose() {
 		}
 
@@ -268,6 +272,7 @@ public class MappingPreferencePage extends PreferencePage implements IWorkbenchP
 		 * @param newInput
 		 *
 		 */
+		@Override
 		public void inputChanged(final Viewer viewer, final Object oldInput, final Object newInput) {
 			if (newInput != null) {
 				((MappingDefinitionList) newInput).addChangeListener(this);
@@ -281,6 +286,7 @@ public class MappingPreferencePage extends PreferencePage implements IWorkbenchP
 		 *
 		 * @param mappingDefinition
 		 */
+		@Override
 		public void addMappingDefinition(final MappingDefinition mappingDefinition) {
 			//
 			MappingPreferencePage.this.tableViewer.add(mappingDefinition);
@@ -289,6 +295,7 @@ public class MappingPreferencePage extends PreferencePage implements IWorkbenchP
 		/**
 		 * @param mappingDefinition
 		 */
+		@Override
 		public void removeMappingDefinition(final MappingDefinition mappingDefinition) {
 			MappingPreferencePage.this.tableViewer.remove(mappingDefinition);
 		}
@@ -296,6 +303,7 @@ public class MappingPreferencePage extends PreferencePage implements IWorkbenchP
 		/**
 		 * @param mappingDefinition
 		 */
+		@Override
 		public void updateMappingDefinition(final MappingDefinition mappingDefinition) {
 			MappingPreferencePage.this.tableViewer.update(mappingDefinition, null);
 		}
@@ -303,6 +311,7 @@ public class MappingPreferencePage extends PreferencePage implements IWorkbenchP
 		/**
 		 * @param inputElement
 		 */
+		@Override
 		public Object[] getElements(final Object inputElement) {
 			return this.mappingDefinitions.toArray();
 		}
@@ -322,6 +331,7 @@ public class MappingPreferencePage extends PreferencePage implements IWorkbenchP
 		 * @param columnIndex
 		 *
 		 */
+		@Override
 		public String getColumnText(final Object element, final int columnIndex) {
 			if (element instanceof MappingDefinition) {
 				switch (columnIndex) {
@@ -375,6 +385,7 @@ public class MappingPreferencePage extends PreferencePage implements IWorkbenchP
 			return false;
 		}
 
+		@Override
 		public Image getColumnImage(final Object element, final int columnIndex) {
 			return null;
 		}
@@ -387,12 +398,14 @@ public class MappingPreferencePage extends PreferencePage implements IWorkbenchP
 			this.mappingDefinitionList = mappingDefinitionList;
 		}
 
+		@Override
 		public boolean canModify(final Object element, final String property) {
 			final int columnIndex = Arrays.asList(MappingDefinitionList.columnNames).indexOf(property);
 
 			return columnIndex > 0;
 		}
 
+		@Override
 		public Object getValue(final Object element, final String property) {
 			Object result = null;
 			final int columnIndex = Arrays.asList(MappingDefinitionList.columnNames).indexOf(property);
@@ -421,6 +434,7 @@ public class MappingPreferencePage extends PreferencePage implements IWorkbenchP
 		 * @param value
 		 *
 		 */
+		@Override
 		public void modify(final Object element, final String property, final Object value) {
 			final int columnIndex = Arrays.asList(MappingDefinitionList.columnNames).indexOf(property);
 
