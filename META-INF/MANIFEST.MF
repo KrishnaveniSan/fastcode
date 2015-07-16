@@ -9,14 +9,14 @@ Bundle-ClassPath: .,
  lib/fast-rule.jar,
  lib/javassist.jar,
  lib/ognl-3.0.1.jar,
- lib/velocity-1.7-dep.jar,
  lib/xbean.jar,
  lib/sequence-library-1.0.2.jar,
  lib/jsr173_1.0_api.jar,
- lib/org.codehaus.groovy.eclipse.core_2.8.0.xx-20130703-1700-e42-RELEASE.jar,
  lib/sqljet-1.1.7.jar,
- lib/svnkit-1.7.9.jar,
- lib/json-simple.jar
+ lib/velocity-1.7-dep.jar,
+ lib/org.codehaus.groovy.eclipse.core_2.8.0.xx-20130703-1700-e42-RELEASE.jar,
+ lib/json-simple.jar,
+ lib/svnkit-1.7.8.jar
 Bundle-Activator: org.fastcode.Activator
 Export-Package: org.fastcode;
   uses:="org.eclipse.jface.action,

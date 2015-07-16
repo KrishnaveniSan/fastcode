@@ -1307,6 +1307,13 @@
                   name="fastcode.groupCreateTable">
             </groupMarker>
          </menu>
+          <action
+               class="org.fastcode.popup.actions.OpenRequiredClassesAction"
+               definitionId="FastCode.classfields.command"
+               id="FastCode.classfields.command"
+               label="Open Required Classes"
+               menubarPath="fastcode.actionset.menu1/fastcode.groupMarker3">
+         </action>
 	</actionSet>
   </extension>
  <!-- <extension
