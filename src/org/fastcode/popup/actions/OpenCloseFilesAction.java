@@ -24,6 +24,7 @@ package org.fastcode.popup.actions;
 
 import static org.eclipse.jdt.ui.JavaUI.openInEditor;
 import static org.eclipse.jdt.ui.JavaUI.revealInEditor;
+import static org.fastcode.util.StringUtil.isEmpty;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,21 +48,21 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
-import org.fastcode.common.OpenRequiredClassesData;
-import org.fastcode.dialog.OpenRequiredClassesDialog;
+import org.fastcode.common.OpenCloseFilesData;
+import org.fastcode.dialog.OpenCloseFilesDialog;
 import org.fastcode.util.MessageUtil;
 
 /**
  * @author Gautam
  *
  */
-public class OpenRequiredClassesAction implements IActionDelegate, IWorkbenchWindowActionDelegate {
+public class OpenCloseFilesAction implements IActionDelegate, IWorkbenchWindowActionDelegate {
 
 	protected IWorkbenchWindow	window;
 	protected IWorkbenchPage	page;
 	protected IEditorPart		editorPart;
 	IWorkingCopyManager			manager;
-	OpenRequiredClassesData		openRequiredClassesData;
+	OpenCloseFilesData		openCloseFilesData;
 
 	@Override
 	public void run(final IAction arg0) {
@@ -79,25 +80,25 @@ public class OpenRequiredClassesAction implements IActionDelegate, IWorkbenchWin
 
 		final Shell parentShell = MessageUtil.getParentShell();
 		final Shell shell = parentShell == null ? new Shell() : parentShell;
-		this.openRequiredClassesData = getOpenRequiredClasses();
+		this.openCloseFilesData = getOpenCloseFiles();
 
-		if (this.openRequiredClassesData == null) {
+		if (this.openCloseFilesData == null) {
 			return;
 		}
 
-		if (this.openRequiredClassesData.isCloseOthers()) {
+		if (this.openCloseFilesData.isCloseOthers()) {
 			for (final IWorkbenchPage workbenchPage : this.window.getWorkbench().getActiveWorkbenchWindow().getPages()) {
 				workbenchPage.closeAllEditors(false);
 
 			}
 		}
 		try {
-			System.out.println(this.openRequiredClassesData.getFastCodePackage().getPackageFragment());
+			System.out.println(this.openCloseFilesData.getFastCodePackage().getPackageFragment());
 			//System.out.println(this.openRequiredClassesData.getFastCodePackage().getPackageFragment().getChildren());
-			System.out.println(this.openRequiredClassesData.getFastCodePackage().getPackageFragment().getCompilationUnits());
-			for (final IJavaElement javaElement : this.openRequiredClassesData.getFastCodePackage().getPackageFragment()
+			System.out.println(this.openCloseFilesData.getFastCodePackage().getPackageFragment().getCompilationUnits());
+			for (final IJavaElement javaElement : this.openCloseFilesData.getFastCodePackage().getPackageFragment()
 					.getCompilationUnits()) {
-				if (matchPattern(javaElement, this.openRequiredClassesData.getPattern())) {
+				if (matchPattern(javaElement, this.openCloseFilesData.getPattern())) {
 					final IEditorPart javaEditor = openInEditor(javaElement);
 					revealInEditor(javaEditor, javaElement);
 				}
@@ -114,7 +115,10 @@ public class OpenRequiredClassesAction implements IActionDelegate, IWorkbenchWin
 
 	}
 
-	private boolean matchPattern(final IJavaElement javaElement, final String pattern) {
+	private boolean matchPattern(final IJavaElement javaElement, String pattern) {
+		if (isEmpty(pattern)) {
+			pattern = "\\*";
+		}
 		final Pattern pattrn = Pattern.compile(pattern);
 		System.out.println(javaElement.getElementName());
 		final Matcher matcher = pattrn.matcher(javaElement.getElementName());
@@ -123,9 +127,9 @@ public class OpenRequiredClassesAction implements IActionDelegate, IWorkbenchWin
 		//return javaElement.getElementName().matches(pattern);
 	}
 
-	private OpenRequiredClassesData getOpenRequiredClasses() {
+	private OpenCloseFilesData getOpenCloseFiles() {
 
-		final OpenRequiredClassesData openRequiredClassesData = new OpenRequiredClassesData();
+		final OpenCloseFilesData openRequiredClassesData = new OpenCloseFilesData();
 
 		IProject project = null;
 		final ICompilationUnit compUnit;
@@ -142,7 +146,7 @@ public class OpenRequiredClassesAction implements IActionDelegate, IWorkbenchWin
 
 		openRequiredClassesData.setProject(project);
 
-		final OpenRequiredClassesDialog openRequiredClassesDialog = new OpenRequiredClassesDialog(new Shell(), openRequiredClassesData);
+		final OpenCloseFilesDialog openRequiredClassesDialog = new OpenCloseFilesDialog(new Shell(), openRequiredClassesData);
 		if (openRequiredClassesDialog.open() == Window.CANCEL) {
 			return null;
 		}
