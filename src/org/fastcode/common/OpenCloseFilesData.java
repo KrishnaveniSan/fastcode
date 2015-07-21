@@ -4,7 +4,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.fastcode.common.FastCodePackage;
 
-public class OpenRequiredClassesData {
+public class OpenCloseFilesData {
 
 	private IProject							project;
 	FastCodeProject selectedProject;
