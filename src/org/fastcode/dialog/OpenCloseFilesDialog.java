@@ -92,6 +92,23 @@ public class OpenCloseFilesDialog extends TrayDialog {
 		return parent;
 	}
 
+	@Override
+	protected void okPressed() {
+		if (isEmpty(this.folderCombo.getText())) {
+			setErrorMessage("Please select a folder");
+			return;
+		} else {
+			setErrorMessage(this.defaultMessage);
+		}
+
+		if (isEmpty(this.patternText.getText())) {
+			setErrorMessage("Please enter pattern");
+			return;
+		} else {
+			setErrorMessage(this.defaultMessage);
+		}
+		super.okPressed();
+	}
 	private void createCloseOthers(final Composite parent) {
 		final Composite composite = new Composite(parent, parent.getStyle());
 		final GridLayout layout = new GridLayout();
@@ -148,6 +165,11 @@ public class OpenCloseFilesDialog extends TrayDialog {
 			public void modifyText(final ModifyEvent e) {
 				final Text text = (Text) e.widget;
 				final String value = text.getText();
+				if (isEmpty(value)) {
+					setErrorMessage("Please enter pattern");
+				} else {
+					setErrorMessage(OpenCloseFilesDialog.this.defaultMessage);
+				}
 				//System.out.println(value.replace(ASTERISK, BACK_SLASH + ASTERISK));
 				OpenCloseFilesDialog.this.openRequiredClassesData.setPattern(value/*.replace(ASTERISK, BACK_SLASH + ASTERISK)*/);
 			}
