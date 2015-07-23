@@ -24,13 +24,14 @@ package org.fastcode.popup.actions;
 
 import static org.eclipse.jdt.ui.JavaUI.openInEditor;
 import static org.eclipse.jdt.ui.JavaUI.revealInEditor;
-import static org.fastcode.util.StringUtil.isEmpty;
+import static org.fastcode.common.FastCodeConstants.ASTERISK;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -44,10 +45,13 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionDelegate;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.ide.IDE;
 import org.fastcode.common.OpenCloseFilesData;
 import org.fastcode.dialog.OpenCloseFilesDialog;
 import org.fastcode.util.MessageUtil;
@@ -62,7 +66,7 @@ public class OpenCloseFilesAction implements IActionDelegate, IWorkbenchWindowAc
 	protected IWorkbenchPage	page;
 	protected IEditorPart		editorPart;
 	IWorkingCopyManager			manager;
-	OpenCloseFilesData		openCloseFilesData;
+	OpenCloseFilesData			openCloseFilesData;
 
 	@Override
 	public void run(final IAction arg0) {
@@ -79,7 +83,7 @@ public class OpenCloseFilesAction implements IActionDelegate, IWorkbenchWindowAc
 		}
 
 		final Shell parentShell = MessageUtil.getParentShell();
-		final Shell shell = parentShell == null ? new Shell() : parentShell;
+		//final Shell shell = parentShell == null ? new Shell() : parentShell;
 		this.openCloseFilesData = getOpenCloseFiles();
 
 		if (this.openCloseFilesData == null) {
@@ -93,14 +97,22 @@ public class OpenCloseFilesAction implements IActionDelegate, IWorkbenchWindowAc
 			}
 		}
 		try {
-			System.out.println(this.openCloseFilesData.getFastCodePackage().getPackageFragment());
+			//System.out.println(this.openCloseFilesData.getFastCodePackage().getPackageFragment());
 			//System.out.println(this.openRequiredClassesData.getFastCodePackage().getPackageFragment().getChildren());
-			System.out.println(this.openCloseFilesData.getFastCodePackage().getPackageFragment().getCompilationUnits());
-			for (final IJavaElement javaElement : this.openCloseFilesData.getFastCodePackage().getPackageFragment()
-					.getCompilationUnits()) {
-				if (matchPattern(javaElement, this.openCloseFilesData.getPattern())) {
-					final IEditorPart javaEditor = openInEditor(javaElement);
-					revealInEditor(javaEditor, javaElement);
+			//System.out.println(this.openCloseFilesData.getFastCodeFolder().name);
+			for (final IResource resource : this.openCloseFilesData.getFastCodeFolder().getFolder().members()) {
+				if (matchPattern(resource, this.openCloseFilesData.getPattern())) {
+					/*System.out.println(this.openCloseFilesData.getFastCodeFolder().name);
+					System.out.println("ABC" + resource.getClass());*/
+					if (resource instanceof IFile) {
+
+						final IWorkbench wb = PlatformUI.getWorkbench();
+						final IWorkbenchPage page = wb.getActiveWorkbenchWindow().getActivePage();
+						IDE.openEditor(page, (IFile) resource);
+					} else if (resource instanceof IJavaElement) {
+						final IEditorPart javaEditor = openInEditor((IJavaElement) resource);
+						revealInEditor(javaEditor, (IJavaElement) resource);
+					}
 				}
 			}
 		} catch (final JavaModelException e) {
@@ -115,13 +127,14 @@ public class OpenCloseFilesAction implements IActionDelegate, IWorkbenchWindowAc
 
 	}
 
-	private boolean matchPattern(final IJavaElement javaElement, String pattern) {
-		if (isEmpty(pattern)) {
+	private boolean matchPattern(final IResource resource, final String pattern) {
+		/*if (isEmpty(pattern)) {
 			pattern = "\\*";
-		}
-		final Pattern pattrn = Pattern.compile(pattern);
-		System.out.println(javaElement.getElementName());
-		final Matcher matcher = pattrn.matcher(javaElement.getElementName());
+		}*/
+		//final Pattern pattrn = Pattern.compile(pattern);
+		//System.out.println(resource.getName());
+		final Pattern pattrn = Pattern.compile(pattern.replace(ASTERISK, ".*"), Pattern.CASE_INSENSITIVE);
+		final Matcher matcher = pattrn.matcher(resource.getName());
 		return matcher.matches();
 
 		//return javaElement.getElementName().matches(pattern);
