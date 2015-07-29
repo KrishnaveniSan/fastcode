@@ -33,13 +33,13 @@ public class CreateTableData {
 	 * @return the schemasInDB
 	 */
 	public List<String> getSchemasInDB() {
-		return schemasInDB;
+		return this.schemasInDB;
 	}
 
 	/**
 	 * @param schemasInDB the schemasInDB to set
 	 */
-	public void setSchemasInDB(List<String> schemasInDB) {
+	public void setSchemasInDB(final List<String> schemasInDB) {
 		this.schemasInDB = schemasInDB;
 	}
 
@@ -111,13 +111,13 @@ public class CreateTableData {
 	 * @return the createTableWithColumns
 	 */
 	public boolean isCreateTableWithColumns() {
-		return createTableWithColumns;
+		return this.createTableWithColumns;
 	}
 
 	/**
 	 * @param createTableWithColumns the createTableWithColumns to set
 	 */
-	public void setCreateTableWithColumns(boolean createTableWithColumns) {
+	public void setCreateTableWithColumns(final boolean createTableWithColumns) {
 		this.createTableWithColumns = createTableWithColumns;
 	}
 
@@ -125,13 +125,13 @@ public class CreateTableData {
 	 * @return the addColumnsToExistingTable
 	 */
 	public boolean isAddColumnsToExistingTable() {
-		return addColumnsToExistingTable;
+		return this.addColumnsToExistingTable;
 	}
 
 	/**
 	 * @param addColumnsToExistingTable the addColumnsToExistingTable to set
 	 */
-	public void setAddColumnsToExistingTable(boolean addColumnsToExistingTable) {
+	public void setAddColumnsToExistingTable(final boolean addColumnsToExistingTable) {
 		this.addColumnsToExistingTable = addColumnsToExistingTable;
 	}
 
@@ -139,13 +139,13 @@ public class CreateTableData {
 	 * @return the schemaSelected
 	 */
 	public String getSchemaSelected() {
-		return schemaSelected;
+		return this.schemaSelected;
 	}
 
 	/**
 	 * @param schemaSelected the schemaSelected to set
 	 */
-	public void setSchemaSelected(String schemaSelected) {
+	public void setSchemaSelected(final String schemaSelected) {
 		this.schemaSelected = schemaSelected;
 	}
 
@@ -153,13 +153,13 @@ public class CreateTableData {
 	 * @return the tableName
 	 */
 	public String getTableName() {
-		return tableName;
+		return this.tableName;
 	}
 
 	/**
 	 * @param tableName the tableName to set
 	 */
-	public void setTableName(String tableName) {
+	public void setTableName(final String tableName) {
 		this.tableName = tableName;
 	}
 
@@ -167,13 +167,13 @@ public class CreateTableData {
 	 * @return the columnTypeSelected
 	 */
 	public String getColumnTypeSelected() {
-		return columnTypeSelected;
+		return this.columnTypeSelected;
 	}
 
 	/**
 	 * @param columnTypeSelected the columnTypeSelected to set
 	 */
-	public void setColumnTypeSelected(String columnTypeSelected) {
+	public void setColumnTypeSelected(final String columnTypeSelected) {
 		this.columnTypeSelected = columnTypeSelected;
 	}
 
@@ -181,13 +181,13 @@ public class CreateTableData {
 	 * @return the columnNames
 	 */
 	public String[] getColumnNames() {
-		return columnNames;
+		return this.columnNames;
 	}
 
 	/**
 	 * @param columnNames the columnNames to set
 	 */
-	public void setColumnNames(String[] columnNames) {
+	public void setColumnNames(final String[] columnNames) {
 		this.columnNames = columnNames;
 	}
 
@@ -195,13 +195,13 @@ public class CreateTableData {
 	 * @return the tablesInDB
 	 */
 	public List<String> getTablesInDB() {
-		return tablesInDB;
+		return this.tablesInDB;
 	}
 
 	/**
 	 * @param tablesInDB the tablesInDB to set
 	 */
-	public void setTablesInDB(List<String> tablesInDB) {
+	public void setTablesInDB(final List<String> tablesInDB) {
 		this.tablesInDB = tablesInDB;
 	}
 
@@ -209,13 +209,13 @@ public class CreateTableData {
 	 * @return the columnTypeSize
 	 */
 	public int getColumnTypeSize() {
-		return columnTypeSize;
+		return this.columnTypeSize;
 	}
 
 	/**
 	 * @param columnTypeSize the columnTypeSize to set
 	 */
-	public void setColumnTypeSize(int columnTypeSize) {
+	public void setColumnTypeSize(final int columnTypeSize) {
 		this.columnTypeSize = columnTypeSize;
 	}
 
@@ -223,13 +223,13 @@ public class CreateTableData {
 	 * @return the columnTypePrecisionAndScale
 	 */
 	public String getColumnTypePrecisionAndScale() {
-		return columnTypePrecisionAndScale;
+		return this.columnTypePrecisionAndScale;
 	}
 
 	/**
 	 * @param columnTypePrecisionAndScale the columnTypePrecisionAndScale to set
 	 */
-	public void setColumnTypePrecisionAndScale(String columnTypePrecisionAndScale) {
+	public void setColumnTypePrecisionAndScale(final String columnTypePrecisionAndScale) {
 		this.columnTypePrecisionAndScale = columnTypePrecisionAndScale;
 	}
 
@@ -237,13 +237,13 @@ public class CreateTableData {
 	 * @return the dbTypeTableWithColumnsQueryMap
 	 */
 	public Map<String, String> getDbTypeTableWithColumnsQueryMap() {
-		return dbTypeTableWithColumnsQueryMap;
+		return this.dbTypeTableWithColumnsQueryMap;
 	}
 
 	/**
 	 * @param dbTypeTableWithColumnsQueryMap the dbTypeTableWithColumnsQueryMap to set
 	 */
-	public void setDbTypeTableWithColumnsQueryMap(Map<String, String> dbTypeTableWithColumnsQueryMap) {
+	public void setDbTypeTableWithColumnsQueryMap(final Map<String, String> dbTypeTableWithColumnsQueryMap) {
 		this.dbTypeTableWithColumnsQueryMap = dbTypeTableWithColumnsQueryMap;
 	}
 
@@ -251,13 +251,13 @@ public class CreateTableData {
 	 * @return the dbTypeAddColumnsToExistingTableMap
 	 */
 	public Map<String, String> getDbTypeAddColumnsToExistingTableMap() {
-		return dbTypeAddColumnsToExistingTableMap;
+		return this.dbTypeAddColumnsToExistingTableMap;
 	}
 
 	/**
 	 * @param dbTypeAddColumnsToExistingTableMap the dbTypeAddColumnsToExistingTableMap to set
 	 */
-	public void setDbTypeAddColumnsToExistingTableMap(Map<String, String> dbTypeAddColumnsToExistingTableMap) {
+	public void setDbTypeAddColumnsToExistingTableMap(final Map<String, String> dbTypeAddColumnsToExistingTableMap) {
 		this.dbTypeAddColumnsToExistingTableMap = dbTypeAddColumnsToExistingTableMap;
 	}
 
@@ -265,13 +265,13 @@ public class CreateTableData {
 	 * @return the selectedDatabaseName
 	 */
 	public String getSelectedDatabaseName() {
-		return selectedDatabaseName;
+		return this.selectedDatabaseName;
 	}
 
 	/**
 	 * @param selectedDatabaseName the selectedDatabaseName to set
 	 */
-	public void setSelectedDatabaseName(String selectedDatabaseName) {
+	public void setSelectedDatabaseName(final String selectedDatabaseName) {
 		this.selectedDatabaseName = selectedDatabaseName;
 	}
 

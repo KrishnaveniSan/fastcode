@@ -189,7 +189,7 @@ public class FastCodeType extends FastCodeEntity {
 			this.fullyQualifiedName = fullyQualifiedName;
 			// this.packageName = fullyQualifiedName.substring(0, off);
 			this.defaultInstance = changeFirstLetterToLowerCase(this.name);
-			this.packge = new FastCodePackage(getFullyQualifiedName().substring(0, off), null);
+			this.packge = new FastCodePackage(fullyQualifiedName.substring(0, off), null);
 			this.value = defaultValues.containsKey(this.name) ? defaultValues.get(this.name) : "null";
 		} else {
 			this.name = fullyQualifiedName;

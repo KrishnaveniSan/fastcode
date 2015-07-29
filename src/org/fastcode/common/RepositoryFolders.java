@@ -7,14 +7,9 @@
 
 package org.fastcode.common;
 
-import org.fastcode.common.RepositoryFolder;
-
-
-
 public class RepositoryFolders {
 
-	private final RepositoryFolder repositoryFolder[];
-
+	private final RepositoryFolder	repositoryFolder[];
 
 	/**
 	 *

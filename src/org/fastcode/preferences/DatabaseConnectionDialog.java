@@ -14,7 +14,6 @@ import static org.fastcode.util.StringUtil.isEmpty;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Arrays;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.eclipse.jdt.core.IType;
@@ -406,6 +405,9 @@ public class DatabaseConnectionDialog extends TrayDialog {
 		}
 	}
 
+	/**
+	 * @param value
+	 */
 	private void enableFields(final boolean value) {
 
 		this.databaseNameField.setEnabled(value);
@@ -417,6 +419,9 @@ public class DatabaseConnectionDialog extends TrayDialog {
 		this.browseButton.setEnabled(value);
 	}
 
+	/**
+	 * @return
+	 */
 	private boolean isFieldsEmpty() {
 
 		if (this.currDatabaseType.equals(EMPTY_STR)) {
@@ -481,7 +486,8 @@ public class DatabaseConnectionDialog extends TrayDialog {
 								attrValues[8] = EMPTY_STR;
 							}
 						}
-						if (this.isdefaultConn && !attrValues[1].equals(this.currDatabaseName) && Boolean.valueOf(attrValues[6]).equals(true)) {
+						if (this.isdefaultConn && !attrValues[1].equals(this.currDatabaseName)
+								&& Boolean.valueOf(attrValues[6]).equals(true)) {
 
 							attrValues[6] = String.valueOf(false);
 							final String newrecord = attrValues[0] + this.FIELD_DELIMITER + attrValues[1] + this.FIELD_DELIMITER
@@ -499,11 +505,16 @@ public class DatabaseConnectionDialog extends TrayDialog {
 				}
 
 			}
-			this.preferenceStore.setValue(P_DATABASE_CONN_DATA, newConnRecords);
+			this.preferenceStore.setValue(P_DATABASE_CONN_DATA, newConnRecords.trim());
 		}
 
 	}
 
+	/**
+	 * @param attrValues
+	 * @param newSize
+	 * @return
+	 */
 	private static String[] resizeArray(final String[] attrValues, final int newSize) {
 		final String[] tempArr = new String[newSize];
 		/*int oldSize = java.lang.reflect.Array.getLength(oldArray);
@@ -520,17 +531,14 @@ public class DatabaseConnectionDialog extends TrayDialog {
 	@Override
 	public void okPressed() {
 
-		this.currDatabaseType = this.databaseTypeField.getText();
-		this.currDatabaseName = this.databaseNameField.getText();
-		this.currHostAddress = this.databaseHost.getText();
-		this.currPortNumber = this.databasePort.getText() == EMPTY_STR ? 0 : Integer.parseInt(this.databasePort.getText());
-		this.currUserName = this.userNameField.getText();
-		this.currPassword = this.passwordField.getText();
+		currDatabaseType = this.databaseTypeField.getText();
+		currDatabaseName = this.databaseNameField.getText();
+		currHostAddress = this.databaseHost.getText();
+		currPortNumber = this.databasePort.getText().equals(EMPTY_STR) ? 0 : Integer.parseInt(this.databasePort.getText());
+		currUserName = this.userNameField.getText();
+		currPassword = this.passwordField.getText();
 		this.isdefaultConn = this.defaultCheckBox.getSelection();
 		this.driverFQName = this.driverClass.getText(); // ((IType)this.driverClass.getText()).getFullyQualifiedName();
-		/*if (this.isdefaultConn == true) {
-			updatePreferenceStore(this.currDatabaseName);
-		}*/
 
 		if (isFieldsEmpty()) {
 			return;

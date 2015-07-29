@@ -41,7 +41,6 @@ public class TemplateVisitor extends BaseVisitor {
 	@Override
 	public Object visit(final ASTReference node, final Object data) {
 		final String name = node.literal();
-		//System.out.println("visit ASTReference" + name);
 		final String varName = VelocityUtil.getInstance().getVariableName(name);
 		if (this.isSetDirective) {
 
@@ -75,10 +74,10 @@ public class TemplateVisitor extends BaseVisitor {
 			if (!this.invalidVariable.contains(varName)) {
 				this.invalidVariable = this.invalidVariable + COMMA + varName;
 			}
-				/*System.out.println("column" + node.getColumn());
-				System.out.println(node.getInfo());
-				System.out.println(node.getLine());*/
-				this.invalidVarsList.add(new InvalidVariables(varName, node.getLine(), node.getColumn()));
+			//	System.out.println("column" + node.getColumn());
+			//	System.out.println(node.getInfo());
+			//	System.out.println(node.getLine());
+			this.invalidVarsList.add(new InvalidVariables(varName, node.getLine(), node.getColumn()));
 
 		}
 		this.isSetDirective = false;
@@ -91,27 +90,13 @@ public class TemplateVisitor extends BaseVisitor {
 
 	@Override
 	public Object visit(final ASTDirective node, final Object data) {
-		//this.localVarsList.clear();
-		//System.out.println("visit ASTDirective" + node.getDirectiveName());
 		if (node.getDirectiveName().equalsIgnoreCase("foreach")) {
-			/*System.out.println(data);
-			System.out.println(node.getLine());
-			System.out.println(node.state);
-			System.out.println(node.getInfo());
-			System.out.println(node.getLastToken().endLine);
-			System.out.println(node.getLastToken().beginLine);
-			System.out.println(node.getFirstToken().beginLine);
-			System.out.println(node.getFirstToken().endLine);*/
 			this.isForDirective = true;
 			this.forLoopLocalVar = node.jjtGetChild(0).literal().substring(1);
 			this.localVars.add(node.jjtGetChild(0).literal());
 			this.localVars.add(node.jjtGetChild(2).literal());
-			/*System.out.println(node.jjtGetChild(2).getType());
-			System.out.println(node.jjtGetChild(0).literal());
-			System.out.println(node.jjtGetChild(2).literal());*/
 			final ForLoopVariable forLoopVar = new ForLoopVariable(this.forLoopLocalVar, node.getFirstToken().beginLine,
 					node.getLastToken().endLine);
-			//updatelocalVarList(this.forLoopLocalVar, node.getFirstToken().beginLine, node.getLastToken().endLine);
 			this.localVarsList.add(forLoopVar);
 		}
 		if (node.getDirectiveName().equalsIgnoreCase("macro")) {
@@ -171,7 +156,6 @@ public class TemplateVisitor extends BaseVisitor {
 	@Override
 	public Object visit(final ASTStringLiteral node, final Object data) {
 		String name = node.literal();
-		//System.out.println("visit ASTStringLiteral" + name);
 		name = name.replaceAll("\"", "");
 		if (name.trim().length() > 0) {
 			String varName = EMPTY_STR;

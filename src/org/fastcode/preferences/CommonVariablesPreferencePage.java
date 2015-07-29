@@ -9,7 +9,6 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
@@ -23,7 +22,7 @@ public class CommonVariablesPreferencePage extends FieldEditorPreferencePage imp
     private StringFieldEditor		dateFormat;
 	private MultiStringFieldEditor	commonvariables;
 
-	private final boolean					errorShown	= false;
+	private boolean					errorShown	= false;
 	private final String			defaultcommonvariables;
 	TableViewer						variablesViewer;
 	private Table					table;
@@ -47,8 +46,7 @@ public class CommonVariablesPreferencePage extends FieldEditorPreferencePage imp
 	@Override
 	public void createFieldEditors() {
 
-		this.commonvariables = new MultiStringFieldEditor(P_ALL_COMMON_VARIABLES, "", true,
-				getFieldEditorParent());
+		this.commonvariables = new MultiStringFieldEditor(P_ALL_COMMON_VARIABLES, "", true, getFieldEditorParent());
 		addField(this.commonvariables);
 	}
 

@@ -20,7 +20,6 @@ import static org.fastcode.common.FastCodeConstants.JDBC;
 import static org.fastcode.common.FastCodeConstants.MYSQL;
 import static org.fastcode.common.FastCodeConstants.ORACLE;
 import static org.fastcode.common.FastCodeConstants.POSTGRESQL;
-import static org.fastcode.common.FastCodeConstants.SPACE;
 import static org.fastcode.common.FastCodeConstants.SQLSERVER;
 import static org.fastcode.common.FastCodeConstants.SYBASE;
 import static org.fastcode.common.FastCodeConstants.THIN;
@@ -29,15 +28,11 @@ import static org.fastcode.preferences.PreferenceConstants.P_DBCONN_FIELD_DELIMI
 import static org.fastcode.preferences.PreferenceConstants.P_DBCONN_RECORD_DELIMITER;
 import static org.fastcode.util.FastCodeTNSParser.parseTNSFields;
 import static org.fastcode.util.SourceUtil.showWarning;
-import static org.fastcode.util.StringUtil.changeFirstLetterToLowerCase;
 
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
 
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.TableColumnLayout;
@@ -63,7 +58,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
@@ -73,11 +67,9 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
-import org.eclipse.ui.internal.ide.dialogs.OpenResourceDialog;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import org.fastcode.common.DatabaseDetails;
 import org.fastcode.common.FastCodeTNSFields;
-import org.fastcode.util.DataBaseTypeInfo;
 import org.fastcode.util.DatabaseUtil;
 
 public class DatabaseConnectionPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {

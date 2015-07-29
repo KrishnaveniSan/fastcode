@@ -571,6 +571,7 @@ public class CreateSnippetDialog extends TrayDialog {
 					}*/
 					break;
 				case File:
+				case json:
 					String selectedFileName = CreateSnippetDialog.this.selectTypeCombo.getText();
 					if (selectedFileName.contains(ENCLOSING_FILE_STR)) {
 						selectedFileName = CreateSnippetDialog.this.currentType;
@@ -738,6 +739,7 @@ public class CreateSnippetDialog extends TrayDialog {
 					}
 					break;
 				case File:
+				case json:
 					String inputFileName = CreateSnippetDialog.this.selectTypeCombo.getText();
 					if (!isEmpty(inputFileName)) {
 						if (inputFileName.contains(ENCLOSING_FILE_STR)) {
@@ -937,6 +939,7 @@ public class CreateSnippetDialog extends TrayDialog {
 					}
 					break;
 				case File:
+				case json:
 					final OpenResourceDialog resourceDialog = new OpenResourceDialog(parent.getShell(), ResourcesPlugin.getWorkspace()
 							.getRoot(), IResource.FILE);
 					resourceDialog.setTitle("Select File ");
@@ -946,6 +949,13 @@ public class CreateSnippetDialog extends TrayDialog {
 						return;
 					}
 					final IFile browseFile = (IFile) resourceDialog.getResult()[0];
+
+					if (CreateSnippetDialog.this.templateSettings.getFirstTemplateItem().equals(FIRST_TEMPLATE.json)) {
+						System.out.println(browseFile.getFileExtension());
+						if (!browseFile.getFileExtension().equals("js") || !browseFile.getFileExtension().equals("json")) {
+							setErrorMessage("Please select only .js or json file ");
+						}
+					}
 					final FastCodeFile browseFastCodeFile = new FastCodeFile(browseFile);
 					if (CreateSnippetDialog.this.createSnippetData.getFastCodeFiles().isEmpty()) {
 						CreateSnippetDialog.this.createSnippetData.getFastCodeFiles().add(browseFastCodeFile);
@@ -2160,6 +2170,7 @@ public class CreateSnippetDialog extends TrayDialog {
 				}
 				break;
 			case File:
+			case json:
 				enableSelectType("Select File:                   ", "Browse File", true, false);
 				break;
 			case Folder:
@@ -2785,6 +2796,47 @@ public class CreateSnippetDialog extends TrayDialog {
 				}
 			}
 			break;
+
+		case json:
+			if (editorPart != null) {
+				if (compUnit == null) {
+					final IFile file = (IFile) editorPart.getEditorInput().getAdapter(IFile.class);
+					if (file.getFileExtension().equals("js") || file.getFileExtension().equals("json")) {
+						this.currentType = file.getFullPath().toString();
+						this.selectTypeCombo.add(ENCLOSING_FILE_STR + HYPHEN + this.currentType);
+						this.createSnippetData.setResourceFile(file);
+					}
+					//this.createSnippetData.getFastCodeFiles().add(new FastCodeFile(file));
+					//this.selectTypeCombo.select(0);
+				}
+			}
+			if (!fastCodeCache.getFileSet().isEmpty()) {
+				for (final IFile file : fastCodeCache.getFileSet()) {
+
+					if (!isEmpty(this.currentType) && this.currentType.equals(file.getFullPath().toString())) {
+						continue;
+					}
+					boolean addItem = true;
+					if (this.selectTypeCombo.getItems() != null) {
+						for (final String existingFile : this.selectTypeCombo.getItems()) {
+							if (existingFile.contains(ENCLOSING_FILE_STR)) {
+								continue;
+							}
+							if (existingFile.equals(file.getFullPath().toString())) {
+								addItem = false;
+								break;
+
+							}
+						}
+						if (addItem) {
+							if (file.getFileExtension().equals("js") || file.getFileExtension().equals("json")) {
+								this.selectTypeCombo.add(file.getFullPath().toString());
+							}
+						}
+					}
+				}
+			}
+			break;
 		case None:
 			break;
 		default:
@@ -2933,6 +2985,7 @@ public class CreateSnippetDialog extends TrayDialog {
 			}
 			break;
 		case File:
+		case json:
 			if (this.createSnippetData.getResourceFile() != null) {
 
 				final IFile selectedFile = this.createSnippetData.getResourceFile();

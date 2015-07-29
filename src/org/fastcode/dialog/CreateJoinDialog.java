@@ -1901,7 +1901,7 @@ public class CreateJoinDialog extends TrayDialog {
 						CreateJoinDialog.this.firstTableCombo.removeAll();
 					}
 					final DatabaseCache databaseCache = DatabaseCache.getInstance();
-					poulateTableCombo(connectToDatabase, firstTableCombo);
+					poulateTableCombo(connectToDatabase, CreateJoinDialog.this.firstTableCombo);
 					/*getTableFromDb(ConnectToDatabase.getCon() == null ? connectToDatabase.getConnection(databaseNameCombo.getText())
 							: ConnectToDatabase.getCon(), CreateJoinDialog.this.firstSchemaCombo.getText(), databaseType);
 					
@@ -1969,7 +1969,7 @@ public class CreateJoinDialog extends TrayDialog {
 					}
 
 					final DatabaseCache databaseCache = DatabaseCache.getInstance();
-					poulateTableCombo(connectToDatabase, secondTableCombo);
+					poulateTableCombo(connectToDatabase, CreateJoinDialog.this.secondTableCombo);
 					/*getTableFromDb(ConnectToDatabase.getCon() == null ? connectToDatabase.getConnection(databaseNameCombo.getText())
 							: ConnectToDatabase.getCon(), CreateJoinDialog.this.secondSchemaCombo.getText(), databaseType);
 					
@@ -2043,7 +2043,7 @@ public class CreateJoinDialog extends TrayDialog {
 					}
 
 					final DatabaseCache databaseCache = DatabaseCache.getInstance();
-					poulateTableCombo(connectToDatabase, thirdTableCombo);
+					poulateTableCombo(connectToDatabase, CreateJoinDialog.this.thirdTableCombo);
 					/*getTableFromDb(ConnectToDatabase.getCon() == null ? connectToDatabase.getConnection(databaseNameCombo.getText())
 							: ConnectToDatabase.getCon(), CreateJoinDialog.this.thirdSchemaCombo.getText(), databaseType);
 					CreateJoinDialog.this.thirdTableCombo.setEnabled(true);
@@ -2114,7 +2114,7 @@ public class CreateJoinDialog extends TrayDialog {
 					if (CreateJoinDialog.this.copyOfThirdTableCombo.getItemCount() > 0) {
 						CreateJoinDialog.this.copyOfThirdTableCombo.removeAll();
 					}
-					poulateTableCombo(connectToDatabase, copyOfThirdTableCombo);
+					poulateTableCombo(connectToDatabase, CreateJoinDialog.this.copyOfThirdTableCombo);
 					//final DatabaseCache databaseCache = DatabaseCache.getInstance();
 					/*getTableFromDb(ConnectToDatabase.getCon() == null ? connectToDatabase.getConnection(databaseNameCombo.getText())
 							: ConnectToDatabase.getCon(), CreateJoinDialog.this.fourthSchemaCombo.getText(), databaseType);
@@ -2262,15 +2262,15 @@ public class CreateJoinDialog extends TrayDialog {
 
 			@Override
 			public void focusLost(final FocusEvent event) {
-				final String selectedDbName = databaseNameCombo.getText();
+				final String selectedDbName = CreateJoinDialog.this.databaseNameCombo.getText();
 				if (databaseConnectionSettings.getConnMap().keySet().contains(selectedDbName)) {
 					if (!selectedDbName.equalsIgnoreCase(DatabaseConnectionSettings.getInstance().getNameofDabase())
-							|| !createJoinData.getSelectedDatabaseName().equals(selectedDbName)) {
+							|| !CreateJoinDialog.this.createJoinData.getSelectedDatabaseName().equals(selectedDbName)) {
 						setMessage("Process is going on,Please wait");
-						firstSchemaCombo.setEnabled(false);
-						secondSchemaCombo.setEnabled(false);
-						thirdSchemaCombo.setEnabled(false);
-						fourthSchemaCombo.setEnabled(false);
+						CreateJoinDialog.this.firstSchemaCombo.setEnabled(false);
+						CreateJoinDialog.this.secondSchemaCombo.setEnabled(false);
+						CreateJoinDialog.this.thirdSchemaCombo.setEnabled(false);
+						CreateJoinDialog.this.fourthSchemaCombo.setEnabled(false);
 						//updatePreferenceStore(selectedDbName);
 						//DatabaseConnectionSettings.setReload(true);
 						final ConnectToDatabase connectToDatabase = ConnectToDatabase.getInstance();
@@ -2281,28 +2281,29 @@ public class CreateJoinDialog extends TrayDialog {
 						try {
 							connection = connectToDatabase.getNewConnection(selectedDbName);
 							getSchemaFromDb(connection, databaseConnection.getDatabaseType());
-							createJoinData.setSchemasInDB(databaseCache.getDbSchemaListMap().get(databaseConnection.getDatabaseType()));
-							populateSchemaCombo(firstSchemaCombo);
-							populateSchemaCombo(secondSchemaCombo);
-							populateSchemaCombo(thirdSchemaCombo);
-							populateSchemaCombo(fourthSchemaCombo);
-							if (createJoinData.getNumberOfJoinTables().equals((NUMBER_OF_JOIN_TABLES.TWO))) {
-								firstSchemaCombo.setEnabled(true);
-								secondSchemaCombo.setEnabled(true);
-								poulateTableCombo(connectToDatabase, firstTableCombo);
-								poulateTableCombo(connectToDatabase, secondTableCombo);
-							} else if (createJoinData.getNumberOfJoinTables().equals((NUMBER_OF_JOIN_TABLES.THREE))) {
-								firstSchemaCombo.setEnabled(true);
-								secondSchemaCombo.setEnabled(true);
-								thirdSchemaCombo.setEnabled(true);
-								fourthSchemaCombo.setEnabled(true);
-								poulateTableCombo(connectToDatabase, firstTableCombo);
-								poulateTableCombo(connectToDatabase, secondTableCombo);
-								poulateTableCombo(connectToDatabase, thirdTableCombo);
-								poulateTableCombo(connectToDatabase, copyOfThirdTableCombo);
+							CreateJoinDialog.this.createJoinData.setSchemasInDB(databaseCache.getDbSchemaListMap().get(
+									databaseConnection.getDatabaseType()));
+							populateSchemaCombo(CreateJoinDialog.this.firstSchemaCombo);
+							populateSchemaCombo(CreateJoinDialog.this.secondSchemaCombo);
+							populateSchemaCombo(CreateJoinDialog.this.thirdSchemaCombo);
+							populateSchemaCombo(CreateJoinDialog.this.fourthSchemaCombo);
+							if (CreateJoinDialog.this.createJoinData.getNumberOfJoinTables().equals(NUMBER_OF_JOIN_TABLES.TWO)) {
+								CreateJoinDialog.this.firstSchemaCombo.setEnabled(true);
+								CreateJoinDialog.this.secondSchemaCombo.setEnabled(true);
+								poulateTableCombo(connectToDatabase, CreateJoinDialog.this.firstTableCombo);
+								poulateTableCombo(connectToDatabase, CreateJoinDialog.this.secondTableCombo);
+							} else if (CreateJoinDialog.this.createJoinData.getNumberOfJoinTables().equals(NUMBER_OF_JOIN_TABLES.THREE)) {
+								CreateJoinDialog.this.firstSchemaCombo.setEnabled(true);
+								CreateJoinDialog.this.secondSchemaCombo.setEnabled(true);
+								CreateJoinDialog.this.thirdSchemaCombo.setEnabled(true);
+								CreateJoinDialog.this.fourthSchemaCombo.setEnabled(true);
+								poulateTableCombo(connectToDatabase, CreateJoinDialog.this.firstTableCombo);
+								poulateTableCombo(connectToDatabase, CreateJoinDialog.this.secondTableCombo);
+								poulateTableCombo(connectToDatabase, CreateJoinDialog.this.thirdTableCombo);
+								poulateTableCombo(connectToDatabase, CreateJoinDialog.this.copyOfThirdTableCombo);
 							}
-							createJoinData.setSelectedDatabaseName(selectedDbName);
-							setMessage(defaultMessage);
+							CreateJoinDialog.this.createJoinData.setSelectedDatabaseName(selectedDbName);
+							setMessage(CreateJoinDialog.this.defaultMessage);
 						} catch (final Exception ex) {
 							ex.printStackTrace();
 						}

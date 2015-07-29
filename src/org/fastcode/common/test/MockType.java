@@ -640,7 +640,6 @@ public class MockType implements IType {
 		return this.strField;
 	}
 
-	@Override
 	public boolean isLambda() {
 		// TODO Auto-generated method stub
 		return false;

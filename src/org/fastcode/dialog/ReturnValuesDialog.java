@@ -152,11 +152,6 @@ public class ReturnValuesDialog extends TrayDialog {
 	public ReturnValuesDialog(final Shell shell, final ReturnValuesData returnValuesData) {
 		super(shell);
 		this.shell = shell;
-		/*this.shell.redraw();
-		this.shell.layout();*/
-		/*	this.shell.layout();
-			final Point newSize = this.shell.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
-			this.shell.setSize(newSize);*/
 		this.returnValuesData = returnValuesData;
 	}
 
@@ -441,8 +436,7 @@ public class ReturnValuesDialog extends TrayDialog {
 					return;
 				}
 
-				if (this.currentFolder != null && !isEmpty(textValue)
-						&& textValue.contains(ENCLOSING_FOLDER_STR)) {
+				if (this.currentFolder != null && !isEmpty(textValue) && textValue.contains(ENCLOSING_FOLDER_STR)) {
 					if (!fastCodeCache.getFolderSet().contains(this.currentFolder)) {
 						fastCodeCache.getFolderSet().add(this.currentFolder);
 					}
@@ -450,7 +444,8 @@ public class ReturnValuesDialog extends TrayDialog {
 						this.paramKeyParamValueMap.put(placeHolderName, new FastCodeFolder(this.currentFolder));
 					}
 				}
-				this.returnValuesData.addReturnValuesMap(placeHolderName, isEmpty(textValue) ? null : this.paramKeyParamValueMap.get(placeHolderName));
+				this.returnValuesData.addReturnValuesMap(placeHolderName,
+						isEmpty(textValue) ? null : this.paramKeyParamValueMap.get(placeHolderName));
 
 				/*final String textValue = this.folderNameCombo[i].getText();
 				if (!isEmpty(textValue) && !validatePattern(pattern, textValue)) {
@@ -479,9 +474,7 @@ public class ReturnValuesDialog extends TrayDialog {
 					return;
 				}
 
-				if (this.currentPackage != null && !isEmpty(textValue)
-						&& textValue.contains(ENCLOSING_PACKAGE_STR)) {
-
+				if (this.currentPackage != null && !isEmpty(textValue) && textValue.contains(ENCLOSING_PACKAGE_STR)) {
 
 					if (!isEmpty(textValue) && !validatePattern(pattern, textValue)) {
 						setErrorMessage("The selected value " + textValue + " does not match pattern " + pattern + " specified.");
@@ -494,7 +487,8 @@ public class ReturnValuesDialog extends TrayDialog {
 						this.paramKeyParamValueMap.put(placeHolderName, new FastCodePackage(this.currentPackage));
 					}
 				}
-				this.returnValuesData.addReturnValuesMap(placeHolderName, isEmpty(textValue) ? null : this.paramKeyParamValueMap.get(placeHolderName));
+				this.returnValuesData.addReturnValuesMap(placeHolderName,
+						isEmpty(textValue) ? null : this.paramKeyParamValueMap.get(placeHolderName));
 				/*if (this.currentPackage != null && !isEmpty(this.packageCombo[i].getText())
 						&& this.packageCombo[i].getText().contains(ENCLOSING_PACKAGE_STR)) {
 
@@ -523,7 +517,8 @@ public class ReturnValuesDialog extends TrayDialog {
 					setErrorMessage("Please enter value for " + placeHolderName + ".");
 					return;
 				}
-				this.returnValuesData.addReturnValuesMap(placeHolderName, isEmpty(prjComboText) ? null : this.paramKeyParamValueMap.get(placeHolderName));
+				this.returnValuesData.addReturnValuesMap(placeHolderName,
+						isEmpty(prjComboText) ? null : this.paramKeyParamValueMap.get(placeHolderName));
 				/*if (required && isEmpty(this.projectCombo[i].getText())) {
 					setErrorMessage("please enter value for " + label);
 					return;
@@ -573,8 +568,7 @@ public class ReturnValuesDialog extends TrayDialog {
 					return;
 				}
 
-				if (this.currentClass != null && !isEmpty(interfaceComboText)
-						&& interfaceComboText.contains(ENCLOSING_INTERFACE_STR)) {
+				if (this.currentClass != null && !isEmpty(interfaceComboText) && interfaceComboText.contains(ENCLOSING_INTERFACE_STR)) {
 					if (!fastCodeCache.getTypeSet().contains(this.currentInterface)) {
 						fastCodeCache.getTypeSet().add(this.currentInterface);
 					}
@@ -731,6 +725,7 @@ public class ReturnValuesDialog extends TrayDialog {
 	/**
 	 * @param parent
 	 * @param required
+	 * @param labelName
 	 * @param paramKey
 	 * @param enabled
 	 * @param pattern
@@ -752,91 +747,6 @@ public class ReturnValuesDialog extends TrayDialog {
 		label.setText(required ? ASTERISK + labelName : labelName);
 		label.setLayoutData(gridDataLabel);*/
 
-		/*this.size = this.returnValuesData.getFastCodeAdditionalParams().length;
-		if (this.returnValuesData.getEditorPart() != null) {
-			this.compilationUnit = getCompilationUnitFromEditor(this.returnValuesData.getEditorPart());
-		}
-
-		*/
-
-		/*this.label = new Label[this.size];
-		this.valueText = new Text[this.size]; //new Text[noStringValues];
-		this.classNameCombo = new Combo[this.size]; //[noClassValues];
-		this.fileNameCombo = new Combo[this.size]; //[noFileValues];
-		this.packageCombo = new Combo[this.size]; //[noPackageValues];
-		this.folderNameCombo = new Combo[this.size]; //[noFolderValues];
-		this.projectCombo = new Combo[this.size]; //[noProjectValues];
-		this.localVarCombo = new Combo[this.size];
-		this.booleanParam = new Button[this.size];
-		this.interfaceNameCombo = new Combo[this.size];
-		this.enumNameCombo = new Combo[this.size];
-		this.allowedValuesCombo = new Combo[this.size];*/
-
-		//this.valuesObj = new Object[this.size];
-
-		/*for (int count = 0; count < this.size; count++) {
-			String labelName = this.returnValuesData.getFastCodeAdditionalParams()[count].getLabel();
-			final String valueType = this.returnValuesData.getFastCodeAdditionalParams()[count].getReturnTypes().getValue();
-			boolean required = Boolean.valueOf(this.returnValuesData.getFastCodeAdditionalParams()[count].getRequired());
-			final String defaultValue = this.returnValuesData.getFastCodeAdditionalParams()[count].getDefaultValue();
-			final String pattern = this.returnValuesData.getFastCodeAdditionalParams()[count].getPattern();
-			final String allowedValues = this.returnValuesData.getFastCodeAdditionalParams()[count].getAllowedValues();
-			final String project = this.returnValuesData.getFastCodeAdditionalParams()[count].getProject();
-			final boolean enabled = Boolean.valueOf(this.returnValuesData.getFastCodeAdditionalParams()[count].getEnabled());
-			final String max = this.returnValuesData.getFastCodeAdditionalParams()[count].getMax();
-			final String min = this.returnValuesData.getFastCodeAdditionalParams()[count].getMin();
-			final String type = this.returnValuesData.getFastCodeAdditionalParams()[count].getType();
-			final String dependsOn = this.returnValuesData.getFastCodeAdditionalParams()[count].getDependsOn();
-			FastCodeAdditionalParams parentParameter = null;
-			if (this.labelFCAdditonalParamMap.containsKey(dependsOn)) {
-				parentParameter = this.labelFCAdditonalParamMap.get(dependsOn);
-			}
-			if (!enabled) {
-				required = false;
-			}
-			if (isEmpty(labelName)) {
-				labelName = this.returnValuesData.getFastCodeAdditionalParams()[count].getName();
-				final String labelNameSuffix = SPACE + LEFT_PAREN + valueType + RIGHT_PAREN;
-				if (!(valueType.equals(RETURN_TYPES.STRING.getValue()) || valueType.equals(RETURN_TYPES.BOOLEAN.getValue()))) {
-					labelName = labelName + labelNameSuffix;
-				}
-			}
-			this.labelFCAdditonalParamMap.put(this.returnValuesData.getFastCodeAdditionalParams()[count].getName(),
-					this.returnValuesData.getFastCodeAdditionalParams()[count]);
-
-			final GridData gridDataLabel = new GridData();
-			this.label[count] = new Label(composite, SWT.NONE);
-			this.label[count].setText(required ? ASTERISK + labelName : labelName);
-			this.label[count].setLayoutData(gridDataLabel);*/
-
-		/*if (valueType.equals(RETURN_TYPES.CLASS.getValue())) {
-			//createClassSelectionPane(composite, count, project, pattern, enabled);
-		} else if (valueType.equals(RETURN_TYPES.FILE.getValue())) {
-			//createFileSelectionPane(composite, count, project, pattern, enabled);
-		} else if (valueType.equals(RETURN_TYPES.FOLDER.getValue())) {
-			//createFolderSelectionPane(composite, count, defaultValue, project, pattern, enabled);
-		} else if (valueType.equals(RETURN_TYPES.PACKAGE.getValue())) {
-			//createPackageSelectionPane(composite, count, defaultValue, pattern, enabled);
-		} else if (valueType.equalsIgnoreCase(RETURN_TYPES.PROJECT.getValue())
-				|| valueType.equalsIgnoreCase(RETURN_TYPES.JAVAPROJECT.getValue())) {
-			//createProjectSelectionPane(composite, valueType, count, defaultValue, pattern, enabled);
-		} else if (valueType.equalsIgnoreCase(RETURN_TYPES.LOCALVAR.getValue())) {
-			//createLocalVarSelectionPane(composite, count, defaultValue, pattern, enabled, type);
-		} else if (valueType.equalsIgnoreCase(RETURN_TYPES.BOOLEAN.getValue())) {
-			//createBooleanParamCheckBox(composite, count, defaultValue, enabled);
-		} else if (!isEmpty(allowedValues)) {
-			//createDropDown(composite, count, allowedValues, defaultValue, required, enabled);
-		} else if (valueType.equalsIgnoreCase(RETURN_TYPES.INTERFACE.getValue())) {
-			//createInterfaceSelectionPane(composite, count, defaultValue, pattern, enabled);
-		} else if (valueType.equalsIgnoreCase(RETURN_TYPES.ENUMERATION.getValue())) {
-			//craeteEnumSelectionPane(composite, count, defaultValue, pattern, enabled);
-		}*/
-		/*
-			* else if (valueType.matches("[*\\s+*]")) { this.arrayData = true;
-			* final String values = valueType.substring(1, valueType.length());
-			* createComboBoxPane(composite, values); }
-			*/
-		/*else {*/
 		final GridData gridDataText = new GridData();
 		gridDataText.grabExcessHorizontalSpace = true;
 
@@ -1014,6 +924,11 @@ public class ReturnValuesDialog extends TrayDialog {
 		}
 	}
 
+	/**
+	 * @param value
+	 * @return
+	 * @throws Exception
+	 */
 	protected IntRange parseIntrange(final String value) throws Exception {
 		final StringBuilder max = new StringBuilder();
 		final StringBuilder min = new StringBuilder();
@@ -1204,21 +1119,21 @@ public class ReturnValuesDialog extends TrayDialog {
 							}
 						}
 					}
-					//					try {
-					//						final IType inputEnumType = getTypeFromWorkspace(inputEnumName);
-					//						if (inputEnumType != null) {
-					//							ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodeType(inputEnumType));
-					//							/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) e.widget).getToolTipText())] = new FastCodeType(
-					//									inputEnumType);*/
-					//							if (!fastCodeCache.getTypeSet().contains(inputEnumType)) {
-					//								fastCodeCache.getTypeSet().add(inputEnumType);
-					//							}
-					//						} else {
-					//							setErrorMessage("Enumeration does not exist,Please enter an enumeration  name ");
-					//						}
-					//					} catch (final Exception ex) {
-					//						ex.printStackTrace();
-					//					}
+					/*	try {
+							final IType inputEnumType = getTypeFromWorkspace(inputEnumName);
+							if (inputEnumType != null) {
+								ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodeType(inputEnumType));
+								/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) e.widget).getToolTipText())] = new FastCodeType(
+										inputEnumType);
+								if (!fastCodeCache.getTypeSet().contains(inputEnumType)) {
+									fastCodeCache.getTypeSet().add(inputEnumType);
+								}
+							} else {
+								setErrorMessage("Enumeration does not exist,Please enter an enumeration  name ");
+							}
+						} catch (final Exception ex) {
+							ex.printStackTrace();
+						}*/
 					enableOrDisableChildren(paramKey);
 				}
 			}
@@ -1428,21 +1343,21 @@ public class ReturnValuesDialog extends TrayDialog {
 							}
 						}
 					}
-					//					try {
-					//						final IType inputInterfaceType = getTypeFromWorkspace(inputInterfaceName);
-					//						if (inputInterfaceType != null) {
-					//							ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodeType(inputInterfaceType));
-					//							/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) e.widget).getToolTipText())] = new FastCodeType(
-					//									inputInterfaceType);*/
-					//							if (!fastCodeCache.getTypeSet().contains(inputInterfaceType)) {
-					//								fastCodeCache.getTypeSet().add(inputInterfaceType);
-					//							}
-					//						} else {
-					//							setErrorMessage("Interface does not exist,Please enter an existing interface name ");
-					//						}
-					//					} catch (final Exception ex) {
-					//						ex.printStackTrace();
-					//					}
+					/*	try {
+							final IType inputInterfaceType = getTypeFromWorkspace(inputInterfaceName);
+							if (inputInterfaceType != null) {
+								ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodeType(inputInterfaceType));
+								/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) e.widget).getToolTipText())] = new FastCodeType(
+										inputInterfaceType);
+								if (!fastCodeCache.getTypeSet().contains(inputInterfaceType)) {
+									fastCodeCache.getTypeSet().add(inputInterfaceType);
+								}
+							} else {
+								setErrorMessage("Interface does not exist,Please enter an existing interface name ");
+							}
+						} catch (final Exception ex) {
+							ex.printStackTrace();
+						}*/
 					enableOrDisableChildren(paramKey);
 				}
 			}
@@ -2343,17 +2258,17 @@ public class ReturnValuesDialog extends TrayDialog {
 						}
 					}
 					try {
-						//						final IType inputClassType = getTypeFromWorkspace(inputFromClassName);
-						//						if (inputClassType != null) {
-						//							ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodeType(inputClassType));
-						/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) e.widget).getToolTipText())] = new FastCodeType(
-								inputClassType);*/
-						//							if (!fastCodeCache.getTypeSet().contains(inputClassType)) {
-						//								fastCodeCache.getTypeSet().add(inputClassType);
-						//							}
-						//						} else {
-						//							setErrorMessage("Class does not exist,Please enter an existing class name ");
-						//						}
+						/*	final IType inputClassType = getTypeFromWorkspace(inputFromClassName);
+							if (inputClassType != null) {
+								ReturnValuesDialog.this.paramKeyParamValueMap.put(paramKey, new FastCodeType(inputClassType));
+								/*New__ReturnValuesDialog.this.valuesObj[Integer.parseInt(((Combo) e.widget).getToolTipText())] = new FastCodeType(
+										inputClassType);
+								if (!fastCodeCache.getTypeSet().contains(inputClassType)) {
+									fastCodeCache.getTypeSet().add(inputClassType);
+								}
+							} else {
+								setErrorMessage("Class does not exist,Please enter an existing class name ");
+							}*/
 					} catch (final Exception ex) {
 						ex.printStackTrace();
 					}
@@ -2386,7 +2301,7 @@ public class ReturnValuesDialog extends TrayDialog {
 		browse.setText("Browse");
 		browse.setLayoutData(gridDataButton);
 		browse.setEnabled(enabled);
-		this.browseButtonComboMap.put(browse, classCombo);
+		//	this.browseButtonComboMap.put(browse, classCombo);
 		browse.addSelectionListener(new SelectionListener() {
 
 			@Override
@@ -2524,11 +2439,6 @@ public class ReturnValuesDialog extends TrayDialog {
 		final GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
 		composite.setLayout(layout);
-
-		/*final GridData gridDataLabel = new GridData();
-		final Label label = new Label(composite, SWT.NONE);
-		label.setText(required ? ASTERISK + labelName : labelName);
-		label.setLayoutData(gridDataLabel);*/
 
 		final GridData gridDataCombo = new GridData();
 		gridDataCombo.grabExcessHorizontalSpace = true;
@@ -2758,10 +2668,6 @@ public class ReturnValuesDialog extends TrayDialog {
 	 * @param parent
 	 */
 	private void createErrorMessageText(final Composite parent) {
-		/*final Composite composite = new Composite(parent, SWT.NONE);
-		final GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
-		composite.setLayout(layout);*/
 
 		final GridData errText = new GridData(700, 20);
 		errText.horizontalSpan = 3;

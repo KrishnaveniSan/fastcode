@@ -61,9 +61,9 @@ public class FCTagAssistProcessor implements IContentAssistProcessor {
 
 			final int length = documentOffset - startPosition;
 			final String startLineStr = document.get(region.getOffset(), documentOffset - region.getOffset());
-			proposals = currentAssistant.getCompletionProposals(document, startPosition, length, startLineStr.substring(0, startLineStr.length() - length));
+			proposals = currentAssistant.getCompletionProposals(document, startPosition, length,
+					startLineStr.substring(0, startLineStr.length() - length));
 		} catch (final Exception e) {/* ignore */
-			System.out.println(e.getMessage());
 		}
 
 		return proposals.toArray(new ICompletionProposal[proposals.size()]);

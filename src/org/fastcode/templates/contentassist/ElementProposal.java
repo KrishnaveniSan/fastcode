@@ -6,12 +6,12 @@ package org.fastcode.templates.contentassist;
  * Element proposal class.
  */
 public class ElementProposal implements Comparable<ElementProposal> {
-	protected String proposal;
-	protected String displayPrefix;
-	protected String description;
-	protected int selectionOffset;
-	protected int selectionLength;
-	protected boolean multiple;
+	protected String	proposal;
+	protected String	displayPrefix;
+	protected String	description;
+	protected int		selectionOffset;
+	protected int		selectionLength;
+	protected boolean	multiple;
 
 
 	/**
@@ -33,8 +33,7 @@ public class ElementProposal implements Comparable<ElementProposal> {
 	 * @param description the description
 	 * @param selectionOffset the selection offset
 	 */
-	public ElementProposal(final String proposal, final String displayPrefix, final String description,
-			final int selectionOffset) {
+	public ElementProposal(final String proposal, final String displayPrefix, final String description, final int selectionOffset) {
 		this(proposal, displayPrefix, description, selectionOffset, 0, false);
 	}
 
@@ -48,8 +47,8 @@ public class ElementProposal implements Comparable<ElementProposal> {
 	 * @param selectionLength the selection length
 	 * @param multiple the multiple
 	 */
-	public ElementProposal(final String proposal, final String displayPrefix, final String description,
-			final int selectionOffset, final int selectionLength, final boolean multiple) {
+	public ElementProposal(final String proposal, final String displayPrefix, final String description, final int selectionOffset,
+			final int selectionLength, final boolean multiple) {
 		this.proposal = proposal;
 		this.displayPrefix = displayPrefix;
 		this.description = description;

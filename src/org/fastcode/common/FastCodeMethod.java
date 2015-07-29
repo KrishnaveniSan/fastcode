@@ -5,8 +5,10 @@ package org.fastcode.common;
 
 import static org.eclipse.jdt.core.Signature.getSignatureSimpleName;
 import static org.fastcode.common.FastCodeConstants.COMMA;
+import static org.fastcode.common.FastCodeConstants.DOT;
 import static org.fastcode.common.FastCodeConstants.EMPTY_STR;
 import static org.fastcode.common.FastCodeConstants.METHOD_RETURN_TYPE_VOID;
+import static org.fastcode.util.FastCodeUtil.getEmptyArrayForNull;
 import static org.fastcode.util.SourceUtil.getFQNameFromFieldTypeName;
 import static org.fastcode.util.StringUtil.parseType;
 
@@ -45,8 +47,8 @@ public final class FastCodeMethod extends FastCodeEntity {
 				parameterList.add(new Pair(memValPair.getMemberName(), memValPair.getValue()));
 			}
 			if (method.getCompilationUnit() != null) {
-				annotations.add(new FastCodeAnnotation(parameterList, new FastCodeType(getFQNameFromFieldTypeName(annotation.getElementName(),
-					method.getCompilationUnit()))));
+				annotations.add(new FastCodeAnnotation(parameterList, new FastCodeType(getFQNameFromFieldTypeName(
+						annotation.getElementName(), method.getCompilationUnit()))));
 			}
 		}
 
@@ -54,24 +56,27 @@ public final class FastCodeMethod extends FastCodeEntity {
 		FastCodeType fastCodeReturnType = null;
 
 		if (!getSignatureSimpleName(method.getReturnType()).equals(METHOD_RETURN_TYPE_VOID)) {
-			fastCodeReturnType = parseType(getSignatureSimpleName(method.getReturnType()), method.getCompilationUnit());
+			if (method.getCompilationUnit() != null) {
+				fastCodeReturnType = parseType(getSignatureSimpleName(method.getReturnType()), method.getCompilationUnit());
+			}
 		}
 		if (method.getParameterTypes() != null && method.getParameterTypes().length > 0) {
 			FastCodeType fastCodeType = null;
 			final StringBuffer paramFQNameBuffer = new StringBuffer();
-			for (final String parameter : method.getParameterTypes()) {
+			for (final String parameter : getEmptyArrayForNull(method.getParameterTypes())) {
 				String paramFQName = EMPTY_STR;
 				if (method.getCompilationUnit() != null) {
 					fastCodeType = parseType(getSignatureSimpleName(parameter), method.getCompilationUnit());
 					paramFQName = getFQNameFromFieldTypeName(fastCodeType.getName(), method.getCompilationUnit());
 				} else {
-					paramFQName = Signature.getSignatureQualifier(parameter) + "." + getSignatureSimpleName(parameter);
+					paramFQName = Signature.getSignatureQualifier(parameter) + DOT + getSignatureSimpleName(parameter);
+
 				}
 				paramFQNameBuffer.append(EMPTY_STR.equals(paramFQNameBuffer.toString()) ? paramFQName : COMMA + paramFQName);
 			}
 			paramTypeFQNames = paramFQNameBuffer.toString().split(COMMA);
 		}
-		for (final String exp : method.getExceptionTypes()) {
+		for (final String exp : getEmptyArrayForNull(method.getExceptionTypes())) {
 			final FastCodeType expFCType = new FastCodeType(getFQNameFromFieldTypeName(getSignatureSimpleName(exp),
 					method.getCompilationUnit()));
 			exptnFCType.add(expFCType);

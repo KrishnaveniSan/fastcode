@@ -490,7 +490,6 @@ public class TemplateSettings {
 		final String allTemplates = store.getString(allTemplatesPreferenceKey);
 		final ArrayList<String> allTemplatesList = new ArrayList<String>();
 		for (final String s : allTemplates.split(COLON)) {
-			System.out.println("tem " + s);
 			allTemplatesList.add(s);
 		}
 

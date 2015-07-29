@@ -173,6 +173,9 @@ public class JUnitPreferencePage extends FieldEditorPreferencePage implements IW
 				.getString(getPreferenceName(P_JUNIT_TYPE)) : P_JUNIT_TYPE_4;
 
 		this.allTestProfiles = getTestProfiles();
+		if (!this.preferenceStore.contains(P_JUNIT_ALL_TEST_PROFILES)) {
+			this.preferenceStore.setValue(P_JUNIT_ALL_TEST_PROFILES, PROFILE_DEFAULT);
+		}
 		setDescription("Preference page for Junit test creator");
 	}
 

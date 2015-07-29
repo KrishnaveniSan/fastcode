@@ -24,8 +24,8 @@ public class CreateNewPreferencePage extends FieldEditorPreferencePage implement
 	public CreateNewPreferencePage() {
 		super(GRID);
 		final IPreferenceStore store = new ScopedPreferenceStore(new InstanceScope(), FAST_CODE_PLUGIN_ID);
-		setPreferenceStore(store);
-		setDescription("Fast Code Create New Preference Page the plugin");
+		this.setPreferenceStore(store);
+		this.setDescription("Fast Code Create New Preference Page the plugin");
 	}
 
 	/*

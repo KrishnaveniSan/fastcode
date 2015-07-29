@@ -25,7 +25,8 @@ public class TagContentAssistant extends AbstractTemplateContentAssistant {
 	 * @see org.fastcode.templates.contentassist.AbstractTemplateContentAssistant#getCompletionProposals(org.eclipse.jface.text.IDocument, int, int)
 	 */
 	@Override
-	public List<ICompletionProposal> getCompletionProposals(final IDocument document, final int offset, final int length, final String spaceToPad) {
+	public List<ICompletionProposal> getCompletionProposals(final IDocument document, final int offset, final int length,
+			final String spaceToPad) {
 		try {
 			final String element = getElement(document, offset, length);
 			if (element != null) {

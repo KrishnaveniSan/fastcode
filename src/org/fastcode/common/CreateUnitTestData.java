@@ -5,13 +5,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.fastcode.common.FastCodeConstants.HANDLE_EXCEPTION;
 import org.fastcode.common.FastCodeConstants.UNIT_TEST_CHOICE;
 import org.fastcode.common.FastCodeConstants.UNIT_TEST_TYPE;
 import org.fastcode.util.JunitPreferencesAndType;
-import org.eclipse.jdt.core.ICompilationUnit;
 
 public class CreateUnitTestData {
 	private String						junitTestProfileName;

@@ -2,16 +2,18 @@ package org.fastcode.common;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.ui.part.EditorPart;
 
-public class OpenRequiredClassesData {
+public class OpenCloseFilesData {
 
-	private IProject							project;
-	FastCodeProject selectedProject;
-	ICompilationUnit compUnit;
-	private String pattern;
-	private boolean closeOthers;
-	private FastCodePackage fastCodePackage;
-
+	private IProject		project;
+	FastCodeProject			selectedProject;
+	ICompilationUnit		compUnit;
+	private String			pattern;
+	private boolean			closeOthers;
+	private FastCodePackage	fastCodePackage;
+	private EditorPart		editorPart;
+	private FastCodeFolder	fastCodeFolder;
 
 	public ICompilationUnit getCompUnit() {
 		return this.compUnit;
@@ -97,5 +99,44 @@ public class OpenRequiredClassesData {
 		this.fastCodePackage = fastCodePackage;
 	}
 
+	/**
+	 *
+	 * getter method for editorPart
+	 * @return
+	 *
+	 */
+	public EditorPart getEditorPart() {
+		return this.editorPart;
+	}
+
+	/**
+	 *
+	 * setter method for editorPart
+	 * @param editorPart
+	 *
+	 */
+	public void setEditorPart(final EditorPart editorPart) {
+		this.editorPart = editorPart;
+	}
+
+	/**
+	 *
+	 * getter method for fastCodeFolder
+	 * @return
+	 *
+	 */
+	public FastCodeFolder getFastCodeFolder() {
+		return this.fastCodeFolder;
+	}
+
+	/**
+	 *
+	 * setter method for fastCodeFolder
+	 * @param fastCodeFolder
+	 *
+	 */
+	public void setFastCodeFolder(final FastCodeFolder fastCodeFolder) {
+		this.fastCodeFolder = fastCodeFolder;
+	}
 
 }

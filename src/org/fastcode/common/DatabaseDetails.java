@@ -12,8 +12,8 @@ public class DatabaseDetails implements Comparable<DatabaseDetails> {
 	private String driverClass;
 	private String driverPrj;
 
-	public DatabaseDetails(final String databaseName, final String databaseType, final String hostAddress, final int port, final String userName, final String password,
-			final boolean defaultConn, final String driverClass, final String driverPrj) {
+	public DatabaseDetails(final String databaseName, final String databaseType, final String hostAddress, final int port,
+			final String userName, final String password, final boolean defaultConn, final String driverClass, final String driverPrj) {
 		super();
 
 		this.databaseName = databaseName;

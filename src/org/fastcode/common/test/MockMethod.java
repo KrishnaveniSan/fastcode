@@ -395,7 +395,6 @@ public class MockMethod implements IMethod {
 		return null;
 	}
 
-	@Override
 	public boolean isLambdaMethod() {
 		// TODO Auto-generated method stub
 		return false;

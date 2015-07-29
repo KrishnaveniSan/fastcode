@@ -37,7 +37,10 @@ import static org.fastcode.util.StringUtil.isEmpty;
 import static org.fastcode.util.VersionControlUtil.addOrUpdateFileStatusInCache;
 import static org.fastcode.util.VersionControlUtil.isPrjConfigured;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -492,9 +495,16 @@ public class TemplateTagsProcessor {
 			final Action actionInfo = new Action.Builder().withEntity(ACTION_ENTITY.Info).withType(ACTION_TYPE.Prompt)
 					.withSource(insideTagBody.trim()).build();
 			return actionInfo;
+			//break;
+		case COMMAND:
+			final String command = attributes.containsKey("command") ? attributes.get("command") : null;
+			final Action actionCommand = new Action.Builder().withEntity(ACTION_ENTITY.Command).withType(ACTION_TYPE.Run)
+					.withSource(command).withLabelMsg("Run command: " + command).build();
+			return actionCommand;
+			//break;
 
 		}
-		//break;
+
 		return null;
 
 	}
@@ -588,6 +598,9 @@ public class TemplateTagsProcessor {
 			final FCSnippetTagHandler fcSnippetTagHandler = new FCSnippetTagHandler();
 			fcSnippetTagHandler.createSnippetFromTag(actionSelected.getSource(), actionSelected.getTarget(), editorPart,
 					spacesBeforeCursor, contextMap, placeHolders, compUnit);
+			break;
+		case Command:
+			RunCommandFromTag(actionSelected.getSource());
 			break;
 		/*case LocalVar:
 		selectLocalVariables(actionSelected, compUnit, editorPart, placeHolders);
@@ -1164,6 +1177,40 @@ public class TemplateTagsProcessor {
 	public List<Action> getSubActions() {
 		return this.subActions;
 	}
+
+	private void RunCommandFromTag(final String source) {
+		String s = null;
+
+		try {
+
+			final Process p = Runtime.getRuntime().exec(source);
+
+			final BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+			final BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+
+			// read the output from the command
+
+			System.out.println("Here is the standard output of the command:\n");
+			while ((s = stdInput.readLine()) != null) {
+				System.out.println(s);
+			}
+
+			// read any errors from the attempted command
+
+			System.out.println("Here is the standard error of the command (if any):\n");
+			while ((s = stdError.readLine()) != null) {
+				System.out.println(s);
+			}
+
+			System.exit(0);
+		} catch (final IOException e) {
+			System.out.println("exception happened - here's what I know: ");
+			e.printStackTrace();
+			System.exit(-1);
+		}
+	}
+
 	/*public class FastCodeCheckedTreeSelectionDialog extends CheckedTreeSelectionDialog {
 
 		public FastCodeCheckedTreeSelectionDialog(Shell parent, ILabelProvider labelProvider, ITreeContentProvider contentProvider) {

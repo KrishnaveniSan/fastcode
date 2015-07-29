@@ -46,6 +46,11 @@ public class FastCodeDataBaseField extends AbstractFastCodeField {
 		this(name, type, value, size, nullable, null, null, null, null);
 	}
 
+	/**
+	 * @param name
+	 * @param dataType
+	 * @param javaTypeName
+	 */
 	public FastCodeDataBaseField(final String name, final String dataType, final String javaTypeName) {
 		this(name, dataType, "0", 0, false, null, javaTypeName, null, null);
 	}

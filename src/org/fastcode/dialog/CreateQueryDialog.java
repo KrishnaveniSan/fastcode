@@ -306,10 +306,10 @@ public class CreateQueryDialog extends TrayDialog {
 
 			@Override
 			public void focusLost(final FocusEvent event) {
-				final String selectedDbName = databaseNameCombo.getText();
+				final String selectedDbName = CreateQueryDialog.this.databaseNameCombo.getText();
 				if (databaseConnectionSettings.getConnMap().keySet().contains(selectedDbName)) {
 					if (!selectedDbName.equalsIgnoreCase(DatabaseConnectionSettings.getInstance().getNameofDabase())
-							|| !createQueryData.getSelectedDatabaseName().equals(selectedDbName)) {
+							|| !CreateQueryDialog.this.createQueryData.getSelectedDatabaseName().equals(selectedDbName)) {
 						//updatePreferenceStore(selectedDbName);
 						//DatabaseConnectionSettings.setReload(true);
 						final ConnectToDatabase connectToDatabase = ConnectToDatabase.getInstance();
@@ -320,10 +320,11 @@ public class CreateQueryDialog extends TrayDialog {
 						try {
 							connection = connectToDatabase.getNewConnection(selectedDbName);
 							getSchemaFromDb(connection, databaseConnection.getDatabaseType());
-							createQueryData.setSchemasInDB(databaseCache.getDbSchemaListMap().get(databaseConnection.getDatabaseType()));
+							CreateQueryDialog.this.createQueryData.setSchemasInDB(databaseCache.getDbSchemaListMap().get(
+									databaseConnection.getDatabaseType()));
 							populateSchemaCombo();
 							poulateTableCombo(connectToDatabase);
-							createQueryData.setSelectedDatabaseName(selectedDbName);
+							CreateQueryDialog.this.createQueryData.setSelectedDatabaseName(selectedDbName);
 
 						} catch (final Exception ex) {
 							ex.printStackTrace();

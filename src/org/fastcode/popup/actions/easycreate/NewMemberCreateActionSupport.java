@@ -44,7 +44,6 @@ import static org.fastcode.common.FastCodeConstants.FILE_SEPARATOR;
 import static org.fastcode.common.FastCodeConstants.GLOBAL_ASK_TO_CREATE;
 import static org.fastcode.common.FastCodeConstants.GLOBAL_NEVER_CREATE;
 import static org.fastcode.common.FastCodeConstants.GROOVY_EXTENSION;
-import static org.fastcode.common.FastCodeConstants.INITIATED;
 import static org.fastcode.common.FastCodeConstants.JAVA_EXTENSION;
 import static org.fastcode.common.FastCodeConstants.LEFT_CURL;
 import static org.fastcode.common.FastCodeConstants.LEFT_PAREN;
@@ -95,6 +94,8 @@ import static org.fastcode.util.StringUtil.isValidVariableName;
 import static org.fastcode.util.StringUtil.makePlaceHolder;
 import static org.fastcode.util.StringUtil.replacePlaceHolder;
 import static org.fastcode.util.StringUtil.replacePlaceHolderWithBlank;
+import static org.fastcode.util.VersionControlUtil.addOrUpdateFileStatusInCache;
+import static org.fastcode.util.VersionControlUtil.isPrjConfigured;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -148,19 +149,14 @@ import org.fastcode.common.FastCodeMethod;
 import org.fastcode.common.FastCodeReturn;
 import org.fastcode.common.FastCodeType;
 import org.fastcode.common.Pair;
-import org.fastcode.preferences.VersionControlPreferences;
 import org.fastcode.setting.GlobalSettings;
 import org.fastcode.util.CreateSimilarDescriptorClass;
 import org.fastcode.util.FastCodeContext;
-import org.fastcode.util.FastCodeFileForCheckin;
 import org.fastcode.util.FieldBuilderImpl;
 import org.fastcode.util.MessageUtil;
 import org.fastcode.util.RepositoryService;
 import org.fastcode.util.SVNRepositoryService;
 import org.fastcode.versioncontrol.FastCodeCheckinCache;
-
-import static org.fastcode.util.VersionControlUtil.isPrjConfigured;
-import static org.fastcode.util.VersionControlUtil.addOrUpdateFileStatusInCache;
 
 /**
  * @author Gautam
@@ -218,8 +214,8 @@ public abstract class NewMemberCreateActionSupport extends AbstractActionSupport
 			if (this.autoCheckinEnabled && this.prjShared && prjConfigured) {
 				final RepositoryService repositoryService = getRepositoryServiceClass();
 				if (repositoryService.isFileInRepository(newFileObj)) { // && !MessageDialog.openQuestion(new Shell(), "File present in repository", "File already present in repository. Click yes to overwrite")) {
-					createFileAlone = MessageDialog.openQuestion(new Shell(), "File present in repository",
-							"File " + newFileObj.getName() + " already present in repository. Click yes to just create the file, No to return without any action.");
+					createFileAlone = MessageDialog.openQuestion(new Shell(), "File present in repository", "File " + newFileObj.getName()
+							+ " already present in repository. Click yes to just create the file, No to return without any action.");
 					if (!createFileAlone) {
 						return;
 					}
@@ -230,7 +226,6 @@ public abstract class NewMemberCreateActionSupport extends AbstractActionSupport
 			//final FastCodeCheckinCache checkinCache = FastCodeCheckinCache.getInstance();
 			addOrUpdateFileStatusInCache(newFileObj);
 			//checkinCache.getFilesToCheckIn().add(new FastCodeFileForCheckin(INITIATED, newFileObj.getAbsolutePath()));
-			System.out.println( newFileObj.getAbsolutePath());
 			compUnit = createClass(this.createVariableData);
 			compUnit.becomeWorkingCopy(new NullProgressMonitor());
 			final IEditorPart javaEditor = JavaUI.openInEditor(compUnit.findPrimaryType());
@@ -259,7 +254,6 @@ public abstract class NewMemberCreateActionSupport extends AbstractActionSupport
 			final FastCodeCheckinCache checkinCache = FastCodeCheckinCache.getInstance();
 			addOrUpdateFileStatusInCache(new File(compUnit.findPrimaryType().getResource().getLocationURI()));
 			//checkinCache.getFilesToCheckIn().add(new FastCodeFileForCheckin(INITIATED, new File(compUnit.findPrimaryType().getResource().getLocationURI()).getAbsolutePath()));
-			System.out.println(new File(compUnit.findPrimaryType().getResource().getLocationURI()).getAbsolutePath());
 		}
 		IType type = compUnit.findPrimaryType();
 		//final File file = new File(compUnit.findPrimaryType().getResource().getLocationURI());

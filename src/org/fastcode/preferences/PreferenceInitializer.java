@@ -439,15 +439,14 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		initTemplates(store, DB_TEMPLATES_FOLDER, databaseTemplateConfigFile, P_DATABASE_TEMPLATE_PREFIX, P_DATABASE_ALL_TEMPLATES);
 		//initTemplates(store, FILE_TEMPLATES_FOLDER, fileTemplateConfigFile, P_FILE_TEMPLATE_PREFIX, P_FILE_ALL_TEMPLATES);
 
-		store.setDefault(P_ALL_COMMON_VARIABLES, "Common Variables" + TAB + TAB + "Descripton" + TAB + TAB + " \n" 
-											   + "${user}"  + TAB + TAB + TAB + "user name who created the class/file" + TAB + TAB + " \n" 
-											   + "${today}"  + TAB + TAB + TAB + "date/time creation of the class/file" + TAB + TAB + " \n" 
-											   + "${to_class}"  + TAB + TAB +  "used to hold class which is needed in dozer mapping file or copy between two classes" + TAB + TAB + " \n" 
-											   + "${from_class}"  + TAB + TAB + "used to hold class which is needed in dozer mapping file or copy between two classes" + TAB + TAB + " \n" 
-											   + "${class.name}"   + TAB + TAB + "name of class selected" + TAB + TAB + " \n" 
-											   + "${fields}"  + TAB + TAB + TAB + "list of fields selected where each element can be accessed as ${field}" + TAB + TAB + " \n" 
-											   + "${Qt}"  + TAB + TAB + TAB + TAB + "used for Quotes" + TAB + TAB + " \n" 
-						);		
+		store.setDefault(P_ALL_COMMON_VARIABLES, "Common Variables" + TAB + TAB + "Descripton" + TAB + TAB + " \n" + "${user}" + TAB + TAB
+				+ TAB + "user name who created the class/file" + TAB + TAB + " \n" + "${today}" + TAB + TAB + TAB
+				+ "date/time creation of the class/file" + TAB + TAB + " \n" + "${to_class}" + TAB + TAB
+				+ "used to hold class which is needed in dozer mapping file or copy between two classes" + TAB + TAB + " \n"
+				+ "${from_class}" + TAB + TAB + "used to hold class which is needed in dozer mapping file or copy between two classes"
+				+ TAB + TAB + " \n" + "${class.name}" + TAB + TAB + "name of class selected" + TAB + TAB + " \n" + "${fields}" + TAB + TAB
+				+ TAB + "list of fields selected where each element can be accessed as ${field}" + TAB + TAB + " \n" + "${Qt}" + TAB + TAB
+				+ TAB + TAB + "used for Quotes" + TAB + TAB + " \n");
 		updateGlobalProps();
 
 		//		System.out.println("In class PreferenceInitializer line 523");

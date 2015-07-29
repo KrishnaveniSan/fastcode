@@ -71,33 +71,33 @@ import org.fastcode.util.MultiStringFieldEditor;
 
 public class VersionControlPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 
-	private ComboFieldEditor			repositoryName;
+	private ComboFieldEditor		repositoryName;
 	//private StringFieldEditor			repositoryBaseLocation;
-	private static final String[][]		REPOSITORY_NAMES	= { { "SVN", "SVN" } };													//, { "CVS", "CVS" } };
-	private RadioGroupFieldEditor		checkIn;
-	private static final String[][]		CHECK_IN_TYPES		= { { "Check In Automatically", "checkIn" },
+	private static final String[][]	REPOSITORY_NAMES	= { { "SVN", "SVN" } };					//, { "CVS", "CVS" } };
+	private RadioGroupFieldEditor	checkIn;
+	private static final String[][]	CHECK_IN_TYPES		= { { "Check In Automatically", "checkIn" },
 			{ "Ask Before Check In", "askBeforeCheckIn" }, { "Do Not Check In", "donotCheckIn" } };
-	private StringFieldEditor			prefixComments;
-	private MultiStringFieldEditor		footerComments;
-	private final IPreferenceStore		preferenceStore;
-	private StringFieldEditor			userName;
-	private StringFieldEditor			passWord;
-	private IntegerFieldEditor			timeGapBeforeAutoCheckIn;
-	BooleanFieldEditor					enableAutoCheckin;
+	private StringFieldEditor		prefixComments;
+	private MultiStringFieldEditor	footerComments;
+	private final IPreferenceStore	preferenceStore;
+	private StringFieldEditor		userName;
+	private StringFieldEditor		passWord;
+	private IntegerFieldEditor		timeGapBeforeAutoCheckIn;
+	BooleanFieldEditor				enableAutoCheckin;
 
-	private String						currentValueOfRepoName;
-	private String						currentValueOfRepoBaseLocation;
-	private String						currentValueOfUserName;
-	private String						currentValueOfPassWord;
-	TableViewer							prjUrlViewer;
-	private Table						table;
-	private Button						addButton;
-	private Button						editButton;
-	private Button						removeButton;
-	private BooleanFieldEditor			enableResChangeListener;
-	private StringFieldEditor			excludeDir;
-	protected String	currentValueOfProject;
-	protected String	currentValueOfRepoUrl;
+	private String					currentValueOfRepoName;
+	private String					currentValueOfRepoBaseLocation;
+	private String					currentValueOfUserName;
+	private String					currentValueOfPassWord;
+	TableViewer						prjUrlViewer;
+	private Table					table;
+	private Button					addButton;
+	private Button					editButton;
+	private Button					removeButton;
+	private BooleanFieldEditor		enableResChangeListener;
+	private StringFieldEditor		excludeDir;
+	protected String				currentValueOfProject;
+	protected String				currentValueOfRepoUrl;
 
 	public VersionControlPreferencePage() {
 		super(GRID);
@@ -228,7 +228,8 @@ public class VersionControlPreferencePage extends FieldEditorPreferencePage impl
 
 		this.addButton = new Button(buttons, SWT.PUSH);
 		this.addButton.setText("Add");
-		if (isEmpty(this.preferenceStore.getString(P_REPOSITORY_PASSWORD)) || isEmpty(this.preferenceStore.getString(P_REPOSITORY_USERNAME))) {
+		if (isEmpty(this.preferenceStore.getString(P_REPOSITORY_PASSWORD))
+				|| isEmpty(this.preferenceStore.getString(P_REPOSITORY_USERNAME))) {
 			this.addButton.setEnabled(false);
 		}
 		this.addButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -287,7 +288,8 @@ public class VersionControlPreferencePage extends FieldEditorPreferencePage impl
 		this.editButton = new Button(buttons, SWT.PUSH);
 		this.editButton.setText("Edit");
 		this.editButton.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		if (isEmpty(this.preferenceStore.getString(P_REPOSITORY_PASSWORD)) || isEmpty(this.preferenceStore.getString(P_REPOSITORY_USERNAME))) {
+		if (isEmpty(this.preferenceStore.getString(P_REPOSITORY_PASSWORD))
+				|| isEmpty(this.preferenceStore.getString(P_REPOSITORY_USERNAME))) {
 			this.editButton.setEnabled(false);
 		}
 		this.editButton.addListener(SWT.Selection, new Listener() {
@@ -301,7 +303,8 @@ public class VersionControlPreferencePage extends FieldEditorPreferencePage impl
 				if (index > -1) {
 					final RepositoryData repositoryData = (RepositoryData) VersionControlPreferencePage.this.prjUrlViewer
 							.getElementAt(index);
-					final String origPrjUrl = repositoryData.getAssociatedProject().trim() + prj_url_delim + repositoryData.getRepUrl().trim();
+					final String origPrjUrl = repositoryData.getAssociatedProject().trim() + prj_url_delim
+							+ repositoryData.getRepUrl().trim();
 					/*String repLoc = VersionControlPreferencePage.this.currentValueOfRepoLoc;
 					if (isEmpty(repLoc)) {
 						repLoc = VersionControlPreferencePage.this.preferenceStore.getString(P_REPOSITORY_LOCATION);
@@ -337,7 +340,8 @@ public class VersionControlPreferencePage extends FieldEditorPreferencePage impl
 					}
 					VersionControlPreferencePage.this.currentValueOfProject = repositoryData.getAssociatedProject();
 					VersionControlPreferencePage.this.currentValueOfRepoUrl = repositoryData.getRepUrl();
-					final String currPrjUrl = repositoryData.getAssociatedProject().trim() + prj_url_delim + repositoryData.getRepUrl().trim();
+					final String currPrjUrl = repositoryData.getAssociatedProject().trim() + prj_url_delim
+							+ repositoryData.getRepUrl().trim();
 					final String finalPrjUrlPairs = prjUrlPairs.replace(origPrjUrl, currPrjUrl);
 					VersionControlPreferencePage.this.preferenceStore.setValue(P_REPOSIROTY_PROJECT_URL_PAIR, finalPrjUrlPairs);
 					VersionControlPreferencePage.this.prjUrlViewer.setInput(getEmptyListForNull(loadData()));
@@ -354,23 +358,15 @@ public class VersionControlPreferencePage extends FieldEditorPreferencePage impl
 			@Override
 			public void handleEvent(final Event e) {
 				final int index = VersionControlPreferencePage.this.table.getSelectionIndex();
-				System.out.println("index--" + index);
 				if (index > -1) {
 					final RepositoryData repositoryData = (RepositoryData) VersionControlPreferencePage.this.prjUrlViewer
 							.getElementAt(index);
-					System.out.println("repositoryData--" + repositoryData);
-					System.out.println(repositoryData.getAssociatedProject());
-					System.out.println(repositoryData.getRepUrl());
 					final String prjUrlPairs = VersionControlPreferencePage.this.preferenceStore.getString(P_REPOSIROTY_PROJECT_URL_PAIR);
-					System.out.println(prjUrlPairs);
 					final String finalPrjUrlPairs = prjUrlPairs.replace(repositoryData.getAssociatedProject().trim() + prj_url_delim
 							+ repositoryData.getRepUrl().trim(), EMPTY_STR);
 					VersionControlPreferencePage.this.preferenceStore.setValue(P_REPOSIROTY_PROJECT_URL_PAIR, finalPrjUrlPairs);
-					System.out.println("set to pref....");
 					VersionControlPreferencePage.this.prjUrlViewer.setInput(getEmptyListForNull(loadData()));
-					System.out.println("refresh done...");
 					VersionControlPreferencePage.this.prjUrlViewer.refresh();
-					System.out.println("remove -- done");
 
 				}
 
@@ -529,10 +525,9 @@ public class VersionControlPreferencePage extends FieldEditorPreferencePage impl
 	@Override
 	public boolean performOk() {
 		if (this.enableAutoCheckin.getBooleanValue()) {
-			if (isEmpty(this.currentValueOfRepoName) /*|| isEmpty(this.currentValueOfRepoBaseLocation)*/ || isEmpty(this.currentValueOfUserName)
-					|| isEmpty(this.currentValueOfPassWord)) {
-				MessageDialog.openWarning(getShell(), "Warning",
-						"Please enter value to Repository Name,UserName and Password fields.");
+			if (isEmpty(this.currentValueOfRepoName) /*|| isEmpty(this.currentValueOfRepoBaseLocation)*/
+					|| isEmpty(this.currentValueOfUserName) || isEmpty(this.currentValueOfPassWord)) {
+				MessageDialog.openWarning(getShell(), "Warning", "Please enter value to Repository Name,UserName and Password fields.");
 				return false;
 			}
 			/*final String prj = this.preferenceStore.getString(P_REPOSITORY_PROJECT);

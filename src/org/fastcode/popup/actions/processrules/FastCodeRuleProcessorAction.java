@@ -589,7 +589,6 @@ public class FastCodeRuleProcessorAction implements IEditorActionDelegate, IActi
 			if (overWrite) {
 				file.setContents(content, false, true, new NullProgressMonitor());
 			} else {
-				System.out.println(file.getFullPath().toString().substring(0, file.getFullPath().toString().lastIndexOf(FORWARD_SLASH)));
 				backUpExistingExportFile(file, file.getName(),
 						file.getFullPath().toString().substring(0, file.getFullPath().toString().lastIndexOf(FORWARD_SLASH)));
 				//createFileAction(placeHolders);

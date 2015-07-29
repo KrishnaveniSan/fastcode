@@ -1,7 +1,5 @@
 package org.fastcode.common;
 
-import static org.fastcode.common.FastCodeConstants.DOT;
-
 public class FastCodeEntity {
 
 	public boolean isEmpty;

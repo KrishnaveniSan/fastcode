@@ -7,23 +7,20 @@
 
 package org.fastcode.common;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.ArrayList;
-import org.fastcode.common.RepositoryFolder;
-
-
 
 public class RepositoryFolder {
 
-	private final String name;
-	private final String author;
-	private final long revision;
-	private final Date revDate;
-	private List<RepositoryFolder> subFolder = new ArrayList<RepositoryFolder>();
-	private final String type;
-	private final String path;
-	private final boolean atRoot;
+	private final String			name;
+	private final String			author;
+	private final long				revision;
+	private final Date				revDate;
+	private List<RepositoryFolder>	subFolder	= new ArrayList<RepositoryFolder>();
+	private final String			type;
+	private final String			path;
+	private final boolean			atRoot;
 
 	/**
 	 *
@@ -104,29 +101,29 @@ public class RepositoryFolder {
 		return this.atRoot;
 	}
 
-	private RepositoryFolder(final Builder builder){
-		 this.name = builder.name;
-	 this.author = builder.author;
-	 this.revision = builder.revision;
-	 this.revDate = builder.revDate;
-	 this.subFolder = builder.subFolder;
-	 this.type = builder.type;
-	 this.path = builder.path;
-	 this.atRoot = builder.atRoot;
-}
+	private RepositoryFolder(final Builder builder) {
+		this.name = builder.name;
+		this.author = builder.author;
+		this.revision = builder.revision;
+		this.revDate = builder.revDate;
+		this.subFolder = builder.subFolder;
+		this.type = builder.type;
+		this.path = builder.path;
+		this.atRoot = builder.atRoot;
+	}
 
-	public static class Builder{
+	public static class Builder {
 
-		private String name;
-		private String author;
-		private long revision;
-		private Date revDate;
-		private List<RepositoryFolder> subFolder = new ArrayList<RepositoryFolder>();
-		private String type;
-		private String path;
-		private boolean atRoot;
+		private String					name;
+		private String					author;
+		private long					revision;
+		private Date					revDate;
+		private List<RepositoryFolder>	subFolder	= new ArrayList<RepositoryFolder>();
+		private String					type;
+		private String					path;
+		private boolean					atRoot;
 
-		public Builder(){
+		public Builder() {
 		}
 
 		public RepositoryFolder build() {

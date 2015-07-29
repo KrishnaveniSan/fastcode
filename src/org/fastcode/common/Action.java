@@ -29,7 +29,7 @@ public class Action {
 	private String			projectSrcPath;
 	private String			delimiter;
 	private boolean			exist;
-	private final boolean			overrideMethods;
+	private boolean			overrideMethods;
 	private String			classToImport;
 	private String			imports;
 

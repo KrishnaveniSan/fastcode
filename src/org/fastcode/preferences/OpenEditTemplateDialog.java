@@ -1052,8 +1052,7 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.method.getValue())
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.file.getValue())
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.property.getValue())
-					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.data.getValue())
-					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.json.getValue())) {
+					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.data.getValue())) {
 				setErrorMessage("Please choose only Class or None in Second Template Item.");
 			} else {
 				setErrorMessage(null);
@@ -1066,8 +1065,7 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.method.getValue())
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.Class.getValue())
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.property.getValue())
-					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.data.getValue())
-					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.json.getValue())) {
+					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.data.getValue())) {
 				setErrorMessage("Please choose only File or None in Second Template Item.");
 			} else {
 				setErrorMessage(null);
@@ -1077,8 +1075,7 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 			if (newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.Class.getValue())
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.file.getValue())
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.property.getValue())
-					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.data.getValue())
-					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.json.getValue())) {
+					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.data.getValue())) {
 
 				setErrorMessage("Please choose only Field, Method, Both or Custom in Second Template Item.");
 			} else {
@@ -1105,7 +1102,7 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.both.getValue())
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.custom.getValue())
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.method.getValue())) {
-				setErrorMessage("Please choose data, property,json or None in Second Template Item.");
+				setErrorMessage("Please choose data, property or None in Second Template Item.");
 			} else {
 
 				setErrorMessage(null);
@@ -1122,8 +1119,7 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.custom.getValue())
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.method.getValue())
 					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.property.getValue())
-					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.data.getValue())
-					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.json.getValue())) {
+					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.data.getValue())) {
 
 				templatePreferencePart.getterSetterRadioButton.setEnabled(false, this.parent);
 				setErrorMessage("Please choose only Field or None in Second Template Item.");
@@ -1144,14 +1140,26 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 						|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.method.getValue())
 						|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.property.getValue())
 						|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.field.getValue())
-						|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.data.getValue())
-						|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.json.getValue())) {
+						|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.data.getValue())) {
 					setErrorMessage("Second Template item should be none");
 
 				} else {
 					setErrorMessage(null);
 				}
 
+			}
+		} else if (currentFirstTemplateItemValue.equals("json")) {
+			if (newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.Class.getValue())
+					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.file.getValue())
+					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.property.getValue())
+					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.data.getValue())
+					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.method.getValue())
+					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.custom.getValue())
+					|| newValueOfSecondTemplateItem.equals(SECOND_TEMPLATE.both.getValue())) {
+
+				setErrorMessage("Please choose only Field in Second Template Item.");
+			} else {
+				setErrorMessage(null);
 			}
 		}
 		this.currentFirstTemplateItemValue = currentFirstTemplateItemValue;
@@ -1259,6 +1267,14 @@ public class OpenEditTemplateDialog extends FieldsPreferencePage {
 			this.currentSecondTemplateItemValue = SECOND_TEMPLATE.none.getValue();
 
 			//			}
+		} else if (newValueOfFirstTemplateItem.equals(FIRST_TEMPLATE.json.getValue())) {
+			templatePreferencePart.secondTemplateRadioButton.setEnabled(true, this.parent);
+			templatePreferencePart.getterSetterRadioButton.setEnabled(false, this.parent);
+			templatePreferencePart.numberOfRequiredClassesField.setEnabled(false, this.parent);
+			getPreferenceStore().setValue(
+					getTemplatePreferenceKey(this.templatePreferencePart.templateName, P_TEMPLATE_NUMBER_REQUIRED_ITEMS), 1);
+			templatePreferencePart.numberOfRequiredClassesField.load();
+			templatePreferencePart.itemPatternField.setEnabled(true, this.parent);
 		}
 
 		validateSecondTemplateItem(templatePreferencePart, (String) newValueOfFirstTemplateItem, this.currentSecondTemplateItemValue,

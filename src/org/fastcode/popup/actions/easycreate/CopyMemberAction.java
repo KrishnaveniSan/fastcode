@@ -40,7 +40,6 @@ import static org.fastcode.common.FastCodeConstants.DOT_CHAR;
 import static org.fastcode.common.FastCodeConstants.EMPTY_STR;
 import static org.fastcode.common.FastCodeConstants.FAST_CODE_PLUGIN_ID;
 import static org.fastcode.common.FastCodeConstants.FORWARD_SLASH;
-import static org.fastcode.common.FastCodeConstants.INITIATED;
 import static org.fastcode.common.FastCodeConstants.JAVA_EXTENSION;
 import static org.fastcode.common.FastCodeConstants.LEFT_PAREN;
 import static org.fastcode.common.FastCodeConstants.MESSAGE_DIALOG_RETURN_YES;
@@ -122,7 +121,6 @@ import org.fastcode.setting.GlobalSettings;
 import org.fastcode.util.CreateSimilarDescriptor;
 import org.fastcode.util.CreateSimilarDescriptorClass;
 import org.fastcode.util.FastCodeContext;
-import org.fastcode.util.FastCodeFileForCheckin;
 import org.fastcode.util.RepositoryService;
 import org.fastcode.versioncontrol.FastCodeCheckinCache;
 

@@ -89,7 +89,6 @@ public class OrderByGroupByJoinDialog extends TitleAreaDialog {
 			this.fieldInfo.addAll(this.databaseCache.getTableNameFieldDetailsMap().get(tableNameWithSchema));
 			final String tableName = tableNameWithSchema.substring(tableNameWithSchema.indexOf(DOT) + 1, tableNameWithSchema.length());
 			final String schemaName = tableNameWithSchema.substring(0, tableNameWithSchema.indexOf(DOT));
-			System.out.println(tableName);
 			if (this.databaseCache.getDbTableListMap().containsKey(schemaName)) {
 				for (final String tableName1 : this.databaseCache.getDbTableListMap().get(schemaName)) {
 					if (tableName1.equals(tableName)) {

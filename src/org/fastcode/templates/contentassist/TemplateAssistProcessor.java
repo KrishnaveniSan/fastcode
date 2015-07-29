@@ -3,14 +3,11 @@ package org.fastcode.templates.contentassist;
 import static org.fastcode.common.FastCodeConstants.EMPTY_STR;
 import static org.fastcode.common.FastCodeConstants.NEWLINE;
 import static org.fastcode.common.FastCodeConstants.SPACE;
-import static org.fastcode.common.FastCodeConstants.TAB;
 import static org.fastcode.util.StringUtil.isEmpty;
-import static org.fastcode.util.StringUtil.replaceSpecialChars;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextViewer;
@@ -18,7 +15,6 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.contentassist.IContextInformationValidator;
-import org.fastcode.util.FastCodeUtil;
 
 /**
  * Template assist processor.
@@ -94,7 +90,8 @@ public class TemplateAssistProcessor implements IContentAssistProcessor {
 			}
 
 			final String startLineStr = document.get(region.getOffset(), documentOffset - region.getOffset());
-			proposals = currentAssistant.getCompletionProposals(document, startPosition, length, startLineStr.substring(0, startLineStr.length() - length));
+			proposals = currentAssistant.getCompletionProposals(document, startPosition, length,
+					startLineStr.substring(0, startLineStr.length() - length));
 		} catch (final Exception e) {/* ignore */
 			System.out.println(e);
 		}

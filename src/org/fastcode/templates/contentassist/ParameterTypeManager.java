@@ -1,15 +1,10 @@
 package org.fastcode.templates.contentassist;
 
-import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_ALLOWED_VALUES;
-import static org.fastcode.common.FastCodeConstants.LEFT_PAREN;
-import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_PATTERN;
-import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_REQUIRED;
-import static org.fastcode.common.FastCodeConstants.ATTRIBUTE_VALUE;
 import static org.fastcode.common.FastCodeConstants.COLON;
-import static org.fastcode.common.FastCodeConstants.PLACEHOLDER_PROJECT;
-import static org.fastcode.common.FastCodeConstants.SPACE;
-import static org.fastcode.common.FastCodeConstants.EQUAL;
 import static org.fastcode.common.FastCodeConstants.DOUBLE_QUOTES;
+import static org.fastcode.common.FastCodeConstants.EQUAL;
+import static org.fastcode.common.FastCodeConstants.LEFT_PAREN;
+import static org.fastcode.common.FastCodeConstants.SPACE;
 import static org.fastcode.common.FastCodeConstants.STRING_INSTANCE;
 
 import java.util.ArrayList;
@@ -32,7 +27,7 @@ public class ParameterTypeManager {
 	static {
 		PARAM_TYPES.add("class");
 		PARAM_TYPES.add("javaProject");
-		PARAM_TYPES.add("localvar");
+		PARAM_TYPES.add("localVar");
 		PARAM_TYPES.add("file");
 		PARAM_TYPES.add("package");
 		PARAM_TYPES.add("folder");

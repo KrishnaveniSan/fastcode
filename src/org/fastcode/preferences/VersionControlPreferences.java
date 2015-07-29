@@ -14,13 +14,14 @@ import static org.fastcode.preferences.PreferenceConstants.P_REPOSITORY_PASSWORD
 import static org.fastcode.preferences.PreferenceConstants.P_REPOSITORY_URL;
 import static org.fastcode.preferences.PreferenceConstants.P_REPOSITORY_USERNAME;
 import static org.fastcode.preferences.PreferenceConstants.P_TIME_GAP_BEFORE_CHECK_IN;
+import static org.fastcode.preferences.VersionControlPreferencePage.getPrjUrlPairMap;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
-import java.util.Map;
-import java.util.HashMap;
-import static org.fastcode.preferences.VersionControlPreferencePage.getPrjUrlPairMap;
 
 public class VersionControlPreferences {
 

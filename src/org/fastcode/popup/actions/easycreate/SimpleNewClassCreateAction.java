@@ -145,6 +145,11 @@ public class SimpleNewClassCreateAction extends NewMemberCreateActionSupport imp
 		return compilationUnit != null && compilationUnit.exists() ? compilationUnit : null;
 	}
 
+	/**
+	 * @param createVariableData
+	 * @return
+	 * @throws CoreException
+	 */
 	private IProject getTypeOfProject(final CreateVariableData createVariableData) throws CoreException {
 		final IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
 		final IProject[] projects = root.getProjects();
