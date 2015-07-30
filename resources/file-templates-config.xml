@@ -3,12 +3,15 @@
 	<template name="SAMPLE_SNIPPET">
 		<description>Used to create sample snippet</description>
 		<variation> </variation>
+		<additional-parameters>folder:folder fileName extension</additional-parameters>
 		<template-body>
 			<![CDATA[
+			<fc:file dir="${folder.fullPath}" name="${fileName}.${extension}">
 				##This is a sample template which will work only with file containing tab delimited data
 				#foreach ($data in ${records})
 					<tr> ${data.Code} : ${data.Country} : ${data.EName} </tr>
 				#end
+				</fc:file>
 			]]>
 		</template-body>
 	</template>
