@@ -19,7 +19,8 @@ public interface RepositoryService {
 
 	void getChangesInWorkspace(final IWorkspace workspace) throws Exception;
 
-	void checkInFile(final File file, final String comment, IProject project)/*, final String repositoryURL)*/ throws FastCodeRepositoryException;
+	void checkInFile(final File file, final String comment, IProject project)
+	/*, final String repositoryURL)*/throws FastCodeRepositoryException;
 
 	boolean isFileInRepository(final File file) throws FastCodeRepositoryException;
 

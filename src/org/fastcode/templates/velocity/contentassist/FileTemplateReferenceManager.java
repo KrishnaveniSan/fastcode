@@ -21,9 +21,12 @@ import org.fastcode.templates.util.VariablesUtil;
 	 */
 	public class FileTemplateReferenceManager {
 
-		private static final Map<String,ArrayList<ElementProposal>> REFERENCE_PROPOSALS_MAP = ContentAssistUtil.getReferenceProposals("file-reference-proposal.xml");
-		private static final List<ElementProposal>	BASE_PROPERTIES		= ContentAssistUtil.getBasicProposals("file-reference-proposal.xml");
-		private static final List<ElementProposal>	DEFAULT_PROPERTIES		= ContentAssistUtil.getBasicProposals("default-reference-proposal.xml");
+	private static final Map<String, ArrayList<ElementProposal>>	REFERENCE_PROPOSALS_MAP	= ContentAssistUtil
+																									.getReferenceProposals("file-reference-proposal.xml");
+	private static final List<ElementProposal>						BASE_PROPERTIES			= ContentAssistUtil
+																									.getBasicProposals("file-reference-proposal.xml");
+	private static final List<ElementProposal>						DEFAULT_PROPERTIES		= ContentAssistUtil
+																									.getBasicProposals("default-reference-proposal.xml");
 
 		/**
 		 * Gets the completion proposals for the given element.
@@ -161,8 +164,9 @@ import org.fastcode.templates.util.VariablesUtil;
 			// return proposals;
 			// }
 
-			final int level = element.endsWith(".") ? tokens.length : tokens.length - 1;
-			final Set<FunctionProposal> functionProposals = getValidFunctionProposals(getMatchingProposal(tokens[level - 1],new ArrayList<ElementProposal>(REFERENCE_PROPOSALS_MAP.get(0))));
+		final int level = element.endsWith(".") ? tokens.length : tokens.length - 1;
+		final Set<FunctionProposal> functionProposals = getValidFunctionProposals(getMatchingProposal(tokens[level - 1],
+				new ArrayList<ElementProposal>(REFERENCE_PROPOSALS_MAP.get(0))));
 
 			for (int i = 1; i < level - 1; ++i) {
 				final ElementProposal rp = getMatchingProposal(tokens[i], new ArrayList<ElementProposal>(REFERENCE_PROPOSALS_MAP.get(0)));

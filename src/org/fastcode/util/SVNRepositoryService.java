@@ -301,9 +301,6 @@ public class SVNRepositoryService implements RepositoryService { //extends Abstr
 						throw new FastCodeRepositoryException("File path not found for file:" + file.getName());
 					}
 					final String path = fileAbsPath.substring(0, fileAbsPath.indexOf(dirTok) + dirTok.length());
-					System.out.println("Toker-->" + dirTok);
-					System.out.println("PATH ==>" + path);
-					System.out.println(prj.getLocation().toString());
 					if (isEmpty(path)) {
 						continue;
 					}
@@ -313,8 +310,7 @@ public class SVNRepositoryService implements RepositoryService { //extends Abstr
 						final File[] subFilePath = { subFile };
 						final SVNStatus info = this.ourClientManager.getStatusClient().doStatus(subFile, true);
 						/*if (info == null) {
-							System.out.println(subFile.getAbsolutePath());
-							System.out.println(this.repositoryURL.toString());
+							
 							throw new FastCodeRepositoryException("File status not available for file " + file.getName());
 						}*/
 						String finalComment = comment.trim();
@@ -346,27 +342,24 @@ public class SVNRepositoryService implements RepositoryService { //extends Abstr
 									final String prevPath = this.myLogEntryHandler.getPreviousPath();
 									prevRevision = this.myLogEntryHandler.getPreviousRevision();
 								}
-								System.out.println("committed revision number-" + info.getCommittedRevision().getNumber());
-								System.out.println("previous revision number-" + prevRevision);*/
+								*/
 
-								//System.out.println(this.myLogEntryHandler.);
 								//if (prevRevision == -1) {
-									/*if (info.getCopyFromURL() != null) {
-										final boolean move = true; //means copy false
-										System.out.println(info.getCopyFromURL());
-										System.out.println(info.getURL());
-										 final SVNCopySource copySource = new SVNCopySource(SVNRevision.UNDEFINED, SVNRevision.HEAD, SVNURL.parseURIEncoded(info.getCopyFromURL()));
-										 final SVNCommitInfo info1 = this.ourClientManager.getCopyClient().doCopy(new SVNCopySource[] { copySource }, info.getURL(), move, false, true,
-												 prefix + NEWLINE + comment + NEWLINE + footer, null);
-										 System.out.println(info1.getNewRevision());
-										 prevRevision = info1.getNewRevision();
-											final boolean allowUnversionedObstructions = false;
-											final boolean depthIsSticky = false;
-											this.ourClientManager.getUpdateClient().doUpdate(subFile, SVNRevision.HEAD, SVNDepth.EMPTY, allowUnversionedObstructions, depthIsSticky);
-									} else {*/
-									/*throw new FastCodeRepositoryException("File " + info.getRepositoryRelativePath()
-											+ " is not found in the repository at " + this.repositoryURL);*/
-									//}
+								/*if (info.getCopyFromURL() != null) {
+									final boolean move = true; //means copy false
+									
+									 final SVNCopySource copySource = new SVNCopySource(SVNRevision.UNDEFINED, SVNRevision.HEAD, SVNURL.parseURIEncoded(info.getCopyFromURL()));
+									 final SVNCommitInfo info1 = this.ourClientManager.getCopyClient().doCopy(new SVNCopySource[] { copySource }, info.getURL(), move, false, true,
+											 prefix + NEWLINE + comment + NEWLINE + footer, null);
+									
+									 prevRevision = info1.getNewRevision();
+										final boolean allowUnversionedObstructions = false;
+										final boolean depthIsSticky = false;
+										this.ourClientManager.getUpdateClient().doUpdate(subFile, SVNRevision.HEAD, SVNDepth.EMPTY, allowUnversionedObstructions, depthIsSticky);
+								} else {*/
+								/*throw new FastCodeRepositoryException("File " + info.getRepositoryRelativePath()
+										+ " is not found in the repository at " + this.repositoryURL);*/
+								//}
 								//} else {
 									if (!info.isConflicted()) { //info.getCommittedRevision().getNumber() == prevRevision) {
 										final SVNCommitInfo commitInfo = this.ourClientManager.getCommitClient().doCommit(paths, keepLocks,
@@ -519,12 +512,10 @@ public class SVNRepositoryService implements RepositoryService { //extends Abstr
 					} catch (final SVNException svnEx) {
 						continue;
 					}
-					System.out.println(new File(res.getLocationURI()).getName());
 					//if (new File(res.getLocationURI()).getName().equalsIgnoreCase("Song.java") || new File(res.getLocationURI()).getName().equalsIgnoreCase("Student.java")) {
 					//System.out.println(new File(res.getLocationURI()));
 					if (info.getContentsStatus() == SVNStatusType.STATUS_UNVERSIONED
 							|| info.getContentsStatus() == SVNStatusType.STATUS_MODIFIED) {
-						System.out.println(new File(res.getLocationURI()));
 						//checkinCache.getFilesToCheckInSet().add(new File(res.getLocationURI()));
 					}
 					//}
@@ -700,8 +691,6 @@ public class SVNRepositoryService implements RepositoryService { //extends Abstr
 
 	private String getPreviosCommentsFromCache(final FastCodeCheckinCache checkinCache, final File file) {
 		for (final FastCodeFileForCheckin fileForCheckin : checkinCache.getFilesToCheckIn()) {
-			System.out.println(fileForCheckin.getFileFullName());
-			System.out.println(file.getAbsolutePath());
 			if (fileForCheckin.getFileFullName().equals(file.getAbsolutePath())) {
 				return isEmpty(fileForCheckin.getComments()) ? EMPTY_STR : fileForCheckin.getComments();
 			}

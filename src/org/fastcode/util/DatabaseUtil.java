@@ -97,7 +97,7 @@ public class DatabaseUtil {
 	 * @param con
 	 * @throws Exception
 	 */
-	public static void getTableFromDb(final Connection con, final String schemaName, final String databaseType) throws Exception {
+	public static void getTableFromDb(final Connection con, final String schemaName, String databaseType) throws Exception {
 		final DatabaseCache databaseCache = DatabaseCache.getInstance();
 		final List<String> tablesOfDb = new ArrayList<String>();
 		ResultSet rs = null;
@@ -149,8 +149,8 @@ public class DatabaseUtil {
 	 * @return
 	 * @throws Exception
 	 */
-	public static String[] getTableColumnsFromDB(final String tableName, final Connection con, final String schemaName,
-			final String databaseType) throws Exception {
+	public static String[] getTableColumnsFromDB(final String tableName, final Connection con, final String schemaName, String databaseType)
+			throws Exception {
 		final DatabaseCache databaseCache = DatabaseCache.getInstance();
 		if (!databaseCache.tableNameColumnListMap.containsKey(schemaName + DOT + tableName)) {
 			populateColumnDetails(tableName, con, databaseCache, schemaName, databaseType);
@@ -171,7 +171,7 @@ public class DatabaseUtil {
 	 * @throws Exception
 	 */
 	private static void populateColumnDetails(final String tableName, final Connection con, final DatabaseCache databaseCache,
-			final String schemaName, final String databaseType) throws Exception {
+			final String schemaName, String databaseType) throws Exception {
 		final List<String> columnsList = new ArrayList<String>();
 		final List<String> columnsListDetail = new ArrayList<String>();
 		final List<String> notNullcolumnsList = new ArrayList<String>();
@@ -216,7 +216,7 @@ public class DatabaseUtil {
 					pkColNameList.add(rsPk.getString(1));
 					notNullcolumnsList.add(rsPk.getString(1));
 				}
-				databaseTypeInfo.primaryKeyMap.put(schemaName + DOT + tableName, pkColNameList);
+				DataBaseTypeInfo.primaryKeyMap.put(schemaName + DOT + tableName, pkColNameList);
 			}
 			if (rs != null) {
 				while (rs.next()) {

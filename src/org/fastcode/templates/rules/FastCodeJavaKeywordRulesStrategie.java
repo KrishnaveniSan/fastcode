@@ -9,9 +9,7 @@ import org.eclipse.jface.text.rules.IRule;
 import org.eclipse.jface.text.rules.IToken;
 import org.eclipse.jface.text.rules.WordRule;
 import org.fastcode.FastCodeColorManager;
-import org.fastcode.templates.velocity.contentassist.FastCodeKeywordsManager;
 import org.fastcode.templates.velocity.rules.FastCodeJavaKeywordDetector;
-import org.fastcode.templates.velocity.rules.FastCodeKeywordDetector;
 
 public class FastCodeJavaKeywordRulesStrategie implements IRulesStrategy {
 

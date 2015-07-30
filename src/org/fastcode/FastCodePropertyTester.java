@@ -1,14 +1,8 @@
 package org.fastcode;
 
-import static org.fastcode.common.FastCodeConstants.FAST_CODE_PLUGIN_ID;
-import static org.fastcode.preferences.PreferenceConstants.P_ENABLE_AUTO_CHECKIN;
+import org.eclipse.jface.preference.IPreferenceStore;
 
 /*import org.eclipse.core.expressions.PropertyTester;*/
-import org.eclipse.core.runtime.preferences.InstanceScope;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.text.TextSelection;
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 public class FastCodePropertyTester /*extends PropertyTester*/ {
 

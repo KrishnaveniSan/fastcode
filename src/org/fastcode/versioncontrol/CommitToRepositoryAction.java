@@ -1,12 +1,10 @@
 package org.fastcode.versioncontrol;
 
 import static org.eclipse.jface.window.Window.CANCEL;
-import static org.fastcode.common.FastCodeConstants.ADD_FILE;
 import static org.fastcode.common.FastCodeConstants.COMMA;
 import static org.fastcode.common.FastCodeConstants.COMPLETED;
 import static org.fastcode.common.FastCodeConstants.EMPTY_STR;
 import static org.fastcode.common.FastCodeConstants.FAST_CODE_PLUGIN_ID;
-import static org.fastcode.common.FastCodeConstants.MODIFIED_FILE;
 import static org.fastcode.common.FastCodeConstants.NEWLINE;
 import static org.fastcode.preferences.PreferenceConstants.P_TIME_GAP_BEFORE_CHECK_IN;
 import static org.fastcode.util.SourceUtil.checkForErrors;
@@ -20,7 +18,6 @@ import static org.fastcode.util.StringUtil.getGlobalSettings;
 import static org.fastcode.util.StringUtil.isEmpty;
 import static org.fastcode.util.VersionControlUtil.getPreviousCommentsFromCache;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -196,8 +193,10 @@ public class CommitToRepositoryAction implements IEditorActionDelegate, IActionD
 								loadComments();
 							}
 							comboData.setFinalComment(((FastCodeFileForCheckin) fcCheckinFile).getComments());
-							final List<String> cmntsFromRepo = checkin.getPreviousComments(((FastCodeFileForCheckin) fcCheckinFile).getProject().getName());
-							final List<String> cmntsFromCache = getPreviousCommentsFromCache(((FastCodeFileForCheckin) fcCheckinFile).getFile());
+							final List<String> cmntsFromRepo = checkin.getPreviousComments(((FastCodeFileForCheckin) fcCheckinFile)
+									.getProject().getName());
+							final List<String> cmntsFromCache = getPreviousCommentsFromCache(((FastCodeFileForCheckin) fcCheckinFile)
+									.getFile());
 
 							comboData.setComntsFromCache(cmntsFromCache);
 							comboData.setComntsFromRepo(cmntsFromRepo);

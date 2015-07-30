@@ -35,7 +35,6 @@ public class LogEntryPreviousRevFinder implements ISVNLogEntryHandler {
 		for (final Iterator changedPaths = changedPathsSet.iterator(); changedPaths.hasNext();) {
 			final SVNLogEntryPath entryPath = logEntry.getChangedPaths().get(changedPaths.next());
 			final String workingFileName = entryPath.getPath();
-			System.out.println(workingFileName + " --> " + this.interestingFile);
 			if (workingFileName.endsWith(this.interestingFile)) {
 				this.previousRevision = logEntry.getRevision();
 				this.previousPath = workingFileName;

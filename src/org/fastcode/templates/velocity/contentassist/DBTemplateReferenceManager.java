@@ -21,9 +21,10 @@ import org.fastcode.templates.util.VariablesUtil;
  */
 public class DBTemplateReferenceManager {
 
-	private static final Map<String,ArrayList<ElementProposal>> REFERENCE_PROPOSALS_MAP = ContentAssistUtil.getReferenceProposals("database-reference-proposal.xml");
-	private static  List<ElementProposal> BASE_PROPERTIES 	   = ContentAssistUtil.getBasicProposals("database-reference-proposal.xml");
-
+	private static final Map<String, ArrayList<ElementProposal>>	REFERENCE_PROPOSALS_MAP	= ContentAssistUtil
+																									.getReferenceProposals("database-reference-proposal.xml");
+	private static List<ElementProposal>							BASE_PROPERTIES			= ContentAssistUtil
+																									.getBasicProposals("database-reference-proposal.xml");
 
 	/**
 	 * Gets the completion proposals for the given element.
@@ -36,8 +37,8 @@ public class DBTemplateReferenceManager {
 	 *
 	 * @return the list of proposals
 	 */
-	public static List<ICompletionProposal> getCompletionProposals(String element, final int offset, final int length, final Map<String, String> properties,
-			final boolean propertiesOnly) {
+	public static List<ICompletionProposal> getCompletionProposals(String element, final int offset, final int length,
+			final Map<String, String> properties, final boolean propertiesOnly) {
 		final List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
 
 		boolean silent = false;
@@ -99,8 +100,8 @@ public class DBTemplateReferenceManager {
 	 *
 	 * @return list of element proposals
 	 */
-	private static List<ICompletionProposal> getElementProposals(final String element, final int offset, final int length, final boolean silent,
-			final Map<String, String> properties, final boolean propertiesOnly) {
+	private static List<ICompletionProposal> getElementProposals(final String element, final int offset, final int length,
+			final boolean silent, final Map<String, String> properties, final boolean propertiesOnly) {
 		final List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
 
 
@@ -139,7 +140,8 @@ public class DBTemplateReferenceManager {
 	 *
 	 * @return list of function proposals
 	 */
-	private static List<ICompletionProposal> getFunctionProposals(final String element, final int offset, final int length, final boolean silent) {
+	private static List<ICompletionProposal> getFunctionProposals(final String element, final int offset, final int length,
+			final boolean silent) {
 		final List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
 
 		final String[] tokens = element.split("\\.");
@@ -148,7 +150,8 @@ public class DBTemplateReferenceManager {
 		//			}
 
 		final int level = element.endsWith(".") ? tokens.length : tokens.length - 1;
-		final Set<FunctionProposal> functionProposals = getValidFunctionProposals(getMatchingProposal(tokens[level - 1], REFERENCE_PROPOSALS_MAP.get(0)));
+		final Set<FunctionProposal> functionProposals = getValidFunctionProposals(getMatchingProposal(tokens[level - 1],
+				REFERENCE_PROPOSALS_MAP.get(0)));
 
 		for (int i = 1; i < level - 1; ++i) {
 			final ElementProposal rp = getMatchingProposal(tokens[i], REFERENCE_PROPOSALS_MAP.get(0));
@@ -229,12 +232,13 @@ public class DBTemplateReferenceManager {
 		return (silent ? "$!{" : "${") + element + "}";
 	}
 
-	private static TemplateProposal createTemplateProposal(final ElementProposal referenceProposal, final int offset, final int length, final boolean silent) {
+	private static TemplateProposal createTemplateProposal(final ElementProposal referenceProposal, final int offset, final int length,
+			final boolean silent) {
 		return createTemplateProposal("", referenceProposal, offset, length, silent);
 	}
 
-	private static TemplateProposal createTemplateProposal(final String prefix, final ElementProposal referenceProposal, final int offset, final int length,
-			final boolean silent) {
+	private static TemplateProposal createTemplateProposal(final String prefix, final ElementProposal referenceProposal, final int offset,
+			final int length, final boolean silent) {
 
 		final String proposal = createReferenceString(prefix + referenceProposal.getProposal(), silent);
 

@@ -3,7 +3,6 @@ package org.fastcode.util;
 import static org.fastcode.common.FastCodeConstants.COMMA;
 import static org.fastcode.common.FastCodeConstants.DIR_TO_SKIP;
 import static org.fastcode.common.FastCodeConstants.EMPTY_STR;
-import static org.fastcode.common.FastCodeConstants.FAST_CODE_PLUGIN_ID;
 import static org.fastcode.common.FastCodeConstants.FC_PLUGIN;
 import static org.fastcode.common.FastCodeConstants.FORWARD_SLASH;
 import static org.fastcode.util.FastCodeUtil.getEmptyArrayForNull;
@@ -31,7 +30,6 @@ import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.team.core.RepositoryProvider;
 import org.fastcode.common.FastCodeConstants.CHECK_IN;
 import org.fastcode.exception.FastCodeRepositoryException;
 import org.fastcode.popup.actions.snippet.FastCodeCache;
@@ -72,15 +70,12 @@ public class FastCodeResourceChangeListener implements IResourceChangeListener {
 			return;
 		}
 		if (event.getType() == IResourceChangeEvent.POST_CHANGE) {
-			//System.out.println("this is post change event");
 
 
 			final String resourcePath = this.affectedChild.getResource().getFullPath().toString();
 			if (isEmpty(resourcePath)) {
 				return;
 			}
-			/*System.out.println(this.affectedChild.getFlags());
-			System.out.println(this.affectedChild.getKind());*/
 
 			if (this.affectedChild.getKind() == IResourceDelta.CHANGED) {
 				return;
@@ -94,15 +89,12 @@ public class FastCodeResourceChangeListener implements IResourceChangeListener {
 					return;
 				}
 
-
-				System.out.println("project shared " + resource.getFullPath() + "--" + !RepositoryProvider.isShared(resource.getProject()));
-				System.out.println("project open " + resource.getFullPath() + "--" + !resource.getProject().isOpen());
-
 				/*if (!RepositoryProvider.isShared(resource.getProject()) || !resource.getProject().isOpen()) { //) {
 					return;
 				}*/
 
-				if (isEmpty(resource.getProject().getPersistentProperties()) || !resource.getProject().isOpen() || !resource.getProject().isAccessible()) {
+				if (isEmpty(resource.getProject().getPersistentProperties()) || !resource.getProject().isOpen()
+						|| !resource.getProject().isAccessible()) {
 					return;
 				}
 
@@ -119,10 +111,6 @@ public class FastCodeResourceChangeListener implements IResourceChangeListener {
 				if (resourceAttributes != null && resourceAttributes.isReadOnly() || isBinaryResource(resource)) {
 					return;
 				}
-				/*System.out.println("res attri is null for resource " + resource.getFullPath() + "--" + resourceAttributes);
-				System.out.println("res attri is hidden " + resource.getFullPath() + "--" + resourceAttributes.isHidden());
-				System.out.println("res attri is read only " + resource.getFullPath() + "--" + resourceAttributes.isReadOnly());*/
-
 
 				final File file = new File(resource.getLocationURI());
 				final FastCodeCheckinCache checkinCache = FastCodeCheckinCache.getInstance();
@@ -133,7 +121,6 @@ public class FastCodeResourceChangeListener implements IResourceChangeListener {
 					}
 				}
 				final RepositoryService checkin = getRepositoryServiceClass();
-				System.out.println("all file-" + file.getName());
 				//file.getName().contains(".java") &&
 				/*if (this.affectedChild.getFlags() == IResourceDelta.MOVED_TO || this.affectedChild.getFlags() == IResourceDelta.MOVED_FROM) {
 					System.out.println(this.affectedChild.getMovedToPath().toString());
@@ -150,9 +137,6 @@ public class FastCodeResourceChangeListener implements IResourceChangeListener {
 				}*/
 
 				if (this.affectedChild.getKind() == IResourceDelta.ADDED) { //|| this.affectedChild.getKind() == IResourceDelta.CHANGED || ) {
-					System.out.println("required file-" + file.getName());
-					System.out.println(this.affectedChild.getFullPath().toString() + " Added");
-					System.out.println(this.affectedChild.getFlags());
 					final IWorkspace workspace = ResourcesPlugin.getWorkspace();
 					final IPath location = Path.fromOSString(file.getAbsolutePath());
 					this.affectedFile = workspace.getRoot().getFileForLocation(location);
@@ -220,9 +204,6 @@ public class FastCodeResourceChangeListener implements IResourceChangeListener {
 				}
 
 				if (this.affectedChild.getKind() == IResourceDelta.REMOVED) { //|| this.affectedChild.getKind() == IResourceDelta.CHANGED || ) {
-					System.out.println("required file-" + file.getName());
-					System.out.println(this.affectedChild.getFullPath().toString() + " Deleted");
-					System.out.println(this.affectedChild.getFlags());
 					final IWorkspace workspace = ResourcesPlugin.getWorkspace();
 					final IPath location = Path.fromOSString(file.getAbsolutePath());
 					this.affectedFile = workspace.getRoot().getFileForLocation(location);
@@ -276,15 +257,10 @@ public class FastCodeResourceChangeListener implements IResourceChangeListener {
 			}
 
 		} else if (event.getType() == IResourceChangeEvent.PRE_REFRESH) {
-			System.out.println("this is PRE_REFRESH event");
 		} else if (event.getType() == IResourceChangeEvent.POST_BUILD) {
-			System.out.println("this is POST_BUILD event");
 		} else if (event.getType() == IResourceChangeEvent.PRE_BUILD) {
-			System.out.println("this is PRE_BUILD event");
 		} else if (event.getType() == IResourceChangeEvent.PRE_CLOSE) {
-			System.out.println("this is PRE_CLOSE event");
 		} else if (event.getType() == IResourceChangeEvent.PRE_DELETE) {
-			System.out.println("this is PRE_DELETE event");
 		}
 	}
 
@@ -297,7 +273,6 @@ public class FastCodeResourceChangeListener implements IResourceChangeListener {
 			if (isEmpty(excludDir)) {
 				continue;
 			}
-			//System.out.println(resource.getFullPath());
 			if (resource.getFullPath().toString().startsWith(prefix + excludDir)) {
 				dirExclude = true;
 				break;
@@ -330,8 +305,7 @@ public class FastCodeResourceChangeListener implements IResourceChangeListener {
 				this.affectedChild = child;
 				return;
 			}
-			/*System.out.println(child.getFlags());
-			System.out.println(child.getKind());*/
+
 			getLastChild(child);
 		}
 	}
@@ -356,7 +330,6 @@ public class FastCodeResourceChangeListener implements IResourceChangeListener {
 
 	public void checkInNow(final Callback callback) throws FastCodeRepositoryException {
 		final VersionControlPreferences versionControlPreferences = VersionControlPreferences.getInstance();
-		System.out.println(versionControlPreferences.getCheckIn());
 		if (isEmpty(versionControlPreferences.getCheckIn())) {
 			MessageDialog.openWarning(new Shell(), "Check in Preference not set, adding changes to cache",
 					"Please set the check in preference in window->preferences->Fast code Preference-> Version Control");

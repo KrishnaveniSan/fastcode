@@ -38,7 +38,7 @@ public class DataBaseTypeInfo {
 
 	public ArrayList<String> getPrimaryKeyColumns(final String tableNameWithSchema) {
 
-		this.primaryKeyColumns = dataBaseTypeInfo.primaryKeyMap.get(tableNameWithSchema);
+		this.primaryKeyColumns = DataBaseTypeInfo.primaryKeyMap.get(tableNameWithSchema);
 		return this.primaryKeyColumns;
 
 	}

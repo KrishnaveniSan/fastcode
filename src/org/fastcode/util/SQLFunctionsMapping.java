@@ -6,16 +6,7 @@ import java.util.Map;
 
 public class SQLFunctionsMapping {
 
-	ArrayList<String>	databases	= new ArrayList<String>();
-
-	public ArrayList<String> getDatabases() {
-		return this.databases;
-	}
-
-	public void setDatabases(final ArrayList<String> databases) {
-		this.databases = databases;
-	}
-
+	ArrayList<String>						databases				= new ArrayList<String>();
 	ArrayList<SQLFunctions>					functionsList			= new ArrayList<SQLFunctions>();
 	Map<String, ArrayList<String>>			dbDataTypeMap			= new HashMap<String, ArrayList<String>>();
 	Map<String, ArrayList<SQLFunctions>>	dataTypeFunctionsMap	= new HashMap<String, ArrayList<SQLFunctions>>();
@@ -27,7 +18,15 @@ public class SQLFunctionsMapping {
 	}
 
 	public static SQLFunctionsMapping getInstance() {
-		return SQLFunctionsMapping.SQLFunctionsMapping;
+		return SQLFunctionsMapping;
+	}
+
+	public ArrayList<String> getDatabases() {
+		return this.databases;
+	}
+
+	public void setDatabases(final ArrayList<String> databases) {
+		this.databases = databases;
 	}
 
 	public ArrayList<SQLFunctions> getFunctionsList() {

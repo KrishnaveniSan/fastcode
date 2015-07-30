@@ -7,7 +7,6 @@ import static org.fastcode.common.FastCodeConstants.FC_PLUGIN;
 import static org.fastcode.common.FastCodeConstants.FORWARD_SLASH;
 import static org.fastcode.common.FastCodeConstants.HSQL;
 import static org.fastcode.common.FastCodeConstants.HSQLDB;
-import static org.fastcode.common.FastCodeConstants.HSQLDB_JDBC_DRIVER;
 import static org.fastcode.common.FastCodeConstants.JDBC;
 import static org.fastcode.common.FastCodeConstants.MYSQL;
 import static org.fastcode.common.FastCodeConstants.MYSQL_CONNECTION_ERROR_SQLSTATE;
@@ -15,23 +14,19 @@ import static org.fastcode.common.FastCodeConstants.MYSQL_JDBC_DRIVER;
 import static org.fastcode.common.FastCodeConstants.ORACLE;
 import static org.fastcode.common.FastCodeConstants.ORACLE_CONNECTION_ERROR_SQLSTATE1;
 import static org.fastcode.common.FastCodeConstants.ORACLE_CONNECTION_ERROR_SQLSTATE2;
-import static org.fastcode.common.FastCodeConstants.ORACLE_JDBC_DRIVER;
+import static org.fastcode.common.FastCodeConstants.ORACLE_DRIVER;
 import static org.fastcode.common.FastCodeConstants.POSTGRESQL;
 import static org.fastcode.common.FastCodeConstants.POSTGRESQL_CONNECTION_ERROR_SQLSTATE;
-import static org.fastcode.common.FastCodeConstants.POSTGRESQL_JDBC_DRIVER;
 import static org.fastcode.common.FastCodeConstants.SQLSERVER;
 import static org.fastcode.common.FastCodeConstants.SYBASE;
-import static org.fastcode.common.FastCodeConstants.SYBASE_JDBC_DRIVER;
 import static org.fastcode.common.FastCodeConstants.THIN;
 import static org.fastcode.util.MessageUtil.showError;
 import static org.fastcode.util.StringUtil.isEmpty;
 
-import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.sql.Connection;
 import java.sql.Driver;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +41,6 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.fastcode.common.DatabaseDetails;
 import org.fastcode.preferences.DatabaseConnectionSettings;
-import static org.fastcode.common.FastCodeConstants.ORACLE_DRIVER;
 
 public class ConnectToDatabase {
 	private static Connection			con;
@@ -76,11 +70,23 @@ public class ConnectToDatabase {
 		final DatabaseDetails databaseDetails = databaseConnectionSettings.getConnMap().get(databaseName);
 
 		return getNewConnection(databaseDetails.getDatabaseType(), databaseDetails.getDatabaseName(), databaseDetails.getHostAddress(),
-				databaseDetails.getPort(), databaseDetails.getUserName(), databaseDetails.getPassword(), databaseDetails.getDriverClass(), databaseDetails.getDriverPrj());
+				databaseDetails.getPort(), databaseDetails.getUserName(), databaseDetails.getPassword(), databaseDetails.getDriverClass(),
+				databaseDetails.getDriverPrj());
 	}
 
+	/**
+	 * @param databaseType
+	 * @param databaseName
+	 * @param hostAddress
+	 * @param portNumber
+	 * @param userName
+	 * @param passWord
+	 * @return
+	 * @throws Exception
+	 */
 	public Connection getNewConnection(final String databaseType, final String databaseName, final String hostAddress,
-			final int portNumber, final String userName, final String passWord, final String driveClass, final String driverPrj) throws Exception {
+			final int portNumber, final String userName, final String passWord, final String driveClass, final String driverPrj)
+			throws Exception {
 		try {
 			if (databaseType.equals(MYSQL)) {
 				final Driver driver = getDriver(databaseType, driveClass, driverPrj);
@@ -94,8 +100,8 @@ public class ConnectToDatabase {
 			} else if (databaseType.equals(ORACLE)) {
 				final Driver driver = getDriver(ORACLE_DRIVER, driveClass, driverPrj);
 				final Properties props = setProperties(userName, passWord);
-				this.con = driver.connect(JDBC + COLON + databaseType + COLON + THIN + COLON + AT_THE_RATE + hostAddress + COLON
-						+ portNumber + COLON + databaseName, props);
+				con = driver.connect(JDBC + COLON + databaseType + COLON + THIN + COLON + AT_THE_RATE + hostAddress + COLON + portNumber
+						+ COLON + databaseName, props);
 				/*Class.forName(ORACLE_JDBC_DRIVER);
 				this.con = DriverManager.getConnection(JDBC + COLON + databaseType + COLON + THIN + COLON + AT_THE_RATE + hostAddress
 						+ COLON + portNumber + COLON + databaseName, userName, passWord);*/
@@ -107,7 +113,7 @@ public class ConnectToDatabase {
 			} else if (databaseType.equals(HSQLDB)) {
 				final Driver driver = getDriver(databaseType, driveClass, driverPrj);
 				final Properties props = setProperties(userName, passWord);
-				this.con = driver.connect(JDBC + COLON + databaseType + COLON + HSQL + COLON + DOUBLE_FORWARD_SLASH + hostAddress
+				con = driver.connect(JDBC + COLON + databaseType + COLON + HSQL + COLON + DOUBLE_FORWARD_SLASH + hostAddress
 						+ FORWARD_SLASH + databaseName, props);
 				/*Class.forName(HSQLDB_JDBC_DRIVER);
 				this.con = DriverManager.getConnection(JDBC + COLON + databaseType + COLON + HSQL + COLON + DOUBLE_FORWARD_SLASH
@@ -120,7 +126,7 @@ public class ConnectToDatabase {
 			} else if (databaseType.equals(POSTGRESQL)) {
 				final Driver driver = getDriver(databaseType, driveClass, driverPrj);
 				final Properties props = setProperties(userName, passWord);
-				this.con = driver.connect(JDBC + COLON + databaseType + COLON + DOUBLE_FORWARD_SLASH + hostAddress + FORWARD_SLASH
+				con = driver.connect(JDBC + COLON + databaseType + COLON + DOUBLE_FORWARD_SLASH + hostAddress + FORWARD_SLASH
 						+ databaseName, props);
 				/*Class.forName(POSTGRESQL_JDBC_DRIVER);
 				this.con = DriverManager.getConnection(JDBC + COLON + databaseType + COLON + DOUBLE_FORWARD_SLASH + hostAddress
@@ -150,6 +156,12 @@ public class ConnectToDatabase {
 		}
 	}
 
+	/**
+	 * @param databaseType
+	 * @param classFQName
+	 * @param driverPrj
+	 * @return
+	 */
 	private Driver getDriver(final String databaseType, final String classFQName, final String driverPrj) {
 		try {
 

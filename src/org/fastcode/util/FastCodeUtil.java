@@ -427,6 +427,10 @@ public class FastCodeUtil {
 		return editor;
 	}
 
+	/**
+	 * @param array
+	 * @return
+	 */
 	public static <E> Set<E> asSet(final E[] array) {
 		final Set<E> set = new HashSet<E>(array.length);
 		for (final E element : array) {

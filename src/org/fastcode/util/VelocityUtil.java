@@ -508,12 +508,6 @@ public class VelocityUtil {
 						invalidMethods = invalidMethods + COMMA + tmpMeth;
 						invalidMethodsStr = invalidMethodsStr + COMMA + methods[i - 1] + DOT + tmpMeth;
 					}
-
-					/*if (!builtInMethods.toLowerCase().contains(tmpMeth.toLowerCase())) {
-						invalidMethods = invalidMethods + COMMA + tmpMeth;
-						invalidMethodsStr = invalidMethodsStr + COMMA + methods[i - 1] + DOT + tmpMeth;
-						break;
-					}*/
 					if (templatePrefix.equals(P_DATABASE_TEMPLATE_PREFIX)) {
 						builtInMethods = getPropertyValue(prefix + tmpMeth.toLowerCase(), EMPTY_STR);
 					} else {

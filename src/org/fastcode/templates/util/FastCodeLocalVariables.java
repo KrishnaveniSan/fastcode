@@ -11,10 +11,10 @@ package org.fastcode.templates.util;
 
 public class FastCodeLocalVariables {
 
-	private String varName;
-	private int scopeStartLine;
-	private int scopeEndLine;
-	private int varLineNo;
+	private String	varName;
+	private int		scopeStartLine;
+	private int		scopeEndLine;
+	private int		varLineNo;
 
 	public FastCodeLocalVariables(final String varName, final int scopeStartLine, final int scopeEndLine) {
 		super();

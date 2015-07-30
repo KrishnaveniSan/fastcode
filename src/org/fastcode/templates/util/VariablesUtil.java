@@ -1,19 +1,14 @@
 package org.fastcode.templates.util;
 
 import static org.fastcode.common.FastCodeConstants.DOT;
-import static org.fastcode.common.FastCodeConstants.FAST_CODE_PLUGIN_ID;
 import static org.fastcode.common.FastCodeConstants.HYPHEN;
 import static org.fastcode.common.FastCodeConstants.SPACE;
-import static org.fastcode.preferences.PreferenceConstants.P_FILE_TEMPLATE_PLACHOLDER_NAME;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.core.runtime.preferences.InstanceScope;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import org.fastcode.common.FastCodeAdditionalParams;
 import org.fastcode.common.FastCodeConstants.RETURN_TYPES;
 import org.fastcode.templates.contentassist.ElementProposal;
@@ -48,6 +43,9 @@ public class VariablesUtil {
 		return this.variablesList;
 	}
 
+	/**
+	 * @param fcAdditnlParamList
+	 */
 	public void setadditionalParamList(final List<FastCodeAdditionalParams> fcAdditnlParamList) {
 		ElementProposal proposal;
 		if (this.addlparamList != null) {
@@ -67,7 +65,9 @@ public class VariablesUtil {
 					this.addlparamList.add(proposal);
 				}
 				if (param.getReturnTypes() != null) {
-					if (!(param.getReturnTypes().equals(RETURN_TYPES.STRING) || param.getReturnTypes().equals(RETURN_TYPES.BOOLEAN) || param.getReturnTypes().equals(RETURN_TYPES.LOCALVAR) || param.getReturnTypes().equals(RETURN_TYPES.INTRANGE) || param.getReturnTypes().equals(RETURN_TYPES.INT))) {
+					if (!(param.getReturnTypes().equals(RETURN_TYPES.STRING) || param.getReturnTypes().equals(RETURN_TYPES.BOOLEAN)
+							|| param.getReturnTypes().equals(RETURN_TYPES.LOCALVAR) || param.getReturnTypes().equals(RETURN_TYPES.INTRANGE) || param
+							.getReturnTypes().equals(RETURN_TYPES.INT))) {
 						this.variablesList.add(proposal);
 					}
 					final ArrayList<String> functions = ContentAssistUtil.getTypefunctionmap(param.getReturnTypes().getValue());

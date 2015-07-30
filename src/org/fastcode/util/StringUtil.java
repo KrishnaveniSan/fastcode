@@ -133,14 +133,14 @@ import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
  */
 public class StringUtil {
 
-	private static Map<String, String> specialTokens = new HashMap<String, String>();
-	private static final String[] EXCLUDE_GLOBAL_PROPERTIES = { DEFAULT_TEMPLATE_VARIATION_FIELD, DEFAULT_TEMPLATE_VARIATION_FIELD_NAME,
-			DEFAULT_TEMPLATE_VARIATION_FIELD_VALUE, EXCLUDE_FIELDS_FROM_SNIPPETS };
-	public static final String[] JAVA_RESERVED_WORDS = { "abstract", "continue", "for", "new", "switch", "assert", "default", "goto",
-			"package", "synchronized", "boolean", "do", "if", "private", "this", "break", "double", "implements", "protected", "throw",
-			"byte", "else", "import", "public", "throws", "case", "enum", "instanceof", "return", "transient", "catch", "extends", "int",
-			"short", "try", "char", "final", "interface", "static", "void", "class", "finally", "long", "strictfp", "volatile", "const",
-			"float", "native", "super", "while", "true", "false" };
+	private static Map<String, String>	specialTokens				= new HashMap<String, String>();
+	private static final String[]		EXCLUDE_GLOBAL_PROPERTIES	= { DEFAULT_TEMPLATE_VARIATION_FIELD,
+			DEFAULT_TEMPLATE_VARIATION_FIELD_NAME, DEFAULT_TEMPLATE_VARIATION_FIELD_VALUE, EXCLUDE_FIELDS_FROM_SNIPPETS };
+	public static final String[]		JAVA_RESERVED_WORDS			= { "abstract", "continue", "for", "new", "switch", "assert",
+			"default", "goto", "package", "synchronized", "boolean", "do", "if", "private", "this", "break", "double", "implements",
+			"protected", "throw", "byte", "else", "import", "public", "throws", "case", "enum", "instanceof", "return", "transient",
+			"catch", "extends", "int", "short", "try", "char", "final", "interface", "static", "void", "class", "finally", "long",
+			"strictfp", "volatile", "const", "float", "native", "super", "while", "true", "false" };
 	static {
 		specialTokens.put("\\\"", "\"");
 		specialTokens.put("\\n", "\n");

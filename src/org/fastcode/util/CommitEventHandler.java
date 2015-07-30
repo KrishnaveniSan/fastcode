@@ -12,13 +12,9 @@ public class CommitEventHandler implements ISVNEventHandler {
 	public void handleEvent(final SVNEvent event, final double progress) {
 		final SVNEventAction action = event.getAction();
 		if (action == SVNEventAction.COMMIT_MODIFIED) {
-			System.out.println("Sending   " + event.getURL().getPath());
 		} else if (action == SVNEventAction.COMMIT_DELETED) {
-			System.out.println("Deleting   " + event.getURL().getPath());
 		} else if (action == SVNEventAction.COMMIT_REPLACED) {
-			System.out.println("Replacing   " + event.getURL().getPath());
 		} else if (action == SVNEventAction.COMMIT_DELTA_SENT) {
-			System.out.println("Transmitting file data....");
 		} else if (action == SVNEventAction.COMMIT_ADDED) {
 			/*
 			 * Gets the MIME-type of the item.
@@ -28,12 +24,9 @@ public class CommitEventHandler implements ISVNEventHandler {
 				/*
 				 * If the item is a binary file
 				 */
-				System.out.println("Adding  (bin)  " + event.getURL().getPath());
 			} else {
-				System.out.println("Adding         " + event.getURL().getPath());
 			}
 		} else if (action == SVNEventAction.COMMIT_COMPLETED) {
-			System.out.println("commit completed ");// + event.getInfo().toString());
 		}
 
 	}

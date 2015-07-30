@@ -84,10 +84,14 @@ package org.fastcode.util;
 *
 */
 
-import java.io.*;
-import java.util.*;
-import java.lang.*;
-import java.sql.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.StringTokenizer;
 
 public class TNSParser {
 

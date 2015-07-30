@@ -32,7 +32,8 @@ public class FastCodeRulesContext {
 
 	public IRulesStrategy[] getFCTagRuleStrategies() {
 		final IRulesStrategy[] ruleStrategies = { new TemplateVariableRulesStrategie(), new DirectiveRulesStrategie(),
-				new TemplateRulesStrategie(), new FastCodeKeywordRulesStrategie() , new FastCodeJavaKeywordRulesStrategie() , new FastCodeJavaCommentRulesStrategie()};
+				new TemplateRulesStrategie(), new FastCodeKeywordRulesStrategie(), new FastCodeJavaKeywordRulesStrategie(),
+				new FastCodeJavaCommentRulesStrategie() };
 		return ruleStrategies;
 	}
 

@@ -45,34 +45,33 @@ import org.fastcode.templates.velocity.rules.TemplateRulesStartStrategie;
 			this.properties = properties;
 			this.propertiesOnly = propertiesOnly;
 
+		final IRulesStrategy[] ruleStrategies = { new TemplateRulesStartStrategie() };
+		this.referenceScanner = new FastCodeTemplateCodeScanner(ruleStrategies);
+	}
 
-			final IRulesStrategy[] ruleStrategies = {
-					new TemplateRulesStartStrategie()};
-			this.referenceScanner = new FastCodeTemplateCodeScanner(ruleStrategies);
+	/*
+	 * @see org.fastcode.templates.contentassist.AbstractTemplateContentAssistant#getCompletionProposals(org.eclipse.jface.text.IDocument, int, int)
+	 */
+	@Override
+	public List<ICompletionProposal> getCompletionProposals(final IDocument document, final int offset, final int length,
+			final String spaceToPad) {
+		try {
+			final String element = getElement(document, offset, length);
+
+			if (element != null) {
+				return FileTemplateReferenceManager.getCompletionProposals(element, offset, length, this.properties, this.propertiesOnly);
+			}
+		} catch (final Exception e) {
+			e.printStackTrace();
 		}
-
-		/*
-		 * @see org.fastcode.templates.contentassist.AbstractTemplateContentAssistant#getCompletionProposals(org.eclipse.jface.text.IDocument, int, int)
-		 */
-		@Override
-		public List<ICompletionProposal> getCompletionProposals(final IDocument document, final int offset, final int length, final String spaceToPad) {
-			try {
-				final String element = getElement(document, offset, length);
-
-				if (element != null) {
-					return FileTemplateReferenceManager.getCompletionProposals(element, offset,	length, this.properties, this.propertiesOnly);
-				}
-			} catch (final Exception e) {e.printStackTrace();}
 
 			return new ArrayList<ICompletionProposal>();
 		}
 
-		private String getElement(final IDocument document, final int offset, final int length)
-													throws BadLocationException {
-			if (length <= 0 || offset > 0 &&
-					document.getChar(offset - 1) == DOUBLE_SLASH_CHAR) { // escaped reference
-				return null;
-			}
+	private String getElement(final IDocument document, final int offset, final int length) throws BadLocationException {
+		if (length <= 0 || offset > 0 && document.getChar(offset - 1) == DOUBLE_SLASH_CHAR) { // escaped reference
+			return null;
+		}
 
 			final String element = document.get(offset, length);
 			if (element.startsWith("$") && isValidReference(document, offset, length)) {
@@ -81,15 +80,14 @@ import org.fastcode.templates.velocity.rules.TemplateRulesStartStrategie;
 			return null;
 		}
 
-		private boolean isValidReference(final IDocument document, final int offset, final int length) {
-			this.referenceScanner.setRange(document, offset, length);
+	private boolean isValidReference(final IDocument document, final int offset, final int length) {
+		this.referenceScanner.setRange(document, offset, length);
 
-			final IToken token = this.referenceScanner.nextToken();
+		final IToken token = this.referenceScanner.nextToken();
 
-			return  this.referenceScanner.getTokenOffset() == offset &&
-					this.referenceScanner.getTokenLength() == length &&
-					token.equals(FastCodeColorManager.getToken("VARIABLE"));
-		}
+		return this.referenceScanner.getTokenOffset() == offset && this.referenceScanner.getTokenLength() == length
+				&& token.equals(FastCodeColorManager.getToken("VARIABLE"));
+	}
 
 
 

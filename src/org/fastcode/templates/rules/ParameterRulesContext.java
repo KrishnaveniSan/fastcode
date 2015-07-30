@@ -8,7 +8,6 @@ import org.eclipse.jface.text.ITextHover;
 import org.fastcode.templates.contentassist.AutoCloseStrategy;
 import org.fastcode.templates.contentassist.ITemplateContentAssistant;
 import org.fastcode.templates.contentassist.ParameterContentAssist;
-/*import org.fastcode.templates.velocity.contentassist.DirectiveAndCommentStartStrategy;*/
 import org.fastcode.templates.velocity.contentassist.TemplateTextHover;
 
 public class ParameterRulesContext {

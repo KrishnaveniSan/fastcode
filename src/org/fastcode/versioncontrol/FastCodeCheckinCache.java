@@ -1,20 +1,10 @@
 package org.fastcode.versioncontrol;
 
-import static org.fastcode.common.FastCodeConstants.EMPTY_STR;
-
-import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IFolder;
-import org.eclipse.jdt.core.IPackageFragment;
-import org.eclipse.jdt.core.IType;
-import java.util.List;
-import java.util.ArrayList;
-import org.eclipse.core.resources.IProject;
 import org.fastcode.util.FastCodeFileForCheckin;
 
 public class FastCodeCheckinCache {

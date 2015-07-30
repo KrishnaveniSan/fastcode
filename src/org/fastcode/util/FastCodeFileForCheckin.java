@@ -12,7 +12,8 @@ public class FastCodeFileForCheckin {
 	private String	fileFullName;
 	private IProject project;
 
-	public FastCodeFileForCheckin(final File file, final String fileFullName, final String comments, final String status, final String cachedTime, final IProject project) {
+	public FastCodeFileForCheckin(final File file, final String fileFullName, final String comments, final String status,
+			final String cachedTime, final IProject project) {
 		super();
 		this.status = status;
 		this.cachedTime = cachedTime;

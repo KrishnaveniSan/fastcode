@@ -164,7 +164,7 @@ public class TemplateManager {
 		//System.out.println(setVarlist);
 		final SECOND_TEMPLATE secondTempalteItem = templateItemsMap.get(firstTemplateItem);
 		if (!firstTemplateItem.equals(FIRST_TEMPLATE.None)) {
-			if (!firstTemplateItem.equals(FIRST_TEMPLATE.Enumeration)) {
+			if (!(firstTemplateItem.equals(FIRST_TEMPLATE.Enumeration) || firstTemplateItem.equals(FIRST_TEMPLATE.json))) {
 				REFERENCE_PROPOSALS.addAll(REFERENCE_PROPOSALS_MAP.get(firstTemplateItem.getValue()));
 			}
 
@@ -184,9 +184,9 @@ public class TemplateManager {
 				if (secondTempalteItem.equals(SECOND_TEMPLATE.property)) {
 					REFERENCE_PROPOSALS.addAll(REFERENCE_PROPOSALS_MAP.get(SECOND_TEMPLATE.property));
 				}
-				if (secondTempalteItem.equals(SECOND_TEMPLATE.json)) {
+				/*if (secondTempalteItem.equals(SECOND_TEMPLATE.json)) {
 					REFERENCE_PROPOSALS.addAll(REFERENCE_PROPOSALS_MAP.get(SECOND_TEMPLATE.field.getValue() + "s"));
-				}
+				}*/
 			}
 
 		}
@@ -232,7 +232,8 @@ public class TemplateManager {
 		final VelocityUtil velocityUtil = VelocityUtil.getInstance();
 		final boolean showErrorMessage = true;
 		final Map<String, Object> allVariablesMap = velocityUtil.getVariablesFromTemplateBody(templateBody, firstTemplateItem.getValue(),
-				secondTempalteItem.getValue(), vutil.getAdditnlParamList(), EMPTY_STR, EMPTY_STR, EMPTY_STR, preferenceStore, false, atEOF, null, showErrorMessage);
+				secondTempalteItem.getValue(), vutil.getAdditnlParamList(), EMPTY_STR, EMPTY_STR, EMPTY_STR, preferenceStore, false, atEOF,
+				null, showErrorMessage);
 		/*final List<String> validVariables = (List<String>) allVariablesMap.get(VALID_VARIABLES);
 		final List<String> localVariables = (List<String>) allVariablesMap.get(LOCAL_VARIABLES);
 		final List<String> setVariables = (List<String>) allVariablesMap.get(SET_VARIABLES);*/
@@ -241,14 +242,20 @@ public class TemplateManager {
 		boolean forLoopVarInScope = false;
 		boolean setVarInScope = false;
 		String forLoopLocalVar = EMPTY_STR;
-		final List<FastCodeLocalVariables> fastCodeAllLocalVariables = (List<FastCodeLocalVariables>) allVariablesMap.get(FC_LOCAL_VAL_LIST);
+		final List<FastCodeLocalVariables> fastCodeAllLocalVariables = (List<FastCodeLocalVariables>) allVariablesMap
+				.get(FC_LOCAL_VAL_LIST);
 		for (final FastCodeLocalVariables fastCodeLocalVariables : fastCodeAllLocalVariables) {
 			if (fastCodeLocalVariables instanceof ForLoopVariable) {
 				if (currentLine >= fastCodeLocalVariables.getScopeStartLine() && currentLine <= fastCodeLocalVariables.getScopeEndLine()) {
 					forLoopVarInScope = true;
 					forLoopLocalVar = fastCodeLocalVariables.getVarName();
 					//add proposal for this for loop variable
-					ArrayList<String> functions = functions = ContentAssistUtil.getTypefunctionmap(secondTempalteItem.getValue());
+					ArrayList<String> functions;
+					if (firstTemplateItem.getValue().equals(FIRST_TEMPLATE.json.getValue())) {
+						functions = ContentAssistUtil.getTypefunctionmap(firstTemplateItem.getValue());
+					} else {
+						functions = ContentAssistUtil.getTypefunctionmap(secondTempalteItem.getValue());
+					}
 					ElementProposal proposal;
 					if (functions != null) {
 						for (final String function : functions) {
@@ -264,7 +271,8 @@ public class TemplateManager {
 			} else if (fastCodeLocalVariables instanceof SetVariable) {
 				if (currentLine >= fastCodeLocalVariables.getScopeStartLine()) {
 					setVarInScope = true;
-					final ElementProposal proposal = new ElementProposal(fastCodeLocalVariables.getVarName(), /*fastCodeLocalVariables.getVarName()*/ "", fastCodeLocalVariables.getVarName());
+					final ElementProposal proposal = new ElementProposal(fastCodeLocalVariables.getVarName(), /*fastCodeLocalVariables.getVarName()*/
+					"", fastCodeLocalVariables.getVarName());
 					proposals.add(createTemplateProposal(proposal, offset, length, silent));
 				}
 			}
@@ -274,19 +282,28 @@ public class TemplateManager {
 		return proposals;
 	}
 
+	/**
+	 * @param element
+	 * @param offset
+	 * @param length
+	 * @param silent
+	 * @param templateItemsMap
+	 * @param propertiesOnly
+	 * @return
+	 */
 	private static List<ICompletionProposal> getElementProposals(final String element, final int offset, final int length,
 			final boolean silent, final Map<FIRST_TEMPLATE, SECOND_TEMPLATE> templateItemsMap, final boolean propertiesOnly) {
 		final List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
 
-		//		Iterator<ElementProposal> iter = BASE_PROPERTIES.iterator();
-		//		while (iter.hasNext()) {
-		//			final ElementProposal propertyProposal = iter.next();
-		//
-		//			if (element.length() == 0 || propertyProposal.getProposal().startsWith(element)) {
-		//				proposals.add(createTemplateProposal(propertyProposal, offset, length, silent));
-		//			}
-		//
-		//		}
+		/*	Iterator<ElementProposal> iter = BASE_PROPERTIES.iterator();
+			while (iter.hasNext()) {
+				final ElementProposal propertyProposal = iter.next();
+
+				if (element.length() == 0 || propertyProposal.getProposal().startsWith(element)) {
+					proposals.add(createTemplateProposal(propertyProposal, offset, length, silent));
+				}
+
+			}*/
 
 		final Iterator<ElementProposal> iter = DEFAULT_PROPERTIES.iterator();
 
@@ -417,15 +434,35 @@ public class TemplateManager {
 		return referenceProposal;
 	}
 
+	/**
+	 * @param element
+	 * @param silent
+	 * @return
+	 */
 	private static String createReferenceString(final String element, final boolean silent) {
 		return (silent ? "$!{" : "${") + element + "}";
 	}
 
+	/**
+	 * @param referenceProposal
+	 * @param offset
+	 * @param length
+	 * @param silent
+	 * @return
+	 */
 	private static TemplateProposal createTemplateProposal(final ElementProposal referenceProposal, final int offset, final int length,
 			final boolean silent) {
 		return createTemplateProposal("", referenceProposal, offset, length, silent);
 	}
 
+	/**
+	 * @param prefix
+	 * @param referenceProposal
+	 * @param offset
+	 * @param length
+	 * @param silent
+	 * @return
+	 */
 	private static TemplateProposal createTemplateProposal(final String prefix, final ElementProposal referenceProposal, final int offset,
 			final int length, final boolean silent) {
 

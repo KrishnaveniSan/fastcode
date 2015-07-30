@@ -173,7 +173,8 @@ public class TemplateFieldEditor extends FieldEditor {
 
 		// hover manager that shows text when we hover
 		final AnnotationBarHoverManager fAnnotationHoverManager = new AnnotationBarHoverManager(compositeRuler,
-				this.fastCodeTemplateViewerField, new FastCodeAnnotationHover(this.fastCodeTemplateViewerField), new AnnotationConfiguration());
+				this.fastCodeTemplateViewerField, new FastCodeAnnotationHover(this.fastCodeTemplateViewerField),
+				new AnnotationConfiguration());
 		fAnnotationHoverManager.install(annotationRuler.getControl());
 
 		// to paint the annotations
@@ -222,8 +223,6 @@ public class TemplateFieldEditor extends FieldEditor {
 
 			@Override
 			public void focusGained(final FocusEvent arg0) {
-				/*valueChanged();
-				clearErrorMessage();*/
 			}
 		});
 
@@ -239,8 +238,7 @@ public class TemplateFieldEditor extends FieldEditor {
 			@Override
 			public void keyPressed(final KeyEvent arg0) {
 				// TODO Auto-generated method stub
-				/*valueChanged();
-				clearErrorMessage();*/
+
 			}
 		});
 
@@ -253,8 +251,6 @@ public class TemplateFieldEditor extends FieldEditor {
 				 */
 				@Override
 				public void keyReleased(final KeyEvent e) {
-					//System.out.println(e.keyCode);
-					//e.
 					valueChanged();
 					//clearErrorMessage();
 				}
@@ -298,47 +294,7 @@ public class TemplateFieldEditor extends FieldEditor {
 	}
 
 	protected void valueChanged() {
-		//System.out.println("In value changed");
 		fireValueChanged(VALUE, this.oldValue, this.fastCodeTemplateViewerField.getDocument().get());
-
-		/*try {
-			RuntimeSingleton.parse(new StringReader(this.fastCodeTemplateViewerField.getDocument().get()), templateName);
-		} catch (final ParseException pe) {
-			pe.printStackTrace();
-			if (pe.currentToken != null && pe.currentToken.next != null) {
-				int lineNo = pe.currentToken.next.beginLine - 1;
-				final int colNo = pe.currentToken.next.beginColumn - 1;
-				int lineOffset = 0;
-				int docLen = 0;
-				try {
-					final IRegion reg = this.fastCodeTemplateViewerField.getDocument().getLineInformation(lineNo);
-					docLen = this.fastCodeTemplateViewerField.getDocument().getLineLength(lineNo);
-					lineOffset = this.fastCodeTemplateViewerField.getDocument().getLineOffset(lineNo);
-					final int lineOfOffset = this.fastCodeTemplateViewerField.getDocument().getLineOfOffset(lineNo);
-					final String lineContent = this.fastCodeTemplateViewerField.getDocument().get(reg.getOffset(), reg.getLength());
-					System.out.println(reg);
-					System.out.println(lineOffset);
-					System.out.println(docLen);
-					System.out.println("text-" +reg.toString());
-					System.out.println("line content-" + this.fastCodeTemplateViewerField.getDocument().get(lineOffset - docLen, docLen));
-					System.out.println(lineOffset - docLen);
-					System.out.println("content-"+lineContent);
-					if (isEmpty(lineContent)) {
-						lineOffset = this.fastCodeTemplateViewerField.getDocument().getLineOffset(lineNo - 1);
-						lineNo = lineNo-1;
-
-					}
-				} catch (final BadLocationException ex) {
-					// TODO Auto-generated catch block
-					ex.printStackTrace();
-				}
-				final ErrorAnnotation errorAnnotation = new ErrorAnnotation(lineNo, pe.getLocalizedMessage());
-
-				addAnnotation(errorAnnotation, new Position(lineOffset, 5));
-				//MessageDialog.openError(new Shell(), "Error", "Error in template body " + pe.getLocalizedMessage());
-				//return;
-			}
-		}*/
 
 	}
 

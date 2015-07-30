@@ -385,13 +385,6 @@ public class FastCodeKeywordsManager {
 				}
 				inValidAttributes.add(attri);
 			}
-			 /*allAttributesForTag = optionalAttributesMap.get(fcTagAttributes.getKey());
-				for (final FcTagAttributes attri : fcTagAttributes.getValue()) {
-					if (allAttributesForTag.contains(attri.getVarName().trim())) {
-						continue;
-					}
-					inValidAttributes.add(attri);
-				}*/
 		}
 
 		return inValidAttributes;

@@ -2,7 +2,6 @@ package org.fastcode.versioncontrol;
 
 import static org.eclipse.jface.dialogs.MessageDialog.openError;
 import static org.fastcode.common.FastCodeConstants.ADD_FILE;
-import static org.fastcode.common.FastCodeConstants.CREATE_CLASS;
 import static org.fastcode.common.FastCodeConstants.MODIFIED_FILE;
 import static org.fastcode.common.FastCodeConstants.NEWLINE;
 import static org.fastcode.common.FastCodeConstants.PLACEHOLDER_FILE;
@@ -77,7 +76,6 @@ public class CommitFileInEditorAction /*extends Action*/implements IEditorAction
 	@Override
 	public void dispose() {
 		// TODO Auto-generated method stub
-		System.out.println("inside dispose");
 	}
 
 	@Override

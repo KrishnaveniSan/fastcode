@@ -1,8 +1,8 @@
 package org.fastcode.templates.velocity.contentassist;
 
 import static org.fastcode.common.FastCodeConstants.DOUBLE_SLASH_CHAR;
-import static org.fastcode.common.FastCodeConstants.EMPTY_QUOTE_STR;
 import static org.fastcode.common.FastCodeConstants.EMPTY_STR;
+import static org.fastcode.common.FastCodeConstants.FC_TAG_START;
 import static org.fastcode.common.FastCodeConstants.SPACE;
 
 import java.util.ArrayList;
@@ -17,7 +17,6 @@ import org.fastcode.common.FastCodeConstants.SECOND_TEMPLATE;
 import org.fastcode.common.FastCodeConstants.TARGET;
 import org.fastcode.templates.contentassist.AbstractTemplateContentAssistant;
 import org.fastcode.templates.velocity.rules.DirectiveDetector;
-import static org.fastcode.common.FastCodeConstants.FC_TAG_START;
 
 /**
  * Content assistant for Velocity directives.
@@ -57,8 +56,8 @@ public class DirectiveContentAssistant extends AbstractTemplateContentAssistant 
 		try {
 			final String element = getElement(document, offset, length);
 			if (element != null) {
-				return FastCodeDirectiveVelocityUtil.getCompletionProposals(element, offset, length, this.firstTemplateItem, this.secondTemplateItem,
-						this.templatePrefix);
+				return FastCodeDirectiveVelocityUtil.getCompletionProposals(element, offset, length, this.firstTemplateItem,
+						this.secondTemplateItem, this.templatePrefix);
 			}
 		} catch (final Exception e) {/* ignore */
 			System.out.println(e.getMessage());

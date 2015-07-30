@@ -7,8 +7,6 @@
 
 package org.fastcode.templates.util;
 
-import org.fastcode.templates.util.FastCodeLocalVariables;
-
 public class SetVariable extends FastCodeLocalVariables {
 
 	public SetVariable(final String varName, final int start, final int end) {

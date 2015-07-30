@@ -184,23 +184,23 @@ public class FastCodeDirectiveVelocityUtil {
 								cursorOffset = proposalString.length();
 								proposals.add(createTemplateProposal(proposalString, displayString, offset, length, cursorOffset));
 							} else if (secondTemplateItem.equals(SECOND_TEMPLATE.data)) {
-								final String middle_part = DOLLAR + secondTemplateItem.getValue() + SPACE + "in" + SPACE + DOLLAR + LEFT_CURL
-										+ VariablesUtil.getInstance().getFilePlaceholderValue() + RIGHT_CURL;
+								final String middle_part = DOLLAR + secondTemplateItem.getValue() + SPACE + "in" + SPACE + DOLLAR
+										+ LEFT_CURL + VariablesUtil.getInstance().getFilePlaceholderValue() + RIGHT_CURL;
 								final String proposalString = first_part + middle_part + last_part;
 								displayString = proposalString;
 								cursorOffset = proposalString.length();
 								proposals.add(createTemplateProposal(proposalString, displayString, offset, length, cursorOffset));
-							} else if (secondTemplateItem.equals(SECOND_TEMPLATE.json)) {
-								final String middle_part = DOLLAR + SECOND_TEMPLATE.field.getValue() + SPACE + "in" + SPACE + DOLLAR + LEFT_CURL
-										+ VariablesUtil.getPlural(SECOND_TEMPLATE.field.getValue()) + RIGHT_CURL;
+							} /*else if (secondTemplateItem.equals(SECOND_TEMPLATE.json)) {
+								final String middle_part = DOLLAR + SECOND_TEMPLATE.field.getValue() + SPACE + "in" + SPACE + DOLLAR
+										+ LEFT_CURL + VariablesUtil.getPlural(SECOND_TEMPLATE.field.getValue()) + RIGHT_CURL;
 								final String proposalString = first_part + middle_part + last_part;
 								displayString = proposalString;
 								cursorOffset = proposalString.length();
 								proposals.add(createTemplateProposal(proposalString, displayString, offset, length, cursorOffset));
-							} else {
+								} */else {
 
-								final String middle_part = DOLLAR + secondTemplateItem.getValue() + SPACE + "in" + SPACE + DOLLAR + LEFT_CURL
-										+ VariablesUtil.getPlural(secondTemplateItem.getValue()) + RIGHT_CURL;
+								final String middle_part = DOLLAR + secondTemplateItem.getValue() + SPACE + "in" + SPACE + DOLLAR
+										+ LEFT_CURL + VariablesUtil.getPlural(secondTemplateItem.getValue()) + RIGHT_CURL;
 								final String proposalString = first_part + middle_part + last_part;
 								displayString = proposalString;
 								cursorOffset = proposalString.length();
@@ -210,9 +210,10 @@ public class FastCodeDirectiveVelocityUtil {
 						if (!isEmpty(templatePrefix) && templatePrefix.equals(P_DATABASE_TEMPLATE_PREFIX)) {
 							final String first_part = proposal.substring(0, 9);
 							final String last_part = proposal.substring(9, proposal.length());
-							for (final String var : getEmptyArrayForNull(VelocityUtil.getInstance().getPropertyValue(DB_FOREACH_VARS, EMPTY_STR).split(COMMA))) {
-								final String middle_part = DOLLAR + var.substring(0, var.length()-1) + SPACE + "in" + SPACE + DOLLAR + LEFT_CURL
-										+ var + RIGHT_CURL;
+							for (final String var : getEmptyArrayForNull(VelocityUtil.getInstance()
+									.getPropertyValue(DB_FOREACH_VARS, EMPTY_STR).split(COMMA))) {
+								final String middle_part = DOLLAR + var.substring(0, var.length() - 1) + SPACE + "in" + SPACE + DOLLAR
+										+ LEFT_CURL + var + RIGHT_CURL;
 								final String proposalString = first_part + middle_part + last_part;
 								displayString = proposalString;
 								cursorOffset = proposalString.length();

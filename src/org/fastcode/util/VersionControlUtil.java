@@ -64,8 +64,6 @@ public class VersionControlUtil {
 		//final File fileObj = new File(ifile.getLocationURI());
 		final FastCodeCheckinCache fastCodeCheckinCache = FastCodeCheckinCache.getInstance();
 		for (final FastCodeFileForCheckin fileToCheckin : fastCodeCheckinCache.getFilesToCheckIn()) {
-			System.out.println("Ifile location URI:-" + fileObj.getAbsolutePath());
-			System.out.println("File full name:-" + fileToCheckin.getFileFullName());
 			if (fileToCheckin.getStatus().equals(COMPLETED)) { // && fileToCheckin.getFileFullName().equals(fileObj.getAbsolutePath())) {
 				comntInCache.add(fileToCheckin.getComments());
 			}
@@ -89,8 +87,6 @@ public class VersionControlUtil {
 		boolean fileFound = false;
 		final FastCodeCheckinCache checkinCache = FastCodeCheckinCache.getInstance();
 		for (final FastCodeFileForCheckin fileForCheckin : checkinCache.getFilesToCheckIn()) {
-			System.out.println(fileForCheckin.getFileFullName());
-			System.out.println(file.getAbsolutePath());
 			if (fileForCheckin.getFileFullName().equals(file.getAbsolutePath())) {
 				fileForCheckin.setStatus(INITIATED);
 				fileFound = true;
@@ -115,11 +111,10 @@ public class VersionControlUtil {
 		//if file already present in cache, then append the comment (except the prefix and footer)
 		final FastCodeCheckinCache checkinCache = FastCodeCheckinCache.getInstance();
 		for (final FastCodeFileForCheckin fileForCheckin : checkinCache.getFilesToCheckIn()) {
-			System.out.println(fileForCheckin.getFileFullName());
-			System.out.println(file.getAbsolutePath());
 			if (fileForCheckin.getFileFullName().equals(file.getAbsolutePath())) {
 				fileFound = true;
-				fileForCheckin.setComments(isEmpty(fileForCheckin.getComments()) ? comment : fileForCheckin.getComments() + NEWLINE + comment);
+				fileForCheckin.setComments(isEmpty(fileForCheckin.getComments()) ? comment : fileForCheckin.getComments() + NEWLINE
+						+ comment);
 				fileForCheckin.setCachedTime(Long.toString(System.currentTimeMillis()));
 				fileForCheckin.setFile(file);
 				fileForCheckin.setStatus(COMPLETED);
@@ -128,7 +123,9 @@ public class VersionControlUtil {
 			}
 		}
 		if (!fileFound) {
-			checkinCache.getFilesToCheckIn().add(new FastCodeFileForCheckin(file, file.getAbsolutePath(), comment, COMPLETED, Long.toString(System.currentTimeMillis()), getPrjFromFile(file)));
+			checkinCache.getFilesToCheckIn().add(
+					new FastCodeFileForCheckin(file, file.getAbsolutePath(), comment, COMPLETED, Long.toString(System.currentTimeMillis()),
+							getPrjFromFile(file)));
 		}
 	}
 
@@ -151,7 +148,6 @@ public class VersionControlUtil {
 				return EMPTY_STR;
 			}
 			return inputDialog.getValue();*/
-			System.out.println("i am here.....");
 			final String comment = EMPTY_STR;
 			//return "i m krish........";
 			/*final IWorkspace workspace = ResourcesPlugin.getWorkspace();
