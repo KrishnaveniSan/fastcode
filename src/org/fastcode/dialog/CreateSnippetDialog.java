@@ -186,6 +186,7 @@ public class CreateSnippetDialog extends TrayDialog {
 	private String				selectedDatabaseName;
 	private Button				autoCheckin;
 	private Button				replaceSelectedText;
+
 	/**
 	 * @param shell
 	 */
@@ -949,6 +950,13 @@ public class CreateSnippetDialog extends TrayDialog {
 						return;
 					}
 					final IFile browseFile = (IFile) resourceDialog.getResult()[0];
+
+					if (CreateSnippetDialog.this.templateSettings.getFirstTemplateItem().equals(FIRST_TEMPLATE.json)) {
+						System.out.println(browseFile.getFileExtension());
+						if (!browseFile.getFileExtension().equals("js") || !browseFile.getFileExtension().equals("json")) {
+							setErrorMessage("Please select only .js or json file ");
+						}
+					}
 					final FastCodeFile browseFastCodeFile = new FastCodeFile(browseFile);
 					if (CreateSnippetDialog.this.createSnippetData.getFastCodeFiles().isEmpty()) {
 						CreateSnippetDialog.this.createSnippetData.getFastCodeFiles().add(browseFastCodeFile);
@@ -2182,6 +2190,7 @@ public class CreateSnippetDialog extends TrayDialog {
 			case None:
 				enableSelectType(EMPTY_STR, EMPTY_STR, false, false);
 				break;
+
 			}
 		}
 		//final String templatePrefix = this.createSnippetData.getTemplatePrefix();
@@ -2652,7 +2661,6 @@ public class CreateSnippetDialog extends TrayDialog {
 
 			break;
 		case File:
-		case json:
 			if (editorPart != null) {
 				if (compUnit == null) {
 					final IFile file = (IFile) editorPart.getEditorInput().getAdapter(IFile.class);
@@ -2786,6 +2794,47 @@ public class CreateSnippetDialog extends TrayDialog {
 						}
 					} catch (final Exception ex) {
 						CreateSnippetDialog.this.setErrorMessage(ex.getMessage());
+					}
+				}
+			}
+			break;
+
+		case json:
+			if (editorPart != null) {
+				if (compUnit == null) {
+					final IFile file = (IFile) editorPart.getEditorInput().getAdapter(IFile.class);
+					if (file.getFileExtension().equals("js") || file.getFileExtension().equals("json")) {
+						this.currentType = file.getFullPath().toString();
+						this.selectTypeCombo.add(ENCLOSING_FILE_STR + HYPHEN + this.currentType);
+						this.createSnippetData.setResourceFile(file);
+					}
+					//this.createSnippetData.getFastCodeFiles().add(new FastCodeFile(file));
+					//this.selectTypeCombo.select(0);
+				}
+			}
+			if (!fastCodeCache.getFileSet().isEmpty()) {
+				for (final IFile file : fastCodeCache.getFileSet()) {
+
+					if (!isEmpty(this.currentType) && this.currentType.equals(file.getFullPath().toString())) {
+						continue;
+					}
+					boolean addItem = true;
+					if (this.selectTypeCombo.getItems() != null) {
+						for (final String existingFile : this.selectTypeCombo.getItems()) {
+							if (existingFile.contains(ENCLOSING_FILE_STR)) {
+								continue;
+							}
+							if (existingFile.equals(file.getFullPath().toString())) {
+								addItem = false;
+								break;
+
+							}
+						}
+						if (addItem) {
+							if (file.getFileExtension().equals("js") || file.getFileExtension().equals("json")) {
+								this.selectTypeCombo.add(file.getFullPath().toString());
+							}
+						}
 					}
 				}
 			}
@@ -2924,6 +2973,9 @@ public class CreateSnippetDialog extends TrayDialog {
 		return compilationUnit != null && compilationUnit.exists() ? compilationUnit : null;
 	}
 
+	/**
+	 *
+	 */
 	private void setFastCodeCacheWithSelectedType() {
 		final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
 		switch (this.templateSettings.getFirstTemplateItem()) {

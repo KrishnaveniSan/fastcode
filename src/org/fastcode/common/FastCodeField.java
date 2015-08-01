@@ -7,6 +7,7 @@ import static org.eclipse.jdt.core.Signature.getSignatureSimpleName;
 import static org.fastcode.common.FastCodeConstants.DOT;
 import static org.fastcode.common.FastCodeConstants.EMPTY_CHAR;
 import static org.fastcode.common.FastCodeConstants.EMPTY_STR;
+import static org.fastcode.common.FastCodeConstants.LEFT_BRACKET;
 import static org.fastcode.common.FastCodeConstants.SPACE;
 import static org.fastcode.util.SourceUtil.getFQNameFromFieldTypeName;
 import static org.fastcode.util.SourceUtil.isNativeType;
@@ -16,6 +17,7 @@ import static org.fastcode.util.StringUtil.isEmpty;
 import static org.fastcode.util.StringUtil.parseType;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,8 @@ import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IMemberValuePair;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 /**
  * @author Gautam
@@ -43,9 +47,12 @@ public class FastCodeField extends AbstractFastCodeField {
 	private int										arrayDimension;
 	private final List<FastCodeField>				childFields		= new ArrayList<FastCodeField>();
 	private boolean									typeNative;
-	private FastCodeType							type;
+	private final FastCodeType						type;
 	private String									gettersetter;
 	private boolean									builderPattern;
+	private boolean									isArray;
+	private boolean									isObject;
+	private boolean									isEmpty;
 
 	static {
 		defaultValues.put("Boolean", "false");
@@ -85,10 +92,53 @@ public class FastCodeField extends AbstractFastCodeField {
 	 * @param name
 	 * @param value
 	 * @throws Exception
+	 * For Json fields
 	 */
-	public FastCodeField(final String name, final String value) throws Exception {
-		super(name, value);
+	public FastCodeField(final String name, final Object value) throws Exception {
 
+		super(name, value instanceof String ? "\"" + value.toString() + "\"" : value.toString());
+		this.type = findType(value);
+
+	}
+
+	/**
+	 * @param value
+	 * @return
+	 */
+	private FastCodeType findType(final Object value) {
+		FastCodeType jsonFieldType = null;
+		if (value == null) {
+			this.isEmpty = true;
+		}
+		if (value instanceof JSONObject) {
+			this.isObject = true;
+		} else if (value instanceof JSONArray) {
+			this.isArray = true;
+			this.arrayDimension = ((JSONArray) value).size();
+		}
+
+		if (value instanceof String) {
+			jsonFieldType = new FastCodeType("java.lang.String");
+		} else if (value instanceof Boolean) {
+			jsonFieldType = new FastCodeType("java.lang.Boolean");
+		} else if (value instanceof Integer) {
+			jsonFieldType = new FastCodeType("java.lang.Integer");
+		} else if (value instanceof Long) {
+			jsonFieldType = new FastCodeType("java.lang.Long");
+		} else if (value instanceof Short) {
+			jsonFieldType = new FastCodeType("java.lang.Short");
+		} else if (value instanceof Float) {
+			jsonFieldType = new FastCodeType("java.lang.Float");
+		} else if (value instanceof Double) {
+			jsonFieldType = new FastCodeType("java.lang.Double");
+		} else if (value instanceof Character) {
+			jsonFieldType = new FastCodeType("java.lang.Character");
+		} else if (value instanceof Byte) {
+			jsonFieldType = new FastCodeType("java.lang.Byte");
+		} else if (value instanceof Date) {
+			jsonFieldType = new FastCodeType("java.util.Date");
+		}
+		return jsonFieldType;
 	}
 
 	/**
@@ -96,17 +146,34 @@ public class FastCodeField extends AbstractFastCodeField {
 	 * @param value
 	 * @param parentField
 	 * @throws Exception
+	 * For Json Fields with parent field
 	 */
-	public FastCodeField(final String name, final String value, FastCodeField parentField) throws Exception {
-		super(name, value);
+	public FastCodeField(final String name, final Object value, FastCodeField parentField) throws Exception {
+		super(name, value instanceof String ? "\"" + value.toString() + "\"" : value.toString());
+		this.type = findType(value);
 		this.parentField = parentField;
-		this.fullName = parentField.getName() + DOT + name;
-		while (parentField.getParentField() != null) {
-			this.fullName = parentField.getParentField().getName() + DOT + this.fullName;
-			parentField = parentField.getParentField();
-			//break;
+		if (parentField != null) {
+			if (name.contains("[") && parentField.getName().equals(name.substring(0, name.indexOf(LEFT_BRACKET)))) {
+				this.fullName = name;
+			} else {
+				this.fullName = parentField.getName() + DOT + name;
+			}
 		}
-		//System.out.println(this.fullName);
+		while (parentField.getParentField() != null) {
+			/*System.out.println(parentField.getName());
+			System.out.println(parentField.getParentField().getName());
+			System.out.println(this.fullName);*/
+			if (parentField.getName().contains("[")
+					&& !parentField.getParentField().getName()
+							.equals(parentField.getName().substring(0, parentField.getName().indexOf(LEFT_BRACKET)))) {
+				this.fullName = parentField.getParentField().getName() + DOT + this.fullName;
+			} else if (!parentField.getName().contains("[") && !parentField.getName().equals(parentField.getParentField().getName())) {
+				this.fullName = parentField.getParentField().getName() + DOT + this.fullName;
+			}
+			parentField = parentField.getParentField();
+
+		}
+
 	}
 
 	/**

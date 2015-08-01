@@ -97,11 +97,11 @@ public class CreateNewJsonFieldSelectionAction extends AbstractCreateNewSnippetA
 
 		for (final Object objct : jsonObject.keySet()) {
 			try {
-				if (parentField != null) {
 
-					jsonField = new FastCodeField(objct.toString(), jsonObject.get(objct).toString(), parentField);
+				if (parentField != null) {
+					jsonField = new FastCodeField(objct.toString(), jsonObject.get(objct), parentField);
 				} else {
-					jsonField = new FastCodeField(objct.toString(), jsonObject.get(objct).toString());
+					jsonField = new FastCodeField(objct.toString(), jsonObject.get(objct));
 				}
 				if (this.jsonFieldList == null) {
 					this.jsonFieldList.add(jsonField);
@@ -113,6 +113,7 @@ public class CreateNewJsonFieldSelectionAction extends AbstractCreateNewSnippetA
 
 				} else {
 					if (jsonObject.get(objct) instanceof JSONObject) {
+
 						//parentJson = new FastCodeField(objct.toString(), jsonObject.get(objct).toString());
 						parseJson(jsonObject.get(objct), jsonField);
 					}
@@ -167,7 +168,7 @@ public class CreateNewJsonFieldSelectionAction extends AbstractCreateNewSnippetA
 
 					parseJson(jsonArr.get(k), jsonField);//getChildrenForJson(jsonArr.get(k));
 				} else {
-					final FastCodeField field = new FastCodeField(jsonArr.toString(), jsonArr.get(k).toString(), jsonField);
+					final FastCodeField field = new FastCodeField(jsonArr.toString(), jsonArr.get(k), jsonField);
 					if (this.jsonFieldList == null) {
 						this.jsonFieldList.add(field);
 					} else if (this.jsonFieldList != null && !this.jsonFieldList.contains(field)) {

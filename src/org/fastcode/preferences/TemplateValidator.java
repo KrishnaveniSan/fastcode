@@ -365,7 +365,8 @@ public class TemplateValidator {
 					velocityUtil.reset();
 					if (varValidation == null) {
 						final String msg2 = "Cannot validate the template now. Please validate manually. Do u want to proceed or go back and validate the template?";
-						if (!showWarning("Template " + templateSettings.getTemplateName() + ", cannot be validated now." + msg2, "Proceed Anyway", "Cancel")) {
+						if (!showWarning("Template " + templateSettings.getTemplateName() + ", cannot be validated now." + msg2,
+								"Proceed Anyway", "Cancel")) {
 							break;
 						} else {
 							this.validate = false;
