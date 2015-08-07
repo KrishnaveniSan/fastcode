@@ -5,6 +5,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.fastcode.common.FastCodePackage;
 import org.eclipse.ui.part.EditorPart;
 import org.fastcode.common.FastCodeFolder;
+import org.eclipse.ui.IEditorPart;
 
 public class OpenCloseFilesData {
 
@@ -14,7 +15,7 @@ public class OpenCloseFilesData {
 	private String pattern;
 	private boolean closeOthers;
 	private FastCodePackage fastCodePackage;
-	private EditorPart editorPart;
+	private IEditorPart editorPart;
 	private FastCodeFolder fastCodeFolder;
 
 
@@ -108,18 +109,8 @@ public class OpenCloseFilesData {
 	 * @return
 	 *
 	 */
-	public EditorPart getEditorPart() {
+	public IEditorPart getEditorPart() {
 		return this.editorPart;
-	}
-
-	/**
-	 *
-	 * setter method for editorPart
-	 * @param editorPart
-	 *
-	 */
-	public void setEditorPart(final EditorPart editorPart) {
-		this.editorPart = editorPart;
 	}
 
 	/**
@@ -140,6 +131,16 @@ public class OpenCloseFilesData {
 	 */
 	public void setFastCodeFolder(final FastCodeFolder fastCodeFolder) {
 		this.fastCodeFolder = fastCodeFolder;
+	}
+
+	/**
+	 *
+	 * setter method for editorPart
+	 * @param editorPart
+	 *
+	 */
+	public void setEditorPart(final IEditorPart editorPart) {
+		this.editorPart = editorPart;
 	}
 
 

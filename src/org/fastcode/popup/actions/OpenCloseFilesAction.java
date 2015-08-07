@@ -147,12 +147,14 @@ public class OpenCloseFilesAction implements IActionDelegate, IWorkbenchWindowAc
 		IProject project = null;
 		final ICompilationUnit compUnit;
 		if (this.editorPart != null) {
+			openRequiredClassesData.setEditorPart(this.editorPart);
 			compUnit = this.manager.getWorkingCopy(this.editorPart.getEditorInput());
 			if (compUnit != null) {
 				project = compUnit.getJavaProject().getProject();
 				openRequiredClassesData.setCompUnit(compUnit);
 			} else {
 				final IFile file = (IFile) this.editorPart.getEditorInput().getAdapter(IFile.class);
+				//file.get
 				project = file.getProject(); //JavaCore.create(file.getProject());
 			}
 		}

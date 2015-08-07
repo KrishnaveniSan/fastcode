@@ -98,6 +98,7 @@ public class OpenCloseFilesDialog extends TrayDialog {
 			setErrorMessage("Please select a folder");
 			return;
 		} else {
+			//OpenCloseFilesDialog.this.openRequiredClassesData.setFastCodeFolder(this.folderCombo.getText());
 			setErrorMessage(this.defaultMessage);
 		}
 
@@ -106,6 +107,15 @@ public class OpenCloseFilesDialog extends TrayDialog {
 			return;
 		} else {
 			setErrorMessage(this.defaultMessage);
+		}
+		final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
+		if (this.openRequiredClassesData.getFastCodeFolder() != null) {
+			final IFolder folder = this.openRequiredClassesData.getFastCodeFolder().getFolder();
+			if (folder != null && folder.exists()) {
+				if (!fastCodeCache.getFolderSet().contains(folder)) {
+					fastCodeCache.getFolderSet().add(folder);
+				}
+			}
 		}
 		super.okPressed();
 	}
@@ -202,7 +212,7 @@ public class OpenCloseFilesDialog extends TrayDialog {
 
 		final GridData gridDataLabel = new GridData();
 		final Label label = new Label(composite, SWT.NONE);
-		label.setText("Select Folder:            ");
+		label.setText("Select Folder:               ");
 		label.setLayoutData(gridDataLabel);
 
 		final GridData gridDataText = new GridData(GridData.FILL_HORIZONTAL);
@@ -216,7 +226,7 @@ public class OpenCloseFilesDialog extends TrayDialog {
 		gridDataText.minimumWidth = 450;
 		final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
 
-		if (this.openRequiredClassesData.getCompUnit() == null) {
+		//if (this.openRequiredClassesData.getCompUnit() == null) {
 			if (this.openRequiredClassesData.getEditorPart() != null) {
 				final IFile file = (IFile) this.openRequiredClassesData.getEditorPart().getEditorInput().getAdapter(IFile.class);
 
@@ -231,7 +241,8 @@ public class OpenCloseFilesDialog extends TrayDialog {
 						if (folder != null) {
 							this.currentFolder = folder;
 							this.folderCombo.add(ENCLOSING_FOLDER_STR + HYPHEN + this.currentFolder.getFullPath().toString());
-
+							this.folderCombo.select(0);
+							this.openRequiredClassesData.setFastCodeFolder(new FastCodeFolder(folder));
 							//this.folderNameCombo[count].select(0);
 						}
 					}
@@ -240,7 +251,7 @@ public class OpenCloseFilesDialog extends TrayDialog {
 				}
 			}
 
-		}
+		//}
 
 		if (!fastCodeCache.getFolderSet().isEmpty()) {
 			for (final IFolder folder : fastCodeCache.getFolderSet()) {
@@ -343,7 +354,7 @@ public class OpenCloseFilesDialog extends TrayDialog {
 				try {
 					Path path = null;
 					//final Button b = (Button) event.getSource();
-					final ContainerSelectionDialog dialog = new ContainerSelectionDialog(new Shell(), null, true, "Select a folder:");
+					final ContainerSelectionDialog dialog = new ContainerSelectionDialog(new Shell(), OpenCloseFilesDialog.this.currentFolder , true, "Select a folder:");
 					dialog.setTitle("Select a Folder");
 					dialog.showClosedProjects(false);
 					if (dialog.open() != CANCEL) {
