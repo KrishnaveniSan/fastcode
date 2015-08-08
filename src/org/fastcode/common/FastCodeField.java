@@ -13,7 +13,6 @@ import static org.fastcode.util.SourceUtil.getFQNameFromFieldTypeName;
 import static org.fastcode.util.SourceUtil.isNativeType;
 import static org.fastcode.util.StringUtil.changeToCamelCase;
 import static org.fastcode.util.StringUtil.flattenType;
-import static org.fastcode.util.StringUtil.isEmpty;
 import static org.fastcode.util.StringUtil.parseType;
 
 import java.util.ArrayList;
@@ -26,6 +25,7 @@ import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IMemberValuePair;
+import org.fastcode.util.StringUtil;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -50,9 +50,10 @@ public class FastCodeField extends AbstractFastCodeField {
 	private final FastCodeType						type;
 	private String									gettersetter;
 	private boolean									builderPattern;
-	private boolean									isArray;
-	private boolean									isObject;
-	private boolean									isEmpty;
+	private boolean									object;
+	private boolean									empty;
+	private boolean									Null;
+	private String									completeValue;
 
 	static {
 		defaultValues.put("Boolean", "false");
@@ -95,10 +96,28 @@ public class FastCodeField extends AbstractFastCodeField {
 	 * For Json fields
 	 */
 	public FastCodeField(final String name, final Object value) throws Exception {
-
-		super(name, value instanceof String ? "\"" + value.toString() + "\"" : value.toString());
+		this.name = name;
+		this.completeValue = value.toString();
+		this.value = parseValue(value.toString());
+		this.fullName = name;
+		//super(name, value instanceof String ? "\"" + value.toString() + "\"" : value.toString());
 		this.type = findType(value);
 
+	}
+
+	/**
+	 * @param value
+	 * @return
+	 */
+	private String parseValue(final String value) {
+		if (!StringUtil.isEmpty(value)) {
+			if (value.matches("\".*\"") || value.startsWith("{") || value.startsWith("[")) {
+				return value.substring(1, value.length() - 1);
+			} else {
+				return value;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -108,12 +127,13 @@ public class FastCodeField extends AbstractFastCodeField {
 	private FastCodeType findType(final Object value) {
 		FastCodeType jsonFieldType = null;
 		if (value == null) {
-			this.isEmpty = true;
+			setNull(true);
 		}
 		if (value instanceof JSONObject) {
-			this.isObject = true;
+			setObject(true);
+			setEmpty(true);
 		} else if (value instanceof JSONArray) {
-			this.isArray = true;
+			this.array = true;
 			this.arrayDimension = ((JSONArray) value).size();
 		}
 
@@ -149,7 +169,10 @@ public class FastCodeField extends AbstractFastCodeField {
 	 * For Json Fields with parent field
 	 */
 	public FastCodeField(final String name, final Object value, FastCodeField parentField) throws Exception {
-		super(name, value instanceof String ? "\"" + value.toString() + "\"" : value.toString());
+		this.name = name;
+		this.completeValue = value.toString();
+		this.value = parseValue(value.toString());
+		//super(name, value instanceof String ? "\"" + value.toString() + "\"" : value.toString());
 		this.type = findType(value);
 		this.parentField = parentField;
 		if (parentField != null) {
@@ -210,7 +233,7 @@ public class FastCodeField extends AbstractFastCodeField {
 			for (final IMemberValuePair memberValuePair : annot.getMemberValuePairs()) {
 				annotElements.put(memberValuePair.getMemberName(), memberValuePair.getValue().toString());
 			}
-			this.annotations.put(isEmpty(annot.getElementName()) ? "value" : annot.getElementName(), annotElements);
+			this.annotations.put(StringUtil.isEmpty(annot.getElementName()) ? "value" : annot.getElementName(), annotElements);
 		}
 
 		FastCodeField parenField = this.parentField;
@@ -260,7 +283,7 @@ public class FastCodeField extends AbstractFastCodeField {
 	 * @return
 	 */
 	public String makeWord() {
-		if (isEmpty(this.name)) {
+		if (StringUtil.isEmpty(this.name)) {
 			return EMPTY_STR;
 		}
 		final String word = changeToCamelCase(this.name, EMPTY_CHAR);
@@ -461,6 +484,56 @@ public class FastCodeField extends AbstractFastCodeField {
 	 */
 	public void setBuilderPattern(final boolean builderPattern) {
 		this.builderPattern = builderPattern;
+	}
+
+	public String getCompleteValue() {
+		return this.completeValue;
+	}
+
+	public void setCompleteValue(final String completeValue) {
+		this.completeValue = completeValue;
+	}
+
+	/**
+	 * @return the object
+	 */
+	public boolean isObject() {
+		return this.object;
+	}
+
+	/**
+	 * @param object the object to set
+	 */
+	public void setObject(final boolean object) {
+		this.object = object;
+	}
+
+	/**
+	 * @return the empty
+	 */
+	public boolean isEmpty() {
+		return this.empty;
+	}
+
+	/**
+	 * @param empty the empty to set
+	 */
+	public void setEmpty(final boolean empty) {
+		this.empty = empty;
+	}
+
+	/**
+	 * @return the null
+	 */
+	public boolean isNull() {
+		return this.Null;
+	}
+
+	/**
+	 * @param _null the null to set
+	 */
+	public void setNull(final boolean _null) {
+		this.Null = _null;
 	}
 
 }
