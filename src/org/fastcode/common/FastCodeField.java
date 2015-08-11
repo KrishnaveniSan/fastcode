@@ -26,8 +26,6 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IMemberValuePair;
 import org.fastcode.util.StringUtil;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 
 /**
  * @author Gautam
@@ -97,7 +95,7 @@ public class FastCodeField extends AbstractFastCodeField {
 	 */
 	public FastCodeField(final String name, final Object value) throws Exception {
 		this.name = name;
-		this.completeValue = value.toString();
+		this.completeValue = value instanceof String ? "\"" + value.toString() + "\"" : value.toString();
 		this.value = parseValue(value.toString());
 		this.fullName = name;
 		//super(name, value instanceof String ? "\"" + value.toString() + "\"" : value.toString());
@@ -129,12 +127,12 @@ public class FastCodeField extends AbstractFastCodeField {
 		if (value == null) {
 			setNull(true);
 		}
-		if (value instanceof JSONObject) {
+		if (value instanceof org.json.simple.JSONObject) {
 			setObject(true);
 			setEmpty(true);
-		} else if (value instanceof JSONArray) {
+		} else if (value instanceof org.json.simple.JSONArray) {
 			this.array = true;
-			this.arrayDimension = ((JSONArray) value).size();
+			this.arrayDimension = ((org.json.simple.JSONArray) value).size();
 		}
 
 		if (value instanceof String) {
@@ -170,7 +168,7 @@ public class FastCodeField extends AbstractFastCodeField {
 	 */
 	public FastCodeField(final String name, final Object value, FastCodeField parentField) throws Exception {
 		this.name = name;
-		this.completeValue = value.toString();
+		this.completeValue = value instanceof String ? "\"" + value.toString() + "\"" : value.toString();
 		this.value = parseValue(value.toString());
 		//super(name, value instanceof String ? "\"" + value.toString() + "\"" : value.toString());
 		this.type = findType(value);
@@ -534,6 +532,19 @@ public class FastCodeField extends AbstractFastCodeField {
 	 */
 	public void setNull(final boolean _null) {
 		this.Null = _null;
+	}
+
+	/**
+	 *
+	 * getter method for fullyQualifiedName
+	 * for json field
+	 * will be same as fullName
+	 * method added for json users as they call fullName as fullyQualifiedName
+	 * @return
+	 *
+	 */
+	public String getFullyQualifiedName() {
+		return this.fullName;
 	}
 
 }

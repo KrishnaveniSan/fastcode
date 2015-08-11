@@ -39,10 +39,14 @@ public class CreateNewJsonFieldSelectionAction extends AbstractCreateNewSnippetA
 	public void getJsonFileElements(final TemplateSettings templateSettings, final Map<String, Object> placeHolders,
 			final IFile resourceFile) throws Exception {
 		final JSONParser jsonParser = new JSONParser();
-
+		Object object = null;
 		try {
+			/*if (placeHolders.containsKey(SELECTED_TEXT)) {
+				object = jsonParser.parse(((String) placeHolders.get(SELECTED_TEXT)).trim());
+			} else {*/
 			final String jsonFileContent = SourceUtil.getFileContents(resourceFile);
-			final Object object = jsonParser.parse(jsonFileContent);
+			object = jsonParser.parse(jsonFileContent);
+			//}
 			parseJson(object, null);
 		} catch (final ParseException ex) {
 			ex.printStackTrace();
@@ -276,7 +280,7 @@ public class CreateNewJsonFieldSelectionAction extends AbstractCreateNewSnippetA
 		@Override
 		public boolean hasChildren(final Object obj) {
 			if (obj instanceof FastCodeField) {
-				if (((FastCodeField) obj).getValue().contains(LEFT_CURL) || ((FastCodeField) obj).getValue().contains("[")) {
+				if (((FastCodeField) obj).getCompleteValue().contains(LEFT_CURL) || ((FastCodeField) obj).getCompleteValue().contains("[")) {
 					return true;
 				}
 

@@ -260,6 +260,9 @@
 		<function-proposal proposal="fullName" description="fullName "
 			prefix="field - " offset="0" basic="false">
 		</function-proposal>
+		<function-proposal proposal="fullyQualifiedName" description="fullyQualifiedName "
+			prefix="field - " offset="0" basic="false">
+		</function-proposal>
 		<function-proposal proposal="value" description="value "
 			prefix="field - " offset="0" basic="false">
 			</function-proposal>
