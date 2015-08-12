@@ -183,7 +183,7 @@ public class CreateSnippetDialog extends TrayDialog {
 	Map<String, Object>			browsedFirstTemplateMap	= new HashMap<String, Object>();
 	private Label				templateVariationLabel;
 	private Combo				databaseNameCombo;
-	private String				selectedDatabaseName;
+	//private String				selectedDatabaseName;
 	private Button				autoCheckin;
 	private Button				replaceSelectedText;
 
@@ -249,7 +249,7 @@ public class CreateSnippetDialog extends TrayDialog {
 				createShowLocaVarButton(parent);
 			}
 			if (this.createSnippetData.getSelectedText() != null && !this.createSnippetData.getSelectedText().isEmpty()) {
-				createSurroundWithButton(parent);
+				createSelectedTextCheckBox(parent);
 			}
 			final String projectName = CreateSnippetDialog.this.projectCombo.getText();
 			if (!isEmpty(projectName)) {
@@ -905,7 +905,9 @@ public class CreateSnippetDialog extends TrayDialog {
 						boolean addItem = true;
 						if (CreateSnippetDialog.this.selectTypeCombo.getItems() != null) {
 							for (final String existingClass : CreateSnippetDialog.this.selectTypeCombo.getItems()) {
-								if (existingClass.equals(browseFromClassType.getFullyQualifiedName())) {
+								if (existingClass.contains(ENCLOSING_CLASS_STR)
+										&& CreateSnippetDialog.this.currentType.equals(browseFromClassType.getFullyQualifiedName())
+										|| existingClass.equals(browseFromClassType.getFullyQualifiedName())) {
 									if (!CreateSnippetDialog.this.selectTypeCombo.getText().equals(existingClass)) {
 										CreateSnippetDialog.this.selectTypeCombo.select(CreateSnippetDialog.this.selectTypeCombo
 												.indexOf(existingClass));
@@ -967,7 +969,9 @@ public class CreateSnippetDialog extends TrayDialog {
 					boolean addItem = true;
 					if (CreateSnippetDialog.this.selectTypeCombo.getItems() != null) {
 						for (final String existingFile : CreateSnippetDialog.this.selectTypeCombo.getItems()) {
-							if (existingFile.equals(browseFile.getFullPath().toString())) {
+							if (existingFile.contains(ENCLOSING_FILE_STR)
+									&& CreateSnippetDialog.this.currentType.equals(browseFile.getFullPath().toString())
+									|| existingFile.equals(browseFile.getFullPath().toString())) {
 								if (!CreateSnippetDialog.this.selectTypeCombo.getText().equals(existingFile)) {
 									CreateSnippetDialog.this.selectTypeCombo.select(CreateSnippetDialog.this.selectTypeCombo
 											.indexOf(existingFile));
@@ -1018,7 +1022,9 @@ public class CreateSnippetDialog extends TrayDialog {
 							boolean addItem1 = true;
 							if (CreateSnippetDialog.this.selectTypeCombo.getItems() != null) {
 								for (final String existingFolder : CreateSnippetDialog.this.selectTypeCombo.getItems()) {
-									if (existingFolder.equals(folder.getFullPath().toString())) {
+									if (existingFolder.contains(ENCLOSING_FOLDER_STR)
+											&& CreateSnippetDialog.this.currentType.equals(folder.getFullPath().toString())
+											|| existingFolder.equals(folder.getFullPath().toString())) {
 										if (!CreateSnippetDialog.this.selectTypeCombo.getText().equals(existingFolder)) {
 											CreateSnippetDialog.this.selectTypeCombo.select(CreateSnippetDialog.this.selectTypeCombo
 													.indexOf(existingFolder));
@@ -1091,7 +1097,9 @@ public class CreateSnippetDialog extends TrayDialog {
 							boolean addItem1 = true;
 							if (CreateSnippetDialog.this.selectTypeCombo.getItems() != null) {
 								for (final String existingPkg : CreateSnippetDialog.this.selectTypeCombo.getItems()) {
-									if (existingPkg.equals(getAlteredPackageName(packageFragment))) {
+									if (existingPkg.contains(ENCLOSING_PACKAGE_STR)
+											&& CreateSnippetDialog.this.currentType.equals(getAlteredPackageName(packageFragment))
+											|| existingPkg.equals(getAlteredPackageName(packageFragment))) {
 										if (!CreateSnippetDialog.this.selectTypeCombo.getText().equals(existingPkg)) {
 											CreateSnippetDialog.this.selectTypeCombo.select(CreateSnippetDialog.this.selectTypeCombo
 													.indexOf(existingPkg));
@@ -2171,7 +2179,7 @@ public class CreateSnippetDialog extends TrayDialog {
 				}
 				break;
 			case File:
-			case json:
+
 				enableSelectType("Select File:                   ", "Browse File", true, false);
 				break;
 			case Folder:
@@ -2186,6 +2194,14 @@ public class CreateSnippetDialog extends TrayDialog {
 				this.fromClassInstCombo.setEnabled(true);
 				this.fromClassInstCombo.setVisible(true);
 				this.fromClassInstLabel.setText("Enumeration Instance:     ");
+				break;
+			case json:
+				//if (this.createSnippetData.getSelectedText() == null) {
+				enableSelectType("Select File:                   ", "Browse File", true, false);
+				/*} else {
+					enableSelectType(EMPTY_STR, EMPTY_STR, false, false);
+					this.replaceSelectedText.setText("Populate Json Fields From Selected Text");
+				}*/
 				break;
 			case None:
 				enableSelectType(EMPTY_STR, EMPTY_STR, false, false);
@@ -2545,7 +2561,7 @@ public class CreateSnippetDialog extends TrayDialog {
 	/**
 	 * @param parent
 	 */
-	private void createSurroundWithButton(final Composite parent) {
+	private void createSelectedTextCheckBox(final Composite parent) {
 		final Composite composite = new Composite(parent, parent.getStyle());
 		final GridLayout layout = new GridLayout();
 		layout.numColumns = 4;
@@ -2558,9 +2574,17 @@ public class CreateSnippetDialog extends TrayDialog {
 			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				if (CreateSnippetDialog.this.replaceSelectedText.getSelection()) {
-					CreateSnippetDialog.this.createSnippetData.setReplaceSelectedText(true);
+					if (!CreateSnippetDialog.this.createSnippetData.getTemplateSettings().getFirstTemplateItem()
+							.equals(FIRST_TEMPLATE.json.getValue())) {
+
+						CreateSnippetDialog.this.createSnippetData.setReplaceSelectedText(true);
+					}
 				} else {
-					CreateSnippetDialog.this.createSnippetData.setReplaceSelectedText(false);
+					if (!CreateSnippetDialog.this.createSnippetData.getTemplateSettings().getFirstTemplateItem()
+							.equals(FIRST_TEMPLATE.json.getValue())) {
+
+						CreateSnippetDialog.this.createSnippetData.setReplaceSelectedText(false);
+					}
 				}
 			}
 
@@ -2973,9 +2997,6 @@ public class CreateSnippetDialog extends TrayDialog {
 		return compilationUnit != null && compilationUnit.exists() ? compilationUnit : null;
 	}
 
-	/**
-	 *
-	 */
 	private void setFastCodeCacheWithSelectedType() {
 		final FastCodeCache fastCodeCache = FastCodeCache.getInstance();
 		switch (this.templateSettings.getFirstTemplateItem()) {
