@@ -129,7 +129,9 @@ public class FastCodeField extends AbstractFastCodeField {
 		}
 		if (value instanceof org.json.simple.JSONObject) {
 			setObject(true);
-			setEmpty(true);
+			if (value.equals(EMPTY_STR) || value.equals("{}") || value.equals("[]")) {
+				setEmpty(true);
+			}
 		} else if (value instanceof org.json.simple.JSONArray) {
 			this.array = true;
 			this.arrayDimension = ((org.json.simple.JSONArray) value).size();
@@ -545,6 +547,14 @@ public class FastCodeField extends AbstractFastCodeField {
 	 */
 	public String getFullyQualifiedName() {
 		return this.fullName;
+	}
+
+	/**
+	 * user can use length or arrayDimension
+	 * in the template
+	 */
+	public int getLength() {
+		return this.arrayDimension;
 	}
 
 }
